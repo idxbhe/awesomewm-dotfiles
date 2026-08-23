@@ -290,7 +290,7 @@ local function make_tasklist(s)
             fg_focus  = beautiful.tasklist_fg_focus,
             fg_urgent = beautiful.tasklist_fg_urgent,
             fg_minimize = beautiful.tasklist_fg_minimize,
-            shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 2) end,
+            shape = gears.shape.rectangle,
         },
         layout = {
             spacing = 4,
