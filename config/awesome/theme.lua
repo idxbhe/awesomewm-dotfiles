@@ -212,6 +212,10 @@ theme.pill_fg       = mocha.text
 theme.pill_spacing  = 6
 theme.pill_padding  = 10
 
+-- Surface colors (for widget backgrounds)
+theme.surface0 = mocha.surface0
+theme.surface1 = mocha.surface1
+
 -- Glyphs (Nerd Font codepoints verified)
 theme.glyph = {
     arch        = "󰣇",  -- U+F08C7 dev-archlinux

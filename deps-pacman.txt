@@ -1,0 +1,10 @@
+main packages:
+```
+awesomewm thunar geany
+```
+
+for thunar thumbnail to work:
+
+```
+gdk-pixbuf2 libgsf libwmf poppler-glib libwebp tumbler ffmpegthumbnailer
+```

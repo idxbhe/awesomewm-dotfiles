@@ -603,11 +603,22 @@ client.connect_signal("request::titlebars", function(c)
         awful.button({ }, 3, function() c:emit_signal("request::activate", "titlebar", {raise = true}); awful.mouse.client.resize(c) end)
     )
 
-    -- Helper: consistent titlebar icon button (forced 14x14)
+    -- Helper: titlebar icon button in a square box
     local function tbbtn(widget)
-        widget.forced_width  = 14
-        widget.forced_height = 14
-        return wibox.widget { widget, widget = wibox.container.place }
+        widget.forced_width  = 16
+        widget.forced_height = 16
+        return wibox.widget {
+            {
+                widget,
+                margins = 2,
+                widget = wibox.container.margin,
+            },
+            forced_width  = 24,
+            forced_height = 24,
+            shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 2) end,
+            bg = beautiful.surface0 .. "80",
+            widget = wibox.container.background,
+        }
     end
 
     awful.titlebar(c):setup {
