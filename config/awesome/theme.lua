@@ -139,6 +139,55 @@ theme.hotkeys_label_fg    = mocha.subtext1
 theme.hotkeys_font        = theme.font
 theme.hotkeys_description_font = theme.font
 
+-- Titlebar colors (Catppuccin Mocha)
+theme.titlebar_bg_normal = mocha.mantle
+theme.titlebar_bg_focus = mocha.surface0
+theme.titlebar_fg_normal = mocha.subtext1
+theme.titlebar_fg_focus = mocha.text
+
+-- Titlebar button icons (Papirus-Dark 16x16)
+local pi = "/usr/share/icons/Papirus-Dark/16x16/actions/"
+
+-- Close
+theme.titlebar_close_button_normal = pi .. "window-close.svg"
+theme.titlebar_close_button_focus  = pi .. "window-close.svg"
+theme.titlebar_close_button_normal_hover = pi .. "window-close.svg"
+theme.titlebar_close_button_focus_hover  = pi .. "window-close.svg"
+theme.titlebar_close_button_normal_press = pi .. "window-close.svg"
+theme.titlebar_close_button_focus_press  = pi .. "window-close.svg"
+
+-- Minimize
+theme.titlebar_minimize_button_normal = pi .. "window-minimize.svg"
+theme.titlebar_minimize_button_focus  = pi .. "window-minimize.svg"
+theme.titlebar_minimize_button_normal_hover = pi .. "window-minimize.svg"
+theme.titlebar_minimize_button_focus_hover  = pi .. "window-minimize.svg"
+theme.titlebar_minimize_button_normal_press = pi .. "window-minimize.svg"
+theme.titlebar_minimize_button_focus_press  = pi .. "window-minimize.svg"
+
+-- Maximize
+theme.titlebar_maximized_button_normal = pi .. "window-maximize.svg"
+theme.titlebar_maximized_button_focus  = pi .. "window-maximize.svg"
+theme.titlebar_maximized_button_normal_active = pi .. "window-restore.svg"
+theme.titlebar_maximized_button_focus_active  = pi .. "window-restore.svg"
+
+-- Floating
+theme.titlebar_floating_button_normal = pi .. "window.svg"
+theme.titlebar_floating_button_focus  = pi .. "window.svg"
+theme.titlebar_floating_button_normal_active = pi .. "window.svg"
+theme.titlebar_floating_button_focus_active  = pi .. "window.svg"
+
+-- Sticky/Pin
+theme.titlebar_sticky_button_normal = pi .. "window-pin.svg"
+theme.titlebar_sticky_button_focus  = pi .. "window-pin.svg"
+theme.titlebar_sticky_button_normal_active = pi .. "window-unpin.svg"
+theme.titlebar_sticky_button_focus_active  = pi .. "window-unpin.svg"
+
+-- On top
+theme.titlebar_ontop_button_normal = pi .. "window-keep-above.svg"
+theme.titlebar_ontop_button_focus  = pi .. "window-keep-above.svg"
+theme.titlebar_ontop_button_normal_active = pi .. "window-keep-above.svg"
+theme.titlebar_ontop_button_focus_active  = pi .. "window-keep-above.svg"
+
 -- Layout icons (will use text fallback)
 theme.layout_floating     = "󰝴"
 theme.layout_tile         = "󰕰"
