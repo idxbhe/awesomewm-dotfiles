@@ -72,16 +72,16 @@ theme.taglist_shape       = gears.shape.rounded_rect
 theme.taglist_spacing     = 2
 
 -- Tasklist
-theme.tasklist_bg_normal  = mocha.mantle .. "00"
-theme.tasklist_bg_focus   = mocha.surface1
+theme.tasklist_bg_normal  = mocha.surface0 .. "80"
+theme.tasklist_bg_focus   = mocha.blue
 theme.tasklist_bg_urgent  = mocha.red
 theme.tasklist_bg_minimize= mocha.surface0
-theme.tasklist_fg_normal  = mocha.subtext1
+theme.tasklist_fg_normal  = mocha.text
 theme.tasklist_fg_focus   = mocha.text
 theme.tasklist_fg_urgent  = mocha.crust
 theme.tasklist_fg_minimize= mocha.overlay1
 theme.tasklist_shape      = gears.shape.rounded_rect
-theme.tasklist_spacing    = 2
+theme.tasklist_spacing    = 4
 theme.tasklist_align      = "center"
 theme.tasklist_font       = theme.font
 theme.tasklist_font_focus = theme.font_bold

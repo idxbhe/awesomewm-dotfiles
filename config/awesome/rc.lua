@@ -288,6 +288,17 @@ local function make_tasklist(s)
         screen  = s,
         filter  = awful.widget.tasklist.filter.currenttags,
         buttons = tasklist_buttons,
+        style   = {
+            bg_normal = beautiful.tasklist_bg_normal,
+            bg_focus  = beautiful.tasklist_bg_focus,
+            bg_urgent = beautiful.tasklist_bg_urgent,
+            bg_minimize = beautiful.tasklist_bg_minimize,
+            fg_normal = beautiful.tasklist_fg_normal,
+            fg_focus  = beautiful.tasklist_fg_focus,
+            fg_urgent = beautiful.tasklist_fg_urgent,
+            fg_minimize = beautiful.tasklist_fg_minimize,
+            shape = gears.shape.rounded_rect,
+        },
         layout = {
             spacing = 4,
             layout = wibox.layout.fixed.horizontal
@@ -295,29 +306,19 @@ local function make_tasklist(s)
         widget_template = {
             {
                 {
-                    {
-                        id = "icon_role",
-                        forced_width = 28,
-                        forced_height = 28,
-                        widget = awful.widget.clienticon
-                    },
-                    margins = 4,
-                    widget = wibox.container.margin
+                    id     = 'clienticon',
+                    widget = awful.widget.clienticon,
                 },
-                id = "background_role",
-                shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 8) end,
-                widget = wibox.container.background
+                margins = 4,
+                widget  = wibox.container.margin,
             },
+            id              = 'background_role',
+            forced_width    = 36,
+            forced_height   = 36,
+            widget          = wibox.container.background,
             create_callback = function(self, c, index, objects)
-                self.tooltip = awful.tooltip({
-                    objects = { self },
-                    timer_function = function() return c.name or c.class end,
-                    shape = gears.shape.rounded_rect,
-                    bg = tooltip_bg,
-                    fg = tooltip_fg,
-                })
+                self:get_children_by_id('clienticon')[1].client = c
             end,
-            widget = wibox.container.margin
         }
     }
 end
@@ -382,7 +383,13 @@ awful.screen.connect_for_each_screen(function(s)
             pill_widget(mylauncher),
             s.mytaglist,
         },
-        s.mytasklist, -- Center: tasklist
+        { -- Center: tasklist
+            layout = wibox.layout.align.horizontal,
+            expand = "none",
+            nil,
+            s.mytasklist,
+            nil,
+        },
         { -- Right: pills (CPU, RAM, Net, Vol, Bat, Clock, Layout)
             layout = wibox.layout.align.horizontal,
             expand = "none",
