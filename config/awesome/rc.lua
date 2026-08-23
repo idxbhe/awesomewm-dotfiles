@@ -589,6 +589,35 @@ client.connect_signal("manage", function(c)
         end
     end
 
+    -- Set Papirus icon via xseticon (X11 _NET_WM_ICON pixel data)
+    -- Try both icon_name and class, pick first Papirus match
+    local candidates = {}
+    if c.icon_name and c.icon_name ~= "" then table.insert(candidates, c.icon_name:lower()) end
+    if c.class and c.class ~= "" then table.insert(candidates, c.class:lower()) end
+
+    local icon_path
+    for _, name in ipairs(candidates) do
+        for _, size in ipairs({"48x48", "32x32", "24x24", "22x22", "16x16"}) do
+            local p = "/usr/share/icons/Papirus-Dark/" .. size .. "/apps/" .. name .. ".svg"
+            if gears.filesystem.file_readable(p) then
+                icon_path = p
+                break
+            end
+        end
+        if icon_path then break end
+    end
+
+    if icon_path and c.window then
+        local wid = tostring(c.window)
+        local png_path = "/tmp/awesome-icon-" .. wid .. ".png"
+        -- Set _NET_WM_ICON via xseticon for titlebar/tasklist
+        awful.spawn.with_shell(
+            "rsvg-convert -w 48 -h 48 '" .. icon_path .. "' -o '" .. png_path .. "' && " ..
+            "xseticon -id " .. wid .. " '" .. png_path .. "' && " ..
+            "rm -f '" .. png_path .. "'"
+        )
+    end
+
     if awesome.startup
       and not c.size_hints.user_position
       and not c.size_hints.program_position then
