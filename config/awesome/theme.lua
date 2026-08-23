@@ -181,6 +181,7 @@ theme.glyph = {
     bat_low     = "󰂎",  -- U+F008E
     bat_charge  = "󰂄",  -- U+F0084
     sep         = "│",
+    launcher    = "",  -- U+E732 Arch Linux logo
 }
 
 return theme

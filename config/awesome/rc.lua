@@ -94,8 +94,32 @@ mymainmenu = awful.menu({ items = { { "awesome", myawesomemenu, beautiful.awesom
                                   }
                         })
 
-mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
-                                     menu = mymainmenu })
+mylauncher = wibox.widget {
+    {
+        {
+            text = beautiful.glyph.launcher,
+            font = font,
+            align = "center",
+            valign = "center",
+            forced_width = 32,
+            forced_height = 32,
+            widget = wibox.widget.textbox,
+        },
+        id = "bg",
+        shape = function(cr, w, h) gears.shape.circle(cr, w, h) end,
+        bg = beautiful.pill_bg or beautiful.bg_focus,
+        widget = wibox.container.background,
+    },
+    margins = 0,
+    widget = wibox.container.margin,
+}
+
+-- Make launcher clickable to open menu
+mylauncher:connect_signal("button::press", function(_, _, _, button)
+    if button == 1 then
+        mymainmenu:toggle()
+    end
+end)
 
 menubar.utils.terminal = terminal
 -- }}}
