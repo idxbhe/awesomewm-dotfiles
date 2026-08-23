@@ -94,7 +94,7 @@ theme.wibar_bg            = mocha.mantle .. "cc"  -- 80% opacity
 theme.wibar_fg            = mocha.text
 theme.wibar_border_width  = 0
 theme.wibar_border_color  = mocha.surface0
-theme.wibar_shape         = gears.shape.rounded_rect
+theme.wibar_shape         = gears.shape.rectangle
 
 -- Tooltip
 theme.tooltip_bg          = mocha.surface0
