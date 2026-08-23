@@ -297,7 +297,7 @@ local function make_tasklist(s)
             fg_focus  = beautiful.tasklist_fg_focus,
             fg_urgent = beautiful.tasklist_fg_urgent,
             fg_minimize = beautiful.tasklist_fg_minimize,
-            shape = gears.shape.rounded_rect,
+            shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 2) end,
         },
         layout = {
             spacing = 4,
@@ -306,15 +306,20 @@ local function make_tasklist(s)
         widget_template = {
             {
                 {
-                    id     = 'clienticon',
-                    widget = awful.widget.clienticon,
+                    {
+                        id     = 'clienticon',
+                        widget = awful.widget.clienticon,
+                    },
+                    halign = "center",
+                    valign = "center",
+                    widget = wibox.container.place,
                 },
                 margins = 4,
                 widget  = wibox.container.margin,
             },
             id              = 'background_role',
-            forced_width    = 36,
-            forced_height   = 36,
+            forced_width    = 32,
+            forced_height   = 32,
             widget          = wibox.container.background,
             create_callback = function(self, c, index, objects)
                 self:get_children_by_id('clienticon')[1].client = c
