@@ -237,38 +237,31 @@ local function make_taglist(s)
         filter  = awful.widget.taglist.filter.all,
         buttons = taglist_buttons,
         layout = {
-            spacing = 4,
+            spacing = 2,
             layout = wibox.layout.fixed.horizontal
         },
         widget_template = {
             {
-                {
-                    {
-                        id = "text_role",
-                        font = font,
-                        align = "center",
-                        valign = "center",
-                        widget = wibox.widget.textbox
-                    },
-                    id = "margin_role",
-                    left = 10,
-                    right = 10,
-                    top = 2,
-                    bottom = 2,
-                    widget = wibox.container.margin
-                },
-                id = "background_role",
-                shape = gears.shape.rounded_rect,
-                widget = wibox.container.background
+                id = "text_role",
+                font = font,
+                align = "center",
+                valign = "center",
+                forced_width = 20,
+                forced_height = 20,
+                widget = wibox.widget.textbox
             },
-            create_callback = function(self, c3, index)
-                self:get_children_by_id("text_role")[1]:set_text(tostring(index))
-            end,
-            update_callback = function(self, c3, index)
-                self:get_children_by_id("text_role")[1]:set_text(tostring(index))
-            end,
-            widget = wibox.container.margin
-        }
+            id = "background_role",
+            shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 10) end,
+            forced_width = 20,
+            forced_height = 20,
+            widget = wibox.container.background
+        },
+        create_callback = function(self, c3, index)
+            self:get_children_by_id("text_role")[1]:set_text(tostring(index))
+        end,
+        update_callback = function(self, c3, index)
+            self:get_children_by_id("text_role")[1]:set_text(tostring(index))
+        end,
     }
 end
 
@@ -386,7 +379,12 @@ awful.screen.connect_for_each_screen(function(s)
             layout = wibox.layout.fixed.horizontal,
             spacing = pill_spacing,
             pill_widget(mylauncher),
-            s.mytaglist,
+            {
+                s.mytaglist,
+                top = 3,
+                bottom = 3,
+                widget = wibox.container.margin,
+            },
         },
         { -- Center: tasklist
             layout = wibox.layout.align.horizontal,
