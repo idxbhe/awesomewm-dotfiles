@@ -1,1 +1,1 @@
-`xseticon`
+`xseticon`, `nerd-fonts-apple-hinted`
