@@ -604,32 +604,85 @@ client.connect_signal("request::titlebars", function(c)
     )
 
     -- Helper: titlebar icon button in a square box
-    local function tbbtn(widget)
-        widget.forced_width  = 16
-        widget.forced_height = 16
+    local function tbbtn(widget, size, shift_up, bg)
+        size = size or 16
+        shift_up = shift_up or 0
+        widget.resize = true
+        widget.forced_width  = size
+        widget.forced_height = size
         return wibox.widget {
             {
-                widget,
-                margins = 2,
+                {
+                    widget,
+                    widget = wibox.container.place,
+                },
+                top    = 4,
+                left   = 4,
+                right  = 4,
+                bottom = 4 + shift_up,
                 widget = wibox.container.margin,
             },
-            forced_width  = 24,
-            forced_height = 24,
-            shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 2) end,
-            bg = beautiful.surface0 .. "80",
+            forced_width  = 26,
+            forced_height = 26,
+            bg = bg or beautiful.surface1,
+            border_width = 1,
+            border_color = beautiful.surface0,
             widget = wibox.container.background,
         }
     end
 
-    awful.titlebar(c):setup {
+    -- Helper: toggle button — same icon, blue tint when active
+    local function tbbtn_toggled(c, prop, svg_path, action, size)
+        size = size or 13
+        local img = wibox.widget {
+            image = gears.surface.load(svg_path),
+            resize = true, forced_width = size, forced_height = size,
+            widget = wibox.widget.imagebox,
+        }
+        local box = wibox.widget {
+            {
+                { img, widget = wibox.container.place },
+                top = 4, left = 4, right = 4, bottom = 4,
+                widget = wibox.container.margin,
+            },
+            forced_width = 26, forced_height = 26,
+            bg = beautiful.surface1,
+            border_width = 1, border_color = beautiful.surface0,
+            widget = wibox.container.background,
+        }
+        local function update()
+            if c[prop] then
+                box.bg = beautiful.blue_dark
+            else
+                box.bg = beautiful.surface1
+            end
+        end
+        c:connect_signal("property::" .. prop, update)
+        update()
+        box:buttons(gears.table.join(
+            awful.button({ }, 1, function()
+                c:emit_signal("request::activate", "titlebar", {raise = true})
+                action(c)
+            end)
+        ))
+        return box
+    end
+
+    awful.titlebar(c, { size = 28 }):setup {
         { awful.titlebar.widget.iconwidget(c), buttons = buttons, layout = wibox.layout.fixed.horizontal },
         { { align = "center", widget = awful.titlebar.widget.titlewidget(c) }, buttons = buttons, layout = wibox.layout.flex.horizontal },
-        { tbbtn(awful.titlebar.widget.minimizebutton(c)),
-          tbbtn(awful.titlebar.widget.floatingbutton(c)),
-          tbbtn(awful.titlebar.widget.maximizedbutton(c)),
-          tbbtn(awful.titlebar.widget.stickybutton(c)),
-          tbbtn(awful.titlebar.widget.ontopbutton(c)),
-          tbbtn(awful.titlebar.widget.closebutton(c)),
+        { tbbtn(awful.titlebar.widget.minimizebutton(c), 16, 2),
+          tbbtn(awful.titlebar.widget.floatingbutton(c), 13),
+          tbbtn_toggled(c, "maximized",
+            "/usr/share/icons/Papirus-Dark/16x16/actions/window-maximize.svg",
+            function(c) c.maximized = not c.maximized; c:raise() end, 15),
+          tbbtn_toggled(c, "sticky",
+            "/usr/share/icons/Papirus-Dark/16x16/actions/window-pin.svg",
+            function(c) c.sticky = not c.sticky end),
+          tbbtn_toggled(c, "ontop",
+            "/usr/share/icons/Papirus-Dark/16x16/actions/window-shade.svg",
+            function(c) c.ontop = not c.ontop end),
+          tbbtn(awful.titlebar.widget.closebutton(c), 16, 0, beautiful.red_dark),
           layout = wibox.layout.fixed.horizontal() },
         layout = wibox.layout.align.horizontal
     }

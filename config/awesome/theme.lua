@@ -73,7 +73,7 @@ theme.taglist_spacing     = 2
 
 -- Tasklist
 theme.tasklist_bg_normal  = mocha.surface0 .. "80"
-theme.tasklist_bg_focus   = mocha.blue
+theme.tasklist_bg_focus   = "#3b5998"
 theme.tasklist_bg_urgent  = mocha.red
 theme.tasklist_bg_minimize= mocha.surface0
 theme.tasklist_fg_normal  = mocha.text
@@ -167,24 +167,32 @@ theme.titlebar_minimize_button_focus_press  = pi .. "window-minimize.svg"
 -- Maximize
 theme.titlebar_maximized_button_normal = pi .. "window-maximize.svg"
 theme.titlebar_maximized_button_focus  = pi .. "window-maximize.svg"
+theme.titlebar_maximized_button_normal_inactive = pi .. "window-maximize.svg"
+theme.titlebar_maximized_button_focus_inactive  = pi .. "window-maximize.svg"
 theme.titlebar_maximized_button_normal_active = pi .. "window-maximize.svg"
 theme.titlebar_maximized_button_focus_active  = pi .. "window-maximize.svg"
 
 -- Floating
 theme.titlebar_floating_button_normal = pi .. "focus-windows.svg"
 theme.titlebar_floating_button_focus  = pi .. "focus-windows.svg"
+theme.titlebar_floating_button_normal_inactive = pi .. "focus-windows.svg"
+theme.titlebar_floating_button_focus_inactive  = pi .. "focus-windows.svg"
 theme.titlebar_floating_button_normal_active = pi .. "focus-windows.svg"
 theme.titlebar_floating_button_focus_active  = pi .. "focus-windows.svg"
 
 -- Sticky/Pin
 theme.titlebar_sticky_button_normal = pi .. "window-pin.svg"
 theme.titlebar_sticky_button_focus  = pi .. "window-pin.svg"
+theme.titlebar_sticky_button_normal_inactive = pi .. "window-pin.svg"
+theme.titlebar_sticky_button_focus_inactive  = pi .. "window-pin.svg"
 theme.titlebar_sticky_button_normal_active = pi .. "window-unpin.svg"
 theme.titlebar_sticky_button_focus_active  = pi .. "window-unpin.svg"
 
 -- On top
 theme.titlebar_ontop_button_normal = pi .. "window-shade.svg"
 theme.titlebar_ontop_button_focus  = pi .. "window-shade.svg"
+theme.titlebar_ontop_button_normal_inactive = pi .. "window-shade.svg"
+theme.titlebar_ontop_button_focus_inactive  = pi .. "window-shade.svg"
 theme.titlebar_ontop_button_normal_active = pi .. "window-unshade.svg"
 theme.titlebar_ontop_button_focus_active  = pi .. "window-unshade.svg"
 
@@ -215,6 +223,9 @@ theme.pill_padding  = 10
 -- Surface colors (for widget backgrounds)
 theme.surface0 = mocha.surface0
 theme.surface1 = mocha.surface1
+theme.blue = mocha.blue
+theme.blue_dark = "#3b5998"
+theme.red_dark = "#a33b4e"
 
 -- Glyphs (Nerd Font codepoints verified)
 theme.glyph = {
