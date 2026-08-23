@@ -1,6 +1,6 @@
 main packages:
 ```
-awesomewm thunar geany
+awesomewm thunar geany firefox mpv rofi
 ```
 
 for thunar thumbnail to work:

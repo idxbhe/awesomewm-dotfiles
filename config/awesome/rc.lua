@@ -114,10 +114,10 @@ mylauncher = wibox.widget {
     widget = wibox.container.margin,
 }
 
--- Make launcher clickable to open menu
+-- Make launcher clickable to open rofi
 mylauncher:connect_signal("button::press", function(_, _, _, button)
     if button == 1 then
-        mymainmenu:toggle()
+        awful.spawn.with_shell("rofi -show drun")
     end
 end)
 

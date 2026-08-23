@@ -1,0 +1,97 @@
+/* Rofi config - Catppuccin Mocha */
+
+configuration {
+    modi: "drun,run,window";
+    show-icons: true;
+    icon-theme: "Papirus-Dark";
+    terminal: "kitty";
+    font: "JetBrainsMono Nerd Font 10";
+    display-drun: " Apps";
+    display-run: " Run";
+    display-window: " Windows";
+    drun-display-format: "{name}";
+}
+
+/* Catppuccin Mocha colors */
+* {
+    bg:       #1e1e2e;
+    bg-alt:   #313244;
+    fg:       #cdd6f4;
+    fg-alt:   #a6adc8;
+    blue:     #89b4fa;
+    red:      #f38ba8;
+    green:    #a6e3a1;
+    yellow:   #f9e2af;
+    urgent:   #f38ba8;
+
+    background-color: transparent;
+    text-color:       @fg;
+    spacing:          0;
+}
+
+window {
+    width:            600px;
+    background-color: @bg;
+    border:           1px;
+    border-color:     @blue;
+    border-radius:    0px;
+    padding:          0;
+}
+
+mainbox {
+    children: [ inputbar, listview ];
+    background-color: @bg;
+}
+
+inputbar {
+    children: [ prompt, entry ];
+    background-color: @bg-alt;
+    padding: 12px;
+}
+
+prompt {
+    background-color: @blue;
+    text-color:       @bg;
+    padding:          6px 12px;
+    margin:           0 8px 0 0;
+}
+
+entry {
+    padding:  6px;
+    placeholder: "Search...";
+    placeholder-color: @fg-alt;
+}
+
+listview {
+    lines:   8;
+    columns: 1;
+    fixed-height: true;
+    padding:  8px 0;
+}
+
+element {
+    padding:       8px 12px;
+    border-radius: 0px;
+}
+
+element selected {
+    background-color: @bg-alt;
+    text-color:       @blue;
+}
+
+element active {
+    text-color: @green;
+}
+
+element urgent {
+    text-color: @urgent;
+}
+
+element-icon {
+    size: 24px;
+    padding: 0 8px 0 0;
+}
+
+element-text {
+    padding: 0;
+}
