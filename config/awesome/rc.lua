@@ -211,16 +211,23 @@ awful.widget.watch("bash -c \"echo\"", 1, function(w)
     w:set_markup_silently(string.format("%s", icons[name] or icons.floating))
 end, layout_widget)
 
--- Volume widget (requires pulseaudio/pipewire)
+-- Volume widget (requires pulseaudio/pipewire + pamixer)
+local vol_value = 40
 local vol_widget = wibox.widget.textbox()
 vol_widget.font = font
-awful.widget.watch("bash -c \"pamixer --get-volume-human 2>/dev/null || amixer get Master | grep -o '\\\\[[0-9]*%\\\\]' | head -1 | tr -d '[]%' || echo '?'\"", 1, function(w, stdout)
-    local vol = stdout:gsub("%s+", "")
+vol_widget:buttons(gears.table.join(
+    awful.button({ }, 4, function() awful.spawn.with_shell("pamixer -i 5") end),
+    awful.button({ }, 5, function() awful.spawn.with_shell("pamixer -d 5") end),
+    awful.button({ }, 3, function() awful.spawn.with_shell("pamixer -t") end)
+))
+vol_widget:set_markup_silently(string.format("%s %d%%", glyph.vol_high, 45))
+awful.widget.watch("pamixer --get-volume 2>/dev/null", 1, function(w, stdout)
+    local vol = math.floor(tonumber(stdout) or 0)
     local icon = glyph.vol_high
-    if vol == "muted" or vol == "0%" then icon = glyph.vol_mute
-    elseif tonumber(vol:match("%d+") or 100) < 30 then icon = glyph.vol_low
-    elseif tonumber(vol:match("%d+") or 100) < 70 then icon = glyph.vol_mid end
-    w:set_markup_silently(string.format("%s %s", icon, vol))
+    if vol == 0 then icon = glyph.vol_mute
+    elseif vol < 30 then icon = glyph.vol_low
+    elseif vol < 70 then icon = glyph.vol_mid end
+    w:set_markup_silently(string.format("%s %d%%", icon, vol))
 end, vol_widget)
 
 -- Battery widget

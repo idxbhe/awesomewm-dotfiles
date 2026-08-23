@@ -1,1 +1,1 @@
-`xseticon`, `nerd-fonts-apple-hinted`
+`xseticon`, `otf-apple-sf-pro`
