@@ -184,4 +184,15 @@ theme.glyph = {
     launcher    = "",  -- U+E732 Arch Linux logo
 }
 
+-- Load default theme as fallback for missing properties (titlebar button images, etc.)
+local default_theme_path = gears.filesystem.get_themes_dir() .. "default/theme.lua"
+if gears.filesystem.file_readable(default_theme_path) then
+    local default = dofile(default_theme_path)
+    for k, v in pairs(default) do
+        if rawget(theme, k) == nil then
+            theme[k] = v
+        end
+    end
+end
+
 return theme

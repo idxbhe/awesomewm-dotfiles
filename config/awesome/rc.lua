@@ -563,7 +563,8 @@ awful.rules.rules = {
                      keys = clientkeys,
                      buttons = clientbuttons,
                      screen = awful.screen.preferred,
-                     placement = awful.placement.no_overlap + awful.placement.no_offscreen
+                     placement = awful.placement.no_overlap + awful.placement.no_offscreen,
+                     size_hints_honor = false,
      }
     },
 
@@ -579,8 +580,19 @@ awful.rules.rules = {
 -- }}}
 
 -- {{{ Signals
+-- Signal function to execute when a new client appears.
 client.connect_signal("manage", function(c)
-    if awesome.startup and not c.size_hints.user_position and not c.size_hints.program_position then
+    -- Apply rounded corners using theme border_radius
+    if beautiful.border_radius then
+        c.shape = function(cr, w, h)
+            gears.shape.rounded_rect(cr, w, h, beautiful.border_radius)
+        end
+    end
+
+    if awesome.startup
+      and not c.size_hints.user_position
+      and not c.size_hints.program_position then
+        -- Prevent clients from being unreachable after screen count changes.
         awful.placement.no_offscreen(c)
     end
 end)
@@ -593,7 +605,7 @@ client.connect_signal("request::titlebars", function(c)
     awful.titlebar(c):setup {
         { awful.titlebar.widget.iconwidget(c), buttons = buttons, layout = wibox.layout.fixed.horizontal },
         { { align = "center", widget = awful.titlebar.widget.titlewidget(c) }, buttons = buttons, layout = wibox.layout.flex.horizontal },
-        { awful.titlebar.widget.floatingbutton(c), awful.titlebar.widget.maximizedbutton(c), awful.titlebar.widget.stickybutton(c), awful.titlebar.widget.ontopbutton(c), awful.titlebar.widget.closebutton(c), layout = wibox.layout.fixed.horizontal() },
+        { awful.titlebar.widget.minimizebutton(c), awful.titlebar.widget.floatingbutton(c), awful.titlebar.widget.maximizedbutton(c), awful.titlebar.widget.stickybutton(c), awful.titlebar.widget.ontopbutton(c), awful.titlebar.widget.closebutton(c), layout = wibox.layout.fixed.horizontal() },
         layout = wibox.layout.align.horizontal
     }
 end)
