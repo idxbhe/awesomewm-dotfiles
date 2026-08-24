@@ -33,7 +33,7 @@ local mocha = {
 }
 
 -- Font
-theme.font          = "JetBrainsMono Nerd Font 9"
+theme.font          = "JetBrainsMono Nerd Font Bold 9"
 theme.font_bold     = "JetBrainsMono Nerd Font Bold 9"
 theme.font_mono     = "JetBrainsMono Nerd Font Mono 9"
 
@@ -68,8 +68,11 @@ theme.taglist_fg_focus    = mocha.blue
 theme.taglist_fg_occupied = mocha.subtext1
 theme.taglist_fg_urgent   = mocha.crust
 theme.taglist_fg_empty    = mocha.overlay0
-theme.taglist_shape       = gears.shape.rounded_rect
 theme.taglist_spacing     = 2
+theme.taglist_squares_sel = false
+theme.taglist_squares_unsel = false
+theme.taglist_squares_sel_empty = false
+theme.taglist_squares_unsel_empty = false
 
 -- Tasklist
 theme.tasklist_bg_normal  = mocha.surface0 .. "80"

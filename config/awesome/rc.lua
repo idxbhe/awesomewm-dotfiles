@@ -364,8 +364,27 @@ local taglist_buttons = gears.table.join(
 local function make_taglist(s)
     return awful.widget.taglist {
         screen  = s,
-        filter  = awful.widget.taglist.filter.all,
+        filter  = awful.widget.taglist.filter.noempty,
         buttons = taglist_buttons,
+        style = {
+            spacing = 2,
+            shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 10) end,
+            bg_empty = "transparent",
+            bg_occupied = beautiful.surface0,
+            bg_focus = "#3b5998",
+            fg_focus = beautiful.text,
+            fg_occupied = beautiful.subtext1,
+            fg_empty = "transparent",
+            default = {
+                shape = function() end,
+            },
+            focus = {
+                shape = function() end,
+            },
+            urgent = {
+                shape = function() end,
+            },
+        },
         layout = {
             spacing = 2,
             layout = wibox.layout.fixed.horizontal
@@ -445,7 +464,22 @@ local function make_tasklist(s)
             forced_height   = 32,
             widget          = wibox.container.background,
             create_callback = function(self, c, index, objects)
-                self:get_children_by_id('clienticon')[1].client = c
+                local icon = self:get_children_by_id('clienticon')[1]
+                icon.client = c
+                if c == client.focus then
+                    icon.forced_width = 20
+                    icon.forced_height = 20
+                end
+            end,
+            update_callback = function(self, c, index, objects)
+                local icon = self:get_children_by_id('clienticon')[1]
+                if c == client.focus then
+                    icon.forced_width = 20
+                    icon.forced_height = 20
+                else
+                    icon.forced_width = nil
+                    icon.forced_height = nil
+                end
             end,
         }
     }
