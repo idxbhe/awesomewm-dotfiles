@@ -106,7 +106,6 @@ element-text {
     padding: 0;
 }
 
-/* Scrollbar */
 scrollbar {
     width: 6px;
     background-color: @bg;
@@ -115,7 +114,4 @@ scrollbar {
 scrollbar handle {
     background-color: @blue;
     border-radius: 3px;
-}
-scrollbar handle:hover {
-    background-color: @green;
 }

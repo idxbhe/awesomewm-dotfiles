@@ -588,14 +588,15 @@ root.buttons(gears.table.join(
 
 -- {{{ Key bindings
 globalkeys = gears.table.join(
-    awful.key({ modkey }, "s", hotkeys_popup.show_help, {description="show help", group="awesome"}),
+    awful.key({ "Mod1" }, "F1", hotkeys_popup.show_help, {description="show help", group="awesome"}),
     awful.key({ modkey }, "Left", awful.tag.viewprev, {description = "view previous", group = "tag"}),
     awful.key({ modkey }, "Right", awful.tag.viewnext, {description = "view next", group = "tag"}),
     awful.key({ modkey }, "Escape", awful.tag.history.restore, {description = "go back", group = "tag"}),
 
+    awful.key({ modkey }, "d", function() awful.client.focus.byidx(1) end, {description = "focus next by index", group = "client"}),
+    awful.key({ modkey }, "a", function() awful.client.focus.byidx(-1) end, {description = "focus previous by index", group = "client"}),
     awful.key({ modkey }, "j", function() awful.client.focus.byidx(1) end, {description = "focus next by index", group = "client"}),
     awful.key({ modkey }, "k", function() awful.client.focus.byidx(-1) end, {description = "focus previous by index", group = "client"}),
-    awful.key({ modkey }, "w", function() mymainmenu:show() end, {description = "show main menu", group = "awesome"}),
 
     -- Layout manipulation
     awful.key({ modkey, "Shift" }, "j", function() awful.client.swap.byidx(1) end, {description = "swap with next client by index", group = "client"}),
@@ -610,6 +611,10 @@ globalkeys = gears.table.join(
 
     -- Standard program
     awful.key({ modkey }, "Return", function() awful.spawn(terminal) end, {description = "open a terminal", group = "launcher"}),
+    awful.key({ modkey }, "f", function() awful.spawn("thunar") end, {description = "open file explorer", group = "launcher"}),
+    awful.key({ modkey }, "b", function() awful.spawn("firefox") end, {description = "open browser", group = "launcher"}),
+    awful.key({ modkey }, "space", function() awful.spawn("rofi -show drun") end, {description = "rofi app launcher", group = "launcher"}),
+    awful.key({ modkey }, "o", function() awful.spawn("obsidian") end, {description = "open notes", group = "launcher"}),
     awful.key({ modkey, "Control" }, "r", awesome.restart, {description = "reload awesome", group = "awesome"}),
     awful.key({ modkey, "Shift" }, "q", awesome.quit, {description = "quit awesome", group = "awesome"}),
 
@@ -619,8 +624,8 @@ globalkeys = gears.table.join(
     awful.key({ modkey, "Shift" }, "l", function() awful.tag.incnmaster(-1, nil, true) end, {description = "decrease the number of master clients", group = "layout"}),
     awful.key({ modkey, "Control" }, "h", function() awful.tag.incncol(1, nil, true) end, {description = "increase the number of columns", group = "layout"}),
     awful.key({ modkey, "Control" }, "l", function() awful.tag.incncol(-1, nil, true) end, {description = "decrease the number of columns", group = "layout"}),
-    awful.key({ modkey }, "space", function() awful.layout.inc(1) end, {description = "select next", group = "layout"}),
-    awful.key({ modkey, "Shift" }, "space", function() awful.layout.inc(-1) end, {description = "select previous", group = "layout"}),
+    awful.key({ "Mod1" }, "space", function() awful.layout.inc(1) end, {description = "select next", group = "layout"}),
+    awful.key({ "Mod1", "Shift" }, "space", function() awful.layout.inc(-1) end, {description = "select previous", group = "layout"}),
 
     awful.key({ modkey, "Control" }, "n", function()
         local c = awful.client.restore()
@@ -630,25 +635,16 @@ globalkeys = gears.table.join(
     -- Prompt
     awful.key({ modkey }, "r", function() awful.screen.focused().mypromptbox:run() end, {description = "run prompt", group = "launcher"}),
 
-    awful.key({ modkey }, "x", function()
-        awful.prompt.run {
-            prompt = "Run Lua code: ",
-            textbox = awful.screen.focused().mypromptbox.widget,
-            exe_callback = awful.util.eval,
-            history_path = awful.util.get_cache_dir() .. "/history_eval"
-        }
-    end, {description = "lua execute prompt", group = "awesome"}),
-
     -- Menubar
     awful.key({ modkey }, "p", function() menubar.show() end, {description = "show the menubar", group = "launcher"})
 )
 
 clientkeys = gears.table.join(
-    awful.key({ modkey }, "f", function(c) c.fullscreen = not c.fullscreen; c:raise() end, {description = "toggle fullscreen", group = "client"}),
-    awful.key({ modkey, "Shift" }, "c", function(c) c:kill() end, {description = "close", group = "client"}),
+    awful.key({ "Mod1" }, "f", function(c) c.fullscreen = not c.fullscreen; c:raise() end, {description = "toggle fullscreen", group = "client"}),
+    awful.key({ modkey }, "x", function(c) c:kill() end, {description = "close", group = "client"}),
     awful.key({ modkey, "Control" }, "space", awful.client.floating.toggle, {description = "toggle floating", group = "client"}),
     awful.key({ modkey, "Control" }, "Return", function(c) c:swap(awful.client.getmaster()) end, {description = "move to master", group = "client"}),
-    awful.key({ modkey }, "o", function(c) c:move_to_screen() end, {description = "move to screen", group = "client"}),
+    awful.key({ modkey, "Control" }, "o", function(c) c:move_to_screen() end, {description = "move to screen", group = "client"}),
     awful.key({ modkey }, "t", function(c) c.ontop = not c.ontop end, {description = "toggle keep on top", group = "client"}),
     awful.key({ modkey }, "n", function(c) c.minimized = true end, {description = "minimize", group = "client"}),
     awful.key({ modkey }, "m", function(c) c.maximized = not c.maximized; c:raise() end, {description = "(un)maximize", group = "client"}),
@@ -664,12 +660,12 @@ for i = 1, 7 do
             local tag = screen.tags[i]
             if tag then tag:view_only() end
         end, {description = "view tag #"..i, group = "tag"}),
-        awful.key({ modkey, "Control" }, "#" .. i + 9, function()
+        awful.key({ modkey, "Shift" }, "#" .. i + 9, function()
             local screen = awful.screen.focused()
             local tag = screen.tags[i]
             if tag then awful.tag.viewtoggle(tag) end
         end, {description = "toggle tag #" .. i, group = "tag"}),
-        awful.key({ modkey, "Shift" }, "#" .. i + 9, function()
+        awful.key({ modkey, "Control" }, "#" .. i + 9, function()
             if client.focus then
                 local tag = client.focus.screen.tags[i]
                 if tag then client.focus:move_to_tag(tag) end
@@ -703,7 +699,12 @@ awful.rules.rules = {
                      keys = clientkeys,
                      buttons = clientbuttons,
                      screen = awful.screen.preferred,
-                     placement = awful.placement.no_overlap + awful.placement.no_offscreen,
+                     placement = function(c)
+                         -- Don't re-position restored clients on awesome restart
+                         if not awesome.startup then
+                             return awful.placement.centered(c)
+                         end
+                     end,
                      size_hints_honor = false,
      }
     },
@@ -765,6 +766,94 @@ client.connect_signal("manage", function(c)
         awful.placement.no_offscreen(c)
     end
 end)
+
+-- {{{ Remember window state (position, size, floating mode) per app class
+local state_file = gears.filesystem.get_cache_dir() .. "/window_state"
+
+-- Load saved states (format: class|x|y|width|height|maximized|floating)
+local window_states = {}
+do
+    local f = io.open(state_file, "r")
+    if f then
+        for line in f:lines() do
+            local class, x, y, w, h, maximized, floating =
+                line:match("^(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.+)$")
+            if class and x then
+                window_states[class] = {
+                    x = tonumber(x), y = tonumber(y),
+                    width = tonumber(w), height = tonumber(h),
+                    maximized = maximized == "1",
+                    floating = floating == "1",
+                }
+            end
+        end
+        f:close()
+    end
+end
+
+local function save_window_states()
+    local f = io.open(state_file, "w")
+    if not f then return end
+    for class, s in pairs(window_states) do
+        f:write(string.format("%s|%d|%d|%d|%d|%s|%s\n",
+            class,
+            math.floor(s.x or 0), math.floor(s.y or 0),
+            math.floor(s.width or 0), math.floor(s.height or 0),
+            s.maximized and "1" or "0",
+            s.floating and "1" or "0"))
+    end
+    f:close()
+end
+
+-- Debounced save (avoid writing on every pixel of resize)
+local save_timer = gears.timer {
+    timeout = 2,
+    single_shot = true,
+    callback = save_window_states,
+}
+
+local function record_window_state(c)
+    if not (c.class and c.valid and not c.fullscreen) then return end
+    window_states[c.class] = {
+        x = c.x, y = c.y,
+        width = c.width, height = c.height,
+        maximized = c.maximized,
+        floating = c.floating,
+    }
+    save_timer:again()
+end
+
+client.connect_signal("manage", function(c)
+    -- Restore last state for this app
+    local state = c.class and window_states[c.class]
+    if state then
+        if state.maximized then
+            c.maximized = true
+        else
+            c.floating = state.floating or false
+            if c.floating and state.width and state.width > 0 then
+                pcall(function()
+                    c.x = state.x
+                    c.y = state.y
+                    c.width = state.width
+                    c.height = state.height
+                end)
+            end
+        end
+    end
+end)
+
+client.connect_signal("property::geometry", function(c)
+    if not awesome.startup then record_window_state(c) end
+end)
+client.connect_signal("property::floating", function(c)
+    if not awesome.startup then record_window_state(c) end
+end)
+client.connect_signal("property::maximized", function(c)
+    if not awesome.startup then record_window_state(c) end
+end)
+client.connect_signal("unmanage", function(c) record_window_state(c) end)
+-- }}}
 
 client.connect_signal("request::titlebars", function(c)
     local buttons = gears.table.join(
