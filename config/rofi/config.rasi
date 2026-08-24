@@ -5,7 +5,7 @@ configuration {
     show-icons: true;
     icon-theme: "Papirus-Dark";
     terminal: "kitty";
-    font: "JetBrainsMono Nerd Font 10";
+    font: "JetBrainsMono Nerd Font Bold 10";
     display-drun: " Apps";
     display-run: " Run";
     display-window: " Windows";
@@ -16,6 +16,7 @@ configuration {
 * {
     bg:       #1e1e2e;
     bg-alt:   #313244;
+    bg-sel:   #585b70;
     fg:       #cdd6f4;
     fg-alt:   #a6adc8;
     blue:     #89b4fa;
@@ -30,68 +31,91 @@ configuration {
 }
 
 window {
-    width:            600px;
+    width:            640px;
     background-color: @bg;
     border:           1px;
     border-color:     @blue;
-    border-radius:    0px;
+    border-radius:    10px;
     padding:          0;
 }
 
 mainbox {
     children: [ inputbar, listview ];
     background-color: @bg;
+    border-radius: 10px;
 }
 
 inputbar {
     children: [ prompt, entry ];
     background-color: @bg-alt;
-    padding: 12px;
+    border-radius: 8px 8px 0 0;
+    padding: 14px;
+    margin: 0;
 }
 
 prompt {
     background-color: @blue;
     text-color:       @bg;
-    padding:          6px 12px;
-    margin:           0 8px 0 0;
+    padding:          8px 16px;
+    margin:           0 12px 0 0;
+    border-radius:    6px;
 }
 
 entry {
-    padding:  6px;
+    padding:  10px 12px;
     placeholder: "Search...";
     placeholder-color: @fg-alt;
+    background-color: @bg-sel;
+    border-radius: 6px;
 }
 
 listview {
-    lines:   8;
+    lines:   10;
     columns: 1;
     fixed-height: true;
-    padding:  8px 0;
+    padding:  12px 4px;
 }
 
 element {
-    padding:       8px 12px;
-    border-radius: 0px;
+    padding:       10px 16px;
+    border-radius: 6px;
+    margin: 0 8px;
 }
 
 element selected {
-    background-color: @bg-alt;
-    text-color:       @blue;
+    background-color: @blue;
+    text-color:       @bg;
 }
 
 element active {
-    text-color: @green;
+    background-color: @bg-sel;
+    text-color:       @green;
 }
 
 element urgent {
-    text-color: @urgent;
+    background-color: @red;
+    text-color:       @bg;
 }
 
 element-icon {
     size: 24px;
-    padding: 0 8px 0 0;
+    padding: 0 12px 0 0;
 }
 
 element-text {
     padding: 0;
+}
+
+/* Scrollbar */
+scrollbar {
+    width: 6px;
+    background-color: @bg;
+    border-radius: 3px;
+}
+scrollbar handle {
+    background-color: @blue;
+    border-radius: 3px;
+}
+scrollbar handle:hover {
+    background-color: @green;
 }
