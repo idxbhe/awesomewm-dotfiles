@@ -31,6 +31,7 @@ local pill_spacing = beautiful.pill_spacing
 local border_radius = beautiful.border_radius
 local useless_gap = beautiful.useless_gap
 local font = beautiful.font
+local font_popup = "JetBrainsMono Nerd Font Bold 10"
 local wibar_height = beautiful.wibar_height
 local wibar_bg = beautiful.wibar_bg
 local tooltip_bg = beautiful.tooltip_bg
@@ -366,10 +367,11 @@ end)
 
 -- Toggle button helper (wifi/bt/airplane) — settings-style switch
 -- Drawn entirely with cairo: pill track + sliding knob circle.
-local function make_switch()
+local function make_switch(sz)
+    sz = sz or 16
     local state = false
     local sw = wibox.widget.base.make_widget(nil, nil, { enable_properties = true })
-    local function fit(_, _, _, _) return 30, 16 end
+    local function fit(_, _, _, _) return 32, sz + 2 end
     local function draw(_, _, cr, w, h)
         -- track pill
         cr:set_source(gears.color(state and "#89b4fa" or "#585b70"))
@@ -394,10 +396,11 @@ local function make_switch()
     return sw
 end
 
-local function make_row(icon, label)
+local function make_row(icon, label, fnt)
+    fnt = fnt or font
     local icon_w = wibox.widget {
         text = icon,
-        font = font,
+        font = fnt,
         align = "center",
         valign = "center",
         forced_width = 22,
@@ -405,7 +408,7 @@ local function make_row(icon, label)
     }
     local label_w = wibox.widget {
         markup = label,
-        font = font,
+        font = fnt,
         align = "left",
         valign = "center",
         widget = wibox.widget.textbox,
@@ -454,7 +457,7 @@ local wifi_refresh = wibox.widget {
     forced_width = 20,
     widget = wibox.widget.textbox,
 }
-local wifi_row = make_row(glyph.wifi_off, "Wi-Fi")
+local wifi_row = make_row(glyph.wifi_off, "Wi-Fi", font_popup)
 -- insert refresh + switch into right slot
 do
     wifi_row.right_slot:add(wifi_refresh)
@@ -622,7 +625,7 @@ wifi_switch:buttons(gears.table.join(
 
 -- Bluetooth section
 local bt_switch = make_switch()
-local bt_row = make_row(glyph.bt_off, "Bluetooth")
+local bt_row = make_row(glyph.bt_off, "Bluetooth", font_popup)
 bt_row.right_slot:add(bt_switch)
 
 bt_switch:buttons(gears.table.join(
@@ -646,7 +649,7 @@ bt_switch:buttons(gears.table.join(
 
 -- Airplane mode toggle
 local ap_switch = make_switch()
-local ap_row = make_row(glyph.airplane_off, "Airplane Mode")
+local ap_row = make_row(glyph.airplane_off, "Airplane Mode", font_popup)
 ap_row.right_slot:add(ap_switch)
 
 ap_switch:buttons(gears.table.join(
@@ -683,7 +686,7 @@ local set_popup = awful.popup {
     widget = wibox.widget {
         {
             { -- Brightness row
-                { text = glyph.clock, font = font, forced_width = 22, align = "center", valign = "center", widget = wibox.widget.textbox },
+                { text = glyph.clock, font = font_popup, forced_width = 24, align = "center", valign = "center", widget = wibox.widget.textbox },
                 bri_slider,
                 bri_text,
                 spacing = 10,
@@ -691,7 +694,7 @@ local set_popup = awful.popup {
                 layout = wibox.layout.fixed.horizontal,
             },
             { -- spacing after brightness
-                forced_height = 6,
+                forced_height = 8,
                 widget = wibox.container.background,
             },
             make_sep(),
@@ -699,6 +702,7 @@ local set_popup = awful.popup {
             wifi_sep,
             wifi_list_pad,
             bt_row,
+            { forced_height = 6, widget = wibox.container.background },
             ap_row,
             layout = wibox.layout.fixed.vertical,
         },
@@ -758,6 +762,8 @@ set_popup:connect_signal("mouse::leave", function()
 end)
 
 set_widget.font = font
+set_widget.forced_width = 22
+set_widget.forced_height = 16
 set_widget:set_markup_silently(glyph.settings)
 set_widget:buttons(gears.table.join(
     awful.button({ }, 1, function()
