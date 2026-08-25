@@ -249,6 +249,13 @@ theme.glyph = {
     bat_charge  = "󰂄",  -- U+F0084
     sep         = "│",
     launcher    = "",  -- U+E732 Arch Linux logo
+    wifi_on     = "󰖪",  -- U+F05AA
+    wifi_off    = "󰖰",  -- U+F05B0
+    bt_on       = "󰂯",  -- U+F00AF
+    bt_off      = "󰂮",  -- U+F00AE
+    airplane_on = "",  -- U+F015D
+    airplane_off = "",  -- U+F015E
+    settings    = "󰒓",  -- U+F0493
 }
 
 -- Load default theme as fallback for missing properties (titlebar button images, etc.)

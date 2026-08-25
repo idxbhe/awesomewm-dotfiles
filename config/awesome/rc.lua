@@ -329,20 +329,462 @@ awful.widget.watch("pamixer --get-volume 2>/dev/null", 1, function(w, stdout)
     w:set_markup_silently(string.format("%s %d%%", icon, vol))
 end, vol_widget)
 
--- Battery widget
-local bat_widget = wibox.widget.textbox()
-bat_widget.font = font
-awful.widget.watch("bash -c \"cat /sys/class/power_supply/BAT*/capacity 2>/dev/null | head -1; cat /sys/class/power_supply/BAT*/status 2>/dev/null | head -1\"", 10, function(w, stdout)
-    local cap, status = stdout:match("(%d+)%s*(%w*)")
-    cap = tonumber(cap) or 0
-    status = status or ""
-    local icon = glyph.bat_mid
-    if status:lower():find("charg") then icon = glyph.bat_charge
-    elseif cap > 80 then icon = glyph.bat_full
-    elseif cap > 30 then icon = glyph.bat_mid
-    else icon = glyph.bat_low end
-    w:set_markup_silently(string.format("%s %d%%", icon, cap))
-end, bat_widget)
+-- Settings widget (control center popup)
+local set_widget = wibox.widget.textbox()
+set_widget.font = font
+
+-- Brightness slider
+local bri_slider = wibox.widget {
+    widget     = wibox.widget.slider,
+    value      = 50,
+    maximum    = 100,
+    forced_width = 180,
+    bar_color  = "#585b70",
+    bar_active_color = "#f9e2af",
+    bar_shape  = gears.shape.rounded_bar,
+    bar_margins = { bottom = 8, top = 8 },
+    handle_width = 12,
+    handle_color = "#cdd6f4",
+    handle_shape = gears.shape.circle,
+    handle_border_width = 2,
+    handle_border_color = "#45475a",
+}
+local bri_text = wibox.widget {
+    markup = "50%",
+    font = font,
+    forced_width = 40,
+    align = "center",
+    widget = wibox.widget.textbox,
+}
+bri_slider:connect_signal("property::value", function(self)
+    local val = self.value
+    if val then
+        bri_text.markup = math.floor(val) .. "%"
+        awful.spawn("brightnessctl set " .. math.floor(val) .. "%", false)
+    end
+end)
+
+-- Toggle button helper (wifi/bt/airplane) — settings-style switch
+-- Two knobs pre-placed (left=off, right=on), toggled by visibility.
+local function make_switch()
+    local knob_off = wibox.widget {
+        forced_width = 10,
+        forced_height = 10,
+        shape = function(cr, w, h) gears.shape.circle(cr, w, h) end,
+        bg = "#a6adc8",
+        widget = wibox.container.background,
+    }
+    local knob_on = wibox.widget {
+        forced_width = 10,
+        forced_height = 10,
+        shape = function(cr, w, h) gears.shape.circle(cr, w, h) end,
+        bg = "#1e1e2e",
+        widget = wibox.container.background,
+    }
+    local track = wibox.widget {
+        { -- left group: off knob
+            {
+                knob_off,
+                margins = 2,
+                widget = wibox.container.margin,
+            },
+            layout = wibox.layout.fixed.horizontal,
+        },
+        nil,
+        { -- right group: on knob
+            {
+                knob_on,
+                margins = 2,
+                widget = wibox.container.margin,
+            },
+            layout = wibox.layout.fixed.horizontal,
+        },
+        layout = wibox.layout.align.horizontal,
+    }
+    track.forced_width = 30
+    track.forced_height = 14
+    local sw = wibox.widget {
+        track,
+        bg = "#585b70",
+        shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 7) end,
+        widget = wibox.container.background,
+    }
+    knob_on.visible = false
+    sw.set_switch = function(on)
+        knob_off.visible = not on
+        knob_on.visible = on
+        if on then
+            sw.bg = beautiful.blue or "#89b4fa"
+        else
+            sw.bg = "#585b70"
+        end
+    end
+    return sw
+end
+
+local function make_row(icon, label)
+    local icon_w = wibox.widget {
+        text = icon,
+        font = font,
+        align = "center",
+        valign = "center",
+        forced_width = 22,
+        widget = wibox.widget.textbox,
+    }
+    local label_w = wibox.widget {
+        markup = label,
+        font = font,
+        align = "left",
+        valign = "center",
+        widget = wibox.widget.textbox,
+    }
+    local right_slot = wibox.widget {
+        layout = wibox.layout.fixed.horizontal,
+        spacing = 8,
+    }
+    -- example2 connections.lua pattern: 3 slots in align.horizontal
+    -- first child pinned left, last child pinned right, middle expands
+    local row = wibox.widget {
+        { -- left: icon + label
+            icon_w,
+            label_w,
+            spacing = 8,
+            layout = wibox.layout.fixed.horizontal,
+            valign = "center",
+        },
+        nil, -- middle: nothing, left group hugs left edge
+        right_slot, -- right: refresh + switch
+        layout = wibox.layout.align.horizontal,
+    }
+    row.icon_widget = icon_w
+    row.label_widget = label_w
+    row.right_slot = right_slot
+    return row
+end
+
+-- Separator line
+local function make_sep()
+    return wibox.widget {
+        forced_height = 1,
+        bg = "#45475a",
+        widget = wibox.container.background,
+    }
+end
+
+-- WiFi section
+local wifi_switch = make_switch()
+local wifi_refresh = wibox.widget {
+    text = "",
+    font = font,
+    visible = false,
+    align = "center",
+    valign = "center",
+    forced_width = 20,
+    widget = wibox.widget.textbox,
+}
+local wifi_row = make_row(glyph.wifi_off, "Wi-Fi")
+-- insert refresh + switch into right slot
+do
+    wifi_row.right_slot:add(wifi_refresh)
+    wifi_row.right_slot:add(wifi_switch)
+end
+
+-- WiFi network list: container rebuilt on each scan, one clickable row per SSID
+local wifi_list_layout = wibox.widget {
+    layout = wibox.layout.fixed.vertical,
+}
+local wifi_list_pad = wibox.widget {
+    wifi_list_layout,
+    left = 14, right = 8, bottom = 4,
+    widget = wibox.container.margin,
+}
+wifi_list_pad.visible = false
+local wifi_sep = make_sep()
+wifi_sep.visible = false
+
+local wifi_networks = {} -- keep SSIDs alive for button closures
+
+local function connect_to(ssid)
+    naughty.notify({ text = "Connecting to " .. ssid .. "...", timeout = 3 })
+    awful.spawn.easy_async_with_shell(
+        "nmcli dev wifi connect '" .. ssid:gsub("'", "'\\''") .. "'",
+        function(stdout, stderr, exit_reason, exit_code)
+            if exit_code == 0 then
+                naughty.notify({ text = "Connected to " .. ssid, timeout = 3 })
+            else
+                -- likely needs a password; prompt for it
+                awful.prompt.run {
+                    prompt = "Password for " .. ssid .. ": ",
+                    textbox = awful.screen.focused().mypromptbox.widget,
+                    exe_callback = function(pass)
+                        if pass and pass ~= "" then
+                            awful.spawn.easy_async_with_shell(
+                                "nmcli dev wifi connect '" .. ssid:gsub("'", "'\\''") .. "' password '"
+                                .. pass:gsub("'", "'\\''") .. "'",
+                                function(o, e, r, c)
+                                    if c == 0 then
+                                        naughty.notify({ text = "Connected to " .. ssid, timeout = 3 })
+                                    else
+                                        naughty.notify({ text = "Failed: wrong password?", timeout = 4 })
+                                    end
+                                end
+                            )
+                        end
+                    end,
+                }
+            end
+        end
+    )
+end
+
+local function refresh_wifi()
+    awful.spawn.easy_async_with_shell(
+        "nmcli -t -f ACTIVE,SIGNAL,SSID dev wifi list 2>/dev/null | head -8",
+        function(stdout)
+            local rows = {}
+            local count = 0
+            for line in stdout:gmatch("[^\n]+") do
+                local active, signal, ssid = line:match("^(yes):(%d+):(.*)$")
+                if not active then
+                    local sig, name = line:match("^no:(%d+):(.*)$")
+                    if name and name ~= "" then
+                        rows[#rows+1] = { ssid = name, signal = tonumber(sig) or 0, active = false }
+                        count = count + 1
+                    end
+                else
+                    table.insert(rows, 1, { ssid = ssid, signal = tonumber(signal) or 0, active = true })
+                end
+            end
+
+            wifi_list_layout:reset()
+            if #rows == 0 then
+                wifi_list_layout:add(wibox.widget {
+                    markup = "<i>No networks found</i>",
+                    font = font,
+                    widget = wibox.widget.textbox,
+                })
+                return
+            end
+
+            for _, net in ipairs(rows) do
+                local label = string.format(
+                    "%s %s (%d%%)",
+                    net.active and "●" or "○",
+                    net.ssid,
+                    net.signal
+                )
+                local row_w = wibox.widget {
+                    markup = net.active and ("<b>" .. label .. "</b>") :gsub("●", '<span foreground="#a6e3a1">●</span>') or label,
+                    font = font,
+                    align = "left",
+                    widget = wibox.widget.textbox,
+                }
+                row_w:buttons(gears.table.join(
+                    awful.button({ }, 1, function()
+                        if not net.active then connect_to(net.ssid) end
+                    end)
+                ))
+                wifi_list_layout:add(row_w)
+            end
+        end
+    )
+end
+
+local function set_wifi_visible(on)
+    wifi_sep.visible = on
+    wifi_list_pad.visible = on
+    wifi_refresh.visible = on
+    if on then refresh_wifi() end
+end
+
+wifi_refresh:buttons(gears.table.join(
+    awful.button({ }, 1, function()
+        awful.spawn.easy_async("nmcli device wifi rescan", function() refresh_wifi() end)
+    end)
+))
+
+wifi_switch:buttons(gears.table.join(
+    awful.button({ }, 1, function()
+        awful.spawn.easy_async_with_shell("nmcli radio wifi", function(stdout)
+            local is_on = stdout:match("enabled")
+            if is_on then
+                awful.spawn("nmcli radio wifi off")
+                wifi_switch.set_switch(false)
+                wifi_row.label_widget.markup = "<span foreground='#a6adc8'>Wi-Fi</span>"
+                wifi_row.icon_widget:set_text(glyph.wifi_off)
+                set_wifi_visible(false)
+            else
+                awful.spawn("nmcli radio wifi on")
+                wifi_switch.set_switch(true)
+                wifi_row.label_widget.markup = "<b>Wi-Fi</b>"
+                wifi_row.icon_widget:set_text(glyph.wifi_on)
+                set_wifi_visible(true)
+                awful.spawn.easy_async("nmcli device wifi rescan", function() refresh_wifi() end)
+            end
+        end)
+    end)
+))
+
+-- Bluetooth section
+local bt_switch = make_switch()
+local bt_row = make_row(glyph.bt_off, "Bluetooth")
+bt_row.right_slot:add(bt_switch)
+
+bt_switch:buttons(gears.table.join(
+    awful.button({ }, 1, function()
+        awful.spawn.easy_async_with_shell("rfkill list bluetooth", function(stdout)
+            local blocked = stdout:find("blocked: yes")
+            if blocked then
+                awful.spawn("rfkill unblock bluetooth")
+                bt_switch.set_switch(true)
+                bt_row.label_widget.markup = "<b>Bluetooth</b>"
+                bt_row.icon_widget:set_text(glyph.bt_on)
+            else
+                awful.spawn("rfkill block bluetooth")
+                bt_switch.set_switch(false)
+                bt_row.label_widget.markup = "<span foreground='#a6adc8'>Bluetooth</span>"
+                bt_row.icon_widget:set_text(glyph.bt_off)
+            end
+        end)
+    end)
+))
+
+-- Airplane mode toggle
+local ap_switch = make_switch()
+local ap_row = make_row(glyph.airplane_off, "Airplane Mode")
+ap_row.right_slot:add(ap_switch)
+
+ap_switch:buttons(gears.table.join(
+    awful.button({ }, 1, function()
+        awful.spawn.easy_async_with_shell("rfkill list | grep -c 'blocked: yes'", function(stdout)
+            local any_blocked = tonumber(stdout) or 0
+            if any_blocked > 0 then
+                awful.spawn("rfkill unblock all")
+                ap_switch.set_switch(false)
+                wifi_switch.set_switch(true)
+                wifi_row.label_widget.markup = "<b>Wi-Fi</b>"
+                wifi_row.icon_widget:set_text(glyph.wifi_on)
+                set_wifi_visible(true)
+                bt_switch.set_switch(true)
+                bt_row.label_widget.markup = "<b>Bluetooth</b>"
+                bt_row.icon_widget:set_text(glyph.bt_on)
+            else
+                awful.spawn("rfkill block all")
+                ap_switch.set_switch(true)
+                wifi_switch.set_switch(false)
+                wifi_row.label_widget.markup = "<span foreground='#a6adc8'>Wi-Fi</span>"
+                wifi_row.icon_widget:set_text(glyph.wifi_off)
+                set_wifi_visible(false)
+                bt_switch.set_switch(false)
+                bt_row.label_widget.markup = "<span foreground='#a6adc8'>Bluetooth</span>"
+                bt_row.icon_widget:set_text(glyph.bt_off)
+            end
+        end)
+    end)
+))
+
+-- Settings popup
+local set_popup = awful.popup {
+    widget = wibox.widget {
+        {
+            { -- Brightness row
+                { text = glyph.clock, font = font, forced_width = 22, align = "center", valign = "center", widget = wibox.widget.textbox },
+                bri_slider,
+                bri_text,
+                spacing = 10,
+                forced_height = 32,
+                layout = wibox.layout.fixed.horizontal,
+            },
+            { -- spacing after brightness
+                forced_height = 6,
+                widget = wibox.container.background,
+            },
+            make_sep(),
+            wifi_row,
+            wifi_sep,
+            wifi_list_pad,
+            bt_row,
+            ap_row,
+            layout = wibox.layout.fixed.vertical,
+        },
+        margins = 12,
+        widget = wibox.container.margin,
+    },
+    minimum_width = 280,
+    maximum_width = 280,
+    bg = "#1e1e2eee",
+    border_width = 1,
+    border_color = "#313244",
+    shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 6) end,
+    ontop = true,
+    visible = false,
+}
+
+-- Init states
+awful.spawn.easy_async_with_shell(
+    "nmcli radio wifi; rfkill list bluetooth 2>/dev/null | grep -o 'blocked: yes'; brightnessctl g 2>/dev/null; brightnessctl m 2>/dev/null",
+    function(stdout)
+        local wifi_on = stdout:match("enabled") ~= nil
+        wifi_switch.set_switch(wifi_on)
+        if wifi_on then
+            wifi_row.label_widget.markup = "<b>Wi-Fi</b>"
+            wifi_row.icon_widget:set_text(glyph.wifi_on)
+        end
+
+        local vals = {}
+        for v in stdout:gmatch("%d+") do vals[#vals+1] = tonumber(v) end
+        local bri_cur, bri_max
+        -- brightness values are the last two numbers (g then m)
+        if #vals >= 2 then bri_cur, bri_max = vals[#vals-1], vals[#vals] end
+        if bri_cur and bri_max and bri_max > 0 then
+            local pct = math.floor(bri_cur / bri_max * 100)
+            bri_slider.value = pct
+            bri_text.markup = pct .. "%"
+        end
+
+        local bt_blocked = stdout:find("blocked: yes") ~= nil
+        bt_switch.set_switch(not bt_blocked)
+    end
+)
+
+set_popup:connect_signal("mouse::leave", function()
+    set_popup.visible = false
+    set_wifi_visible(false)
+end)
+
+set_widget.font = font
+set_widget:set_markup_silently(glyph.settings)
+set_widget:buttons(gears.table.join(
+    awful.button({ }, 1, function()
+        set_popup.visible = not set_popup.visible
+        if set_popup.visible then
+            local s = awful.screen.focused().geometry
+            set_popup.x = s.x + s.width - 300
+            set_popup.y = s.y + 30
+            -- Auto rescan wifi if enabled
+            awful.spawn.easy_async_with_shell("nmcli radio wifi", function(stdout)
+                if stdout:match("enabled") then
+                    wifi_switch.set_switch(true)
+                    wifi_row.label_widget.markup = "<b>Wi-Fi</b>"
+                    wifi_row.icon_widget:set_text(glyph.wifi_on)
+                    set_wifi_visible(true)
+                else
+                    wifi_switch.set_switch(false)
+                    set_wifi_visible(false)
+                end
+            end)
+            -- Refresh brightness
+            awful.spawn.easy_async_with_shell("brightnessctl g 2>/dev/null; brightnessctl m 2>/dev/null", function(out)
+                local cur, mx = out:match("(%d+)\n(%d+)")
+                if cur and mx and tonumber(mx) > 0 then
+                    local pct = math.floor(tonumber(cur) / tonumber(mx) * 100)
+                    bri_slider.value = pct
+                    bri_text.markup = pct .. "%"
+                end
+            end)
+        end
+    end)
+))
 
 -- Separator
 local sep_widget = pill_text(glyph.sep, pill_bg, overlay0)
@@ -569,7 +1011,7 @@ awful.screen.connect_for_each_screen(function(s)
                 pill_widget(ram_widget),
                 pill_widget(net_widget),
                 pill_widget(vol_widget),
-                pill_widget(bat_widget),
+                pill_widget(set_widget),
                 pill_widget(clock_widget),
                 pill_widget(layout_widget),
             },
