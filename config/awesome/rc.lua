@@ -365,59 +365,31 @@ bri_slider:connect_signal("property::value", function(self)
 end)
 
 -- Toggle button helper (wifi/bt/airplane) — settings-style switch
--- Two knobs pre-placed (left=off, right=on), toggled by visibility.
+-- Drawn entirely with cairo: pill track + sliding knob circle.
 local function make_switch()
-    local knob_off = wibox.widget {
-        forced_width = 10,
-        forced_height = 10,
-        shape = function(cr, w, h) gears.shape.circle(cr, w, h) end,
-        bg = "#a6adc8",
-        widget = wibox.container.background,
-    }
-    local knob_on = wibox.widget {
-        forced_width = 10,
-        forced_height = 10,
-        shape = function(cr, w, h) gears.shape.circle(cr, w, h) end,
-        bg = "#1e1e2e",
-        widget = wibox.container.background,
-    }
-    local track = wibox.widget {
-        { -- left group: off knob
-            {
-                knob_off,
-                margins = 2,
-                widget = wibox.container.margin,
-            },
-            layout = wibox.layout.fixed.horizontal,
-        },
-        nil,
-        { -- right group: on knob
-            {
-                knob_on,
-                margins = 2,
-                widget = wibox.container.margin,
-            },
-            layout = wibox.layout.fixed.horizontal,
-        },
-        layout = wibox.layout.align.horizontal,
-    }
-    track.forced_width = 30
-    track.forced_height = 14
-    local sw = wibox.widget {
-        track,
-        bg = "#585b70",
-        shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 7) end,
-        widget = wibox.container.background,
-    }
-    knob_on.visible = false
+    local state = false
+    local sw = wibox.widget.base.make_widget(nil, nil, { enable_properties = true })
+    local function fit(_, _, _, _) return 30, 16 end
+    local function draw(_, _, cr, w, h)
+        -- track pill
+        cr:set_source(gears.color(state and "#89b4fa" or "#585b70"))
+        gears.shape.rounded_rect(cr, w, h, h / 2)
+        cr:fill()
+        -- knob circle: left when off, right when on
+        local r = h / 2 - 3
+        local cx = state and (w - h / 2) or (h / 2)
+        cr:set_source(gears.color(state and "#1e1e2e" or "#cdd6f4"))
+        cr:arc(cx, h / 2, r, 0, 2 * math.pi)
+        cr:fill_preserve()
+        cr:set_source(gears.color("#00000022"))
+        cr:set_line_width(1)
+        cr:stroke()
+    end
+    rawset(sw, "fit", fit)
+    rawset(sw, "draw", draw)
     sw.set_switch = function(on)
-        knob_off.visible = not on
-        knob_on.visible = on
-        if on then
-            sw.bg = beautiful.blue or "#89b4fa"
-        else
-            sw.bg = "#585b70"
-        end
+        state = on
+        sw:emit_signal("widget::redraw_needed")
     end
     return sw
 end
@@ -537,10 +509,33 @@ local function connect_to(ssid)
     )
 end
 
+local wifi_spinner = wibox.widget.textbox()
+wifi_spinner.font = font
+local spin_frame = 0
+
+-- Spinning dots animation while scanning
+local spin_frames = { "⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏" }
+local spin_timer = gears.timer {
+    timeout = 0.08,
+    call_now = false,
+    callback = function()
+        spin_frame = (spin_frame % #spin_frames) + 1
+        wifi_spinner.markup = "<span foreground='#89b4fa'>" .. spin_frames[spin_frame] .. "</span> <i>Scanning...</i>"
+    end,
+}
+
 local function refresh_wifi()
+    -- Always show spinner, replace contents
+    spin_timer:stop()
+    spin_frame = 0
+    wifi_list_layout:reset()
+    wifi_list_layout:add(wifi_spinner)
+    wifi_spinner.markup = "<span foreground='#89b4fa'>⠋</span> <i>Scanning...</i>"
+    spin_timer:start()
     awful.spawn.easy_async_with_shell(
         "nmcli -t -f ACTIVE,SIGNAL,SSID dev wifi list 2>/dev/null | head -8",
         function(stdout)
+            spin_timer:stop()
             local rows = {}
             local count = 0
             for line in stdout:gmatch("[^\n]+") do
@@ -747,15 +742,26 @@ awful.spawn.easy_async_with_shell(
     end
 )
 
+-- Track if mouse has entered the popup (avoid instant leave on spawn)
+local popup_entered = false
+
+set_popup:connect_signal("mouse::enter", function()
+    popup_entered = true
+end)
+
 set_popup:connect_signal("mouse::leave", function()
-    set_popup.visible = false
-    set_wifi_visible(false)
+    if popup_entered then
+        set_popup.visible = false
+        set_wifi_visible(false)
+        popup_entered = false
+    end
 end)
 
 set_widget.font = font
 set_widget:set_markup_silently(glyph.settings)
 set_widget:buttons(gears.table.join(
     awful.button({ }, 1, function()
+        popup_entered = false
         set_popup.visible = not set_popup.visible
         if set_popup.visible then
             local s = awful.screen.focused().geometry
