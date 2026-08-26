@@ -762,8 +762,9 @@ set_popup:connect_signal("mouse::leave", function()
 end)
 
 set_widget.font = font
-set_widget.forced_width = 22
-set_widget.forced_height = 16
+set_widget.align = "center"
+set_widget.valign = "center"
+set_widget.forced_width = 20
 set_widget:set_markup_silently(glyph.settings)
 set_widget:buttons(gears.table.join(
     awful.button({ }, 1, function()
@@ -1023,7 +1024,23 @@ awful.screen.connect_for_each_screen(function(s)
                 pill_widget(ram_widget),
                 pill_widget(net_widget),
                 pill_widget(vol_widget),
-                pill_widget(set_widget),
+                -- Settings icon pill
+                wibox.widget {
+                    {
+                        set_widget,
+                        left = pill_padding,
+                        right = pill_padding,
+                        top = 4,
+                        bottom = 4,
+                        widget = wibox.container.margin,
+                    },
+                    bg = pill_bg,
+                    fg = pill_fg,
+                    shape = function(cr, w, h)
+                        gears.shape.rounded_rect(cr, w, h, border_radius)
+                    end,
+                    widget = wibox.container.background,
+                },
                 pill_widget(clock_widget),
                 pill_widget(layout_widget),
             },
