@@ -943,6 +943,8 @@ local function make_tasklist(s)
                     {
                         id     = 'clienticon',
                         widget = awful.widget.clienticon,
+                        forced_width = 16,
+                        forced_height = 16,
                     },
                     halign = "center",
                     valign = "center",
@@ -952,8 +954,8 @@ local function make_tasklist(s)
                 widget  = wibox.container.margin,
             },
             id              = 'background_role',
-            forced_width    = 22,
-            forced_height   = 22,
+            forced_width    = 28,
+            forced_height   = 28,
             widget          = wibox.container.background,
             create_callback = function(self, c, index, objects)
                 local icon = self:get_children_by_id('clienticon')[1]
