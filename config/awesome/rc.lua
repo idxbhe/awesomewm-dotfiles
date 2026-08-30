@@ -30,8 +30,11 @@ local pill_padding = beautiful.pill_padding
 local pill_spacing = beautiful.pill_spacing
 local border_radius = beautiful.border_radius
 local useless_gap = beautiful.useless_gap
-local font = beautiful.font
-local font_popup = "JetBrainsMono Nerd Font Bold 10"
+-- Font sizes — icons larger than text
+local font       = "JetBrainsMono Nerd Font Mono Bold 10"
+local font_icon  = "JetBrainsMono Nerd Font Mono Bold 14"
+local font_popup = "JetBrainsMono Nerd Font Mono Bold 11"
+local icon = function(t) return string.format('<span font="%s">%s</span>', font_icon, t) end
 local wibar_height = beautiful.wibar_height
 local wibar_bg = beautiful.wibar_bg
 local tooltip_bg = beautiful.tooltip_bg
@@ -99,11 +102,11 @@ mylauncher = wibox.widget {
     {
         {
             text = beautiful.glyph.launcher,
-            font = font,
+            font = font_icon,
             align = "center",
             valign = "center",
-            forced_width = 32,
-            forced_height = 32,
+            forced_width = 22,
+            forced_height = 22,
             widget = wibox.widget.textbox,
         },
         id = "bg",
@@ -141,6 +144,7 @@ local function pill_widget(widget, bg, fg)
         },
         bg = bg or pill_bg,
         fg = fg or pill_fg,
+        forced_height = wibar_height - 4,
         shape = function(cr, w, h)
             gears.shape.rounded_rect(cr, w, h, border_radius)
         end,
@@ -158,49 +162,88 @@ local function pill_text(text, bg, fg)
     }, bg, fg)
 end
 
--- CPU widget
-local cpu_widget = wibox.widget.textbox()
-cpu_widget.font = font
-awful.widget.watch("bash -c \"top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d'%' -f1\"", 2, function(w, stdout)
+-- Pill with separate icon + text containers for perfect centering
+local function pill_icon_text(icon_glyph, text_markup, bg, fg)
+    local icon_tb = wibox.widget {
+        text = icon_glyph,
+        font = font_icon,
+        align = "center",
+        valign = "center",
+        widget = wibox.widget.textbox,
+    }
+    local text_tb = wibox.widget {
+        markup = text_markup,
+        font = font,
+        align = "center",
+        valign = "center",
+        widget = wibox.widget.textbox,
+    }
+    local h_layout = wibox.layout.fixed.horizontal()
+    h_layout:add(icon_tb)
+    h_layout:add(text_tb)
+    h_layout.spacing = 8
+    -- Use pill_widget directly — it handles padding
+    return pill_widget(h_layout, bg, fg), icon_tb, text_tb, h_layout
+end
+
+-- CPU widget — separate icon + text containers for perfect centering
+local cpu_widget, cpu_icon_tb, cpu_text_tb, cpu_layout = pill_icon_text(glyph.cpu, "%d%%", pill_bg, pill_fg)
+awful.widget.watch("bash -c \"top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d'%' -f1\"", 2, function(_, stdout)
     local cpu = math.floor(tonumber(stdout) or 0)
-    local icon = glyph.cpu
-    w:set_markup_silently(string.format("%s %d%%", icon, cpu))
-end, cpu_widget)
+    cpu_text_tb.markup = string.format("%d%%", cpu)
+end)
 
 -- RAM widget
-local ram_widget = wibox.widget.textbox()
-ram_widget.font = font
-awful.widget.watch("bash -c \"free | awk '/Mem:/ {printf \\\"%.0f\\\", $3/$2 * 100}'\"", 2, function(w, stdout)
+local ram_widget, ram_icon_tb, ram_text_tb, ram_layout = pill_icon_text(glyph.ram, "%d%%", pill_bg, pill_fg)
+awful.widget.watch("bash -c \"free | awk '/Mem:/ {printf \\\\\"%.0f\\\\\", $3/$2 * 100}'\"", 2, function(_, stdout)
     local ram = math.floor(tonumber(stdout) or 0)
-    local icon = glyph.ram
-    w:set_markup_silently(string.format("%s %d%%", icon, ram))
-end, ram_widget)
+    ram_text_tb.markup = string.format("%d%%", ram)
+end)
 
 -- Network widget
-local net_widget = wibox.widget.textbox()
-net_widget.font = font
+local net_widget, net_icon_tb, net_text_tb, net_layout = pill_icon_text(glyph.net_down, "%s", pill_bg, pill_fg)
 local last_rx, last_tx = 0, 0
-awful.widget.watch("bash -c \"cat /proc/net/dev | awk '/wlp|enp|eth/ {rx+=$2; tx+=$10} END {print rx, tx}'\"", 1, function(w, stdout)
+awful.widget.watch("bash -c \"cat /proc/net/dev | awk '/wlp|enp|eth/ {rx+=$2; tx+=$10} END {print rx, tx}'\"", 1, function(_, stdout)
     local rx, tx = stdout:match("(%d+)%s+(%d+)")
     rx, tx = tonumber(rx) or 0, tonumber(tx) or 0
     if last_rx > 0 and last_tx > 0 then
         local down = (rx - last_rx) / 1024
-        local up = (tx - last_tx) / 1024
         local down_str = down > 1024 and string.format("%.1fM", down/1024) or string.format("%.0fK", down)
-        local up_str = up > 1024 and string.format("%.1fM", up/1024) or string.format("%.0fK", up)
-        w:set_markup_silently(string.format("%s %s %s %s", glyph.net_down, down_str, glyph.net_up, up_str))
+        net_text_tb.markup = string.format("%s", down_str)
     end
     last_rx, last_tx = rx, tx
-end, net_widget)
+end)
 
--- Clock widget
-local clock_widget = wibox.widget.textclock(string.format("%s %%H:%%M", glyph.clock), 1)
+-- Clock widget — separate icon + text containers
+local clock_widget, clock_icon_tb, clock_text_tb, clock_layout = pill_icon_text(glyph.clock, "%H:%M", pill_bg, pill_fg)
+-- Update clock periodically using os.date
+local clock_timer = gears.timer {
+    timeout = 1,
+    callback = function()
+        clock_text_tb.markup = os.date("%H:%M")
+    end,
+}
+clock_timer:start()
 
--- Layout indicator widget
-local layout_widget = wibox.widget.textbox()
-layout_widget.font = font
-layout_widget.forced_width = 20
-awful.widget.watch("bash -c \"echo\"", 1, function(w)
+-- Layout indicator widget — icon only, no text
+local layout_widget = wibox.widget {
+    {
+        widget = wibox.widget.textbox,
+        font = font_icon,
+        align = "center",
+        valign = "center",
+    },
+    left = pill_padding,
+    right = pill_padding,
+    top = 2,
+    bottom = 2,
+    widget = wibox.container.margin,
+    forced_width = 24,
+}
+layout_widget.forced_height = wibar_height - 4
+local layout_icon_tb = layout_widget.children[1]
+
+local function update_layout_w()
     local s = awful.screen.focused()
     local layout = s.selected_tag and s.selected_tag.layout or awful.layout.suit.floating
     local name = layout.name or "floating"
@@ -209,8 +252,16 @@ awful.widget.watch("bash -c \"echo\"", 1, function(w)
         tiletop = "󰕳", fairv = "󰕴", fairh = "󰕵", spiral = "󰕶",
         dwindle = "󰕷", max = "󰕸", fullscreen = "󰕹", magnifier = "󰕺", cornernw = "󰕻"
     }
-    w:set_markup_silently(string.format("%s", icons[name] or icons.floating))
-end, layout_widget)
+    layout_icon_tb:set_markup_silently(icons[name] or icons.floating)
+end
+
+awful.screen.connect_for_each_screen(function(s)
+    s:connect_signal("tag::history::update", update_layout_w)
+    s:connect_signal("tag::property::selected", update_layout_w)
+end)
+client.connect_signal("property::fullscreen", update_layout_w)
+client.connect_signal("focus", update_layout_w)
+update_layout_w()
 
 -- Volume popup
 local vol_slider = wibox.widget {
@@ -230,8 +281,7 @@ local vol_slider = wibox.widget {
 }
 
 local vol_text = wibox.widget {
-    markup = "40%",
-    font = font,
+    markup = string.format("<span font=\"%s\">40%%</span>", font),
     align = "center",
     forced_width = 36,
     widget = wibox.widget.textbox,
@@ -240,8 +290,7 @@ local vol_text = wibox.widget {
 local vol_popup_widget = wibox.widget {
     {
         {
-            text = glyph.vol_high,
-            font = font,
+            text = icon(glyph.vol_high),
             forced_width = 20,
             align = "center",
             valign = "center",
@@ -292,9 +341,8 @@ vol_slider:connect_signal("property::value", function(self)
     end
 end)
 
--- Volume bar widget
-local vol_widget = wibox.widget.textbox()
-vol_widget.font = font
+-- Volume bar widget — use pill_icon_text for proper centering
+local vol_widget, vol_icon_tb, vol_text_tb, vol_layout = pill_icon_text(glyph.vol_high, "%d%%", pill_bg, pill_fg)
 vol_widget:buttons(gears.table.join(
     awful.button({ }, 1, function()
         vol_popup.visible = not vol_popup.visible
@@ -308,31 +356,21 @@ vol_widget:buttons(gears.table.join(
     awful.button({ }, 5, function() awful.spawn.with_shell("pamixer -d 5") end),
     awful.button({ }, 3, function() awful.spawn.with_shell("pamixer -t") end)
 ))
-vol_widget:set_markup_silently(string.format("%s %d%%", glyph.vol_high, 45))
+vol_text_tb.markup = "45%"
 awful.spawn.easy_async_with_shell("pamixer --get-volume", function(stdout)
     local vol = math.floor(tonumber(stdout) or 0)
     vol_slider.value = vol
-    vol_text.markup = vol .. "%"
-    local icon = glyph.vol_high
-    if vol == 0 then icon = glyph.vol_mute
-    elseif vol < 30 then icon = glyph.vol_low
-    elseif vol < 70 then icon = glyph.vol_mid end
-    vol_widget:set_markup_silently(string.format("%s %d%%", icon, vol))
+    vol_text_tb.markup = string.format("%d%%", vol)
 end)
-awful.widget.watch("pamixer --get-volume 2>/dev/null", 1, function(w, stdout)
+awful.widget.watch("pamixer --get-volume 2>/dev/null", 1, function(_, stdout)
     local vol = math.floor(tonumber(stdout) or 0)
     vol_slider.value = vol
-    vol_text.markup = vol .. "%"
-    local icon = glyph.vol_high
-    if vol == 0 then icon = glyph.vol_mute
-    elseif vol < 30 then icon = glyph.vol_low
-    elseif vol < 70 then icon = glyph.vol_mid end
-    w:set_markup_silently(string.format("%s %d%%", icon, vol))
-end, vol_widget)
+    vol_text_tb.markup = string.format("%d%%", vol)
+end, vol_layout)
 
 -- Settings widget (control center popup)
 local set_widget = wibox.widget.textbox()
-set_widget.font = font
+set_widget.font = font_icon
 
 -- Brightness slider
 local bri_slider = wibox.widget {
@@ -351,8 +389,7 @@ local bri_slider = wibox.widget {
     handle_border_color = "#45475a",
 }
 local bri_text = wibox.widget {
-    markup = "50%",
-    font = font,
+    markup = string.format("<span font=\"%s\">50%%</span>", font),
     forced_width = 40,
     align = "center",
     widget = wibox.widget.textbox,
@@ -360,7 +397,7 @@ local bri_text = wibox.widget {
 bri_slider:connect_signal("property::value", function(self)
     local val = self.value
     if val then
-        bri_text.markup = math.floor(val) .. "%"
+        bri_text.markup = string.format("<span font=\"%s\">%d%%</span>", font, math.floor(val))
         awful.spawn("brightnessctl set " .. math.floor(val) .. "%", false)
     end
 end)
@@ -686,7 +723,7 @@ local set_popup = awful.popup {
     widget = wibox.widget {
         {
             { -- Brightness row
-                { text = glyph.clock, font = font_popup, forced_width = 24, align = "center", valign = "center", widget = wibox.widget.textbox },
+                { text = icon(glyph.clock), font = font_popup, forced_width = 24, align = "center", valign = "center", widget = wibox.widget.textbox },
                 bri_slider,
                 bri_text,
                 spacing = 10,
@@ -761,11 +798,10 @@ set_popup:connect_signal("mouse::leave", function()
     end
 end)
 
-set_widget.font = font
+set_widget.font = font_icon
 set_widget.align = "center"
 set_widget.valign = "center"
 set_widget.forced_width = 24
-set_widget.forced_height = 24
 set_widget:set_markup_silently(glyph.settings)
 set_widget:buttons(gears.table.join(
     awful.button({ }, 1, function()
@@ -851,14 +887,14 @@ local function make_taglist(s)
                 font = font,
                 align = "center",
                 valign = "center",
-                forced_width = 20,
-                forced_height = 20,
+                forced_width = 22,
+                forced_height = 22,
                 widget = wibox.widget.textbox
             },
             id = "background_role",
-            shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 10) end,
-            forced_width = 20,
-            forced_height = 20,
+            shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 8) end,
+            forced_width = 22,
+            forced_height = 22,
             widget = wibox.container.background
         },
         create_callback = function(self, c3, index)
@@ -912,29 +948,22 @@ local function make_tasklist(s)
                     valign = "center",
                     widget = wibox.container.place,
                 },
-                margins = 4,
+                margins = 2,
                 widget  = wibox.container.margin,
             },
             id              = 'background_role',
-            forced_width    = 32,
-            forced_height   = 32,
+            forced_width    = 22,
+            forced_height   = 22,
             widget          = wibox.container.background,
             create_callback = function(self, c, index, objects)
                 local icon = self:get_children_by_id('clienticon')[1]
                 icon.client = c
-                if c == client.focus then
-                    icon.forced_width = 20
-                    icon.forced_height = 20
-                end
             end,
             update_callback = function(self, c, index, objects)
-                local icon = self:get_children_by_id('clienticon')[1]
                 if c == client.focus then
-                    icon.forced_width = 20
-                    icon.forced_height = 20
+                    self.bg = beautiful.tasklist_bg_focus
                 else
-                    icon.forced_width = nil
-                    icon.forced_height = nil
+                    self.bg = beautiful.tasklist_bg_normal
                 end
             end,
         }
@@ -994,30 +1023,34 @@ awful.screen.connect_for_each_screen(function(s)
 
     s.mywibox:setup {
         layout = wibox.layout.align.horizontal,
-        expand = "outside",
-        { -- Left: launcher + tags
-            layout = wibox.layout.fixed.horizontal,
-            spacing = pill_spacing,
-            pill_widget(mylauncher),
+        expand = "none",
+        { -- Left: launcher + taglist
             {
-                s.mytaglist,
-                top = 3,
-                bottom = 3,
-                widget = wibox.container.margin,
+                layout = wibox.layout.fixed.horizontal,
+                spacing = pill_spacing,
+                pill_widget(mylauncher),
+                {
+                    s.mytaglist,
+                    top = 3,
+                    bottom = 3,
+                    widget = wibox.container.margin,
+                },
             },
+            widget = wibox.container.place,
+            valign = "center",
         },
         { -- Center: tasklist
-            layout = wibox.layout.align.horizontal,
-            expand = "none",
-            nil,
-            s.mytasklist,
-            nil,
+            {
+                layout = wibox.layout.align.horizontal,
+                expand = "inside",
+                nil,
+                s.mytasklist,
+                nil,
+            },
+            widget = wibox.container.place,
+            valign = "center",
         },
-        { -- Right: pills (CPU, RAM, Net, Vol, Bat, Clock, Layout)
-            layout = wibox.layout.align.horizontal,
-            expand = "none",
-            nil,
-            nil,
+        { -- Right: pills
             {
                 layout = wibox.layout.fixed.horizontal,
                 spacing = pill_spacing,
@@ -1025,20 +1058,13 @@ awful.screen.connect_for_each_screen(function(s)
                 pill_widget(ram_widget),
                 pill_widget(net_widget),
                 pill_widget(vol_widget),
-                -- Settings icon pill (24x24 square)
-                wibox.widget {
-                    set_widget,
-                    bg = pill_bg,
-                    fg = pill_fg,
-                    shape = function(cr, w, h)
-                        gears.shape.rounded_rect(cr, w, h, border_radius)
-                    end,
-                    widget = wibox.container.background,
-                },
+                pill_widget(set_widget),
                 pill_widget(clock_widget),
                 pill_widget(layout_widget),
             },
-        }
+            widget = wibox.container.place,
+            valign = "center",
+        },
     }
 end)
 -- }}}

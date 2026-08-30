@@ -33,9 +33,9 @@ local mocha = {
 }
 
 -- Font
-theme.font          = "JetBrainsMono Nerd Font Bold 9"
-theme.font_bold     = "JetBrainsMono Nerd Font Bold 9"
-theme.font_mono     = "JetBrainsMono Nerd Font Mono 9"
+theme.font          = "JetBrainsMono Nerd Font Mono Bold 12"
+theme.font_bold     = "JetBrainsMono Nerd Font Mono Bold 12"
+theme.font_mono     = "JetBrainsMono Nerd Font Mono Bold 12"
 
 -- Colors
 theme.bg_normal     = mocha.mantle .. "ee"  -- translucent mantle
@@ -221,7 +221,7 @@ theme.icon_theme = "Papirus-Dark"
 theme.pill_bg       = mocha.surface0
 theme.pill_fg       = mocha.text
 theme.pill_spacing  = 6
-theme.pill_padding  = 10
+theme.pill_padding  = 6
 
 -- Surface colors (for widget backgrounds)
 theme.surface0 = mocha.surface0
