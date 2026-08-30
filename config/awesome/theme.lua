@@ -60,6 +60,7 @@ theme.border_marked       = mocha.red
 theme.border_radius       = 2
 
 -- Taglist
+theme.taglist_font        = "JetBrainsMono Nerd Font Mono Bold 10"
 theme.taglist_bg_focus    = mocha.surface1
 theme.taglist_bg_occupied = mocha.surface0
 theme.taglist_bg_urgent   = mocha.red
@@ -68,7 +69,7 @@ theme.taglist_fg_focus    = mocha.blue
 theme.taglist_fg_occupied = mocha.subtext1
 theme.taglist_fg_urgent   = mocha.crust
 theme.taglist_fg_empty    = mocha.overlay0
-theme.taglist_spacing     = 2
+theme.taglist_spacing     = 4
 theme.taglist_squares_sel = false
 theme.taglist_squares_unsel = false
 theme.taglist_squares_sel_empty = false

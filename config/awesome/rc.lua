@@ -859,7 +859,7 @@ local function make_taglist(s)
         filter  = awful.widget.taglist.filter.noempty,
         buttons = taglist_buttons,
         style = {
-            spacing = 2,
+            spacing = 4,
             shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 10) end,
             bg_empty = "transparent",
             bg_occupied = beautiful.surface0,
@@ -878,7 +878,7 @@ local function make_taglist(s)
             },
         },
         layout = {
-            spacing = 2,
+            spacing = 4,
             layout = wibox.layout.fixed.horizontal
         },
         widget_template = {
@@ -887,14 +887,14 @@ local function make_taglist(s)
                 font = font,
                 align = "center",
                 valign = "center",
-                forced_width = 22,
-                forced_height = 22,
+                forced_width = 20,
+                forced_height = 20,
                 widget = wibox.widget.textbox
             },
             id = "background_role",
-            shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 8) end,
-            forced_width = 22,
-            forced_height = 22,
+            shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 10) end,
+            forced_width = 20,
+            forced_height = 20,
             widget = wibox.container.background
         },
         create_callback = function(self, c3, index)
