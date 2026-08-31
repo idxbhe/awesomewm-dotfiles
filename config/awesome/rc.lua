@@ -298,9 +298,10 @@ local cal_grid_widget = wibox.widget {
 
 -- Header row
 local header_row = wibox.widget { layout = wibox.layout.fixed.horizontal, spacing = 4 }
-for _, day in ipairs(day_names) do
+local header_colors = {"#f38ba8","#cdd6f4","#cdd6f4","#cdd6f4","#cdd6f4","#a6e3a1","#cdd6f4"} -- Su red, Fr green
+for idx, day in ipairs(day_names) do
     header_row:add(wibox.widget {
-        markup = string.format("<span foreground='#89b4fa'>%s</span>", day),
+        markup = string.format("<span foreground='%s'>%s</span>", header_colors[idx], day),
         font = font_popup,
         align = "center",
         valign = "center",
@@ -353,13 +354,27 @@ local function render_calendar()
     -- Fill in the days
     local day_num = 1
     for i = first_day + 1, first_day + num_days do
-        local fg = (day_num == today and cal_month == current_month and cal_year == current_year) and "#f5e0dc" or "#cdd6f4"
-        local bg = (day_num == today and cal_month == current_month and cal_year == current_year) and "#313244" or "#1e1e2e"
+        local col_idx = ((i-1)%7)+1  -- 1=Sunday, 6=Friday
+        local is_today = (day_num == today and cal_month == current_month and cal_year == current_year)
+        local fg, bg
+        
+        if is_today then
+            fg = "#f5e0dc"
+            bg = "#313244"
+        elseif col_idx == 1 then  -- Sunday
+            fg = "#f38ba8"
+            bg = "#1e1e2e"
+        elseif col_idx == 6 then  -- Friday
+            fg = "#a6e3a1"
+            bg = "#1e1e2e"
+        else
+            fg = "#cdd6f4"
+            bg = "#1e1e2e"
+        end
         
         day_widgets[i].markup = string.format("<span foreground='%s'>%d</span>", fg, day_num)
         
         local row_idx = math.ceil(i/7)
-        local col_idx = ((i-1)%7)+1
         if week_rows[row_idx] then
             local container = week_rows[row_idx]:get_children()[col_idx]
             if container.set_bg then container.bg = bg end
