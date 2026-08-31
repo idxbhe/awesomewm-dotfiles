@@ -1214,6 +1214,107 @@ awful.rules.rules = {
 -- }}}
 
 -- {{{ Signals
+
+-- {{{ Papirus icon lookup and application
+-- Build a WM_CLASS -> Icon mapping from .desktop files
+local desktop_icon_map = {}
+do
+    local desktop_dirs = {"/usr/share/applications/", "/usr/local/share/applications/"}
+    for _, dir in ipairs(desktop_dirs) do
+        local handle = io.popen("ls " .. dir .. "*.desktop 2>/dev/null")
+        if handle then
+            for file in handle:lines() do
+                local f = io.open(file, "r")
+                if f then
+                    local content = f:read("*all")
+                    f:close()
+                    local wmclass = content:match("StartupWMClass=([^\n]+)")
+                    local icon = content:match("^Icon=([^\n]+)")
+                    if wmclass and icon then
+                        desktop_icon_map[wmclass:lower()] = icon
+                    end
+                end
+            end
+            handle:close()
+        end
+    end
+end
+
+-- Find Papirus icon path for a given icon name
+local function find_papirus_icon(icon_name)
+    if not icon_name or icon_name == "" then return nil end
+    for _, size in ipairs({"48x48", "32x32", "24x24", "22x22", "16x16"}) do
+        local p = "/usr/share/icons/Papirus-Dark/" .. size .. "/apps/" .. icon_name .. ".svg"
+        if gears.filesystem.file_readable(p) then
+            return p
+        end
+    end
+    return nil
+end
+
+-- Look up icon for a client, trying multiple strategies
+local function lookup_client_icon(c)
+    -- Strategy 1: Check .desktop file mapping by WM_CLASS
+    if c.class then
+        local icon_name = desktop_icon_map[c.class:lower()]
+        if icon_name then
+            local path = find_papirus_icon(icon_name)
+            if path then return path end
+        end
+    end
+    
+    -- Strategy 2: Try direct Papirus lookup with various name transformations
+    local candidates = {}
+    if c.class and c.class ~= "" then
+        local cls = c.class:lower()
+        table.insert(candidates, cls)
+        -- Strip common prefixes/suffixes (md., com., org., .desktop)
+        local stripped = cls:gsub("^(md|com|org)%.",""):gsub("%.desktop$","")
+        if stripped ~= cls then table.insert(candidates, stripped) end
+        -- Handle dotted names: md.obsidian.Obsidian -> obsidian
+        local last_part = cls:match("([^.]+)$")
+        if last_part and last_part ~= cls then table.insert(candidates, last_part) end
+    end
+    
+    for _, name in ipairs(candidates) do
+        local path = find_papirus_icon(name)
+        if path then return path end
+    end
+    
+    return nil
+end
+
+-- Apply Papirus icon to a client via xseticon
+local function apply_papirus_icon(c)
+    if not c.valid then return end
+    
+    -- Guard: prevent infinite loops
+    if c._papirus_applying then return end
+    
+    local icon_path = lookup_client_icon(c)
+    if not icon_path or not c.window then return end
+    
+    c._papirus_applying = true
+    local wid = tostring(c.window)
+    local png_path = "/tmp/awesome-icon-" .. wid .. ".png"
+    
+    awful.spawn.easy_async_with_shell(
+        "rsvg-convert -w 48 -h 48 '" .. icon_path .. "' -o '" .. png_path .. "' 2>/dev/null && " ..
+        "xseticon -id " .. wid .. " '" .. png_path .. "' 2>/dev/null && " ..
+        "rm -f '" .. png_path .. "'",
+        function()
+            if c.valid then
+                c._papirus_applying = false
+                -- Mark the time so property::icon handler knows we caused it
+                c._papirus_own_emit = true
+                c:emit_signal("property::icon")
+                c._papirus_own_emit = false
+            end
+        end
+    )
+end
+-- }}}
+
 -- Signal function to execute when a new client appears.
 client.connect_signal("manage", function(c)
     -- Apply rounded corners using theme border_radius
@@ -1223,33 +1324,9 @@ client.connect_signal("manage", function(c)
         end
     end
 
-    -- Set Papirus icon via xseticon (X11 _NET_WM_ICON pixel data)
-    -- Try both icon_name and class, pick first Papirus match
-    local candidates = {}
-    if c.icon_name and c.icon_name ~= "" then table.insert(candidates, c.icon_name:lower()) end
-    if c.class and c.class ~= "" then table.insert(candidates, c.class:lower()) end
-
-    local icon_path
-    for _, name in ipairs(candidates) do
-        for _, size in ipairs({"48x48", "32x32", "24x24", "22x22", "16x16"}) do
-            local p = "/usr/share/icons/Papirus-Dark/" .. size .. "/apps/" .. name .. ".svg"
-            if gears.filesystem.file_readable(p) then
-                icon_path = p
-                break
-            end
-        end
-        if icon_path then break end
-    end
-
-    if icon_path and c.window then
-        local wid = tostring(c.window)
-        local png_path = "/tmp/awesome-icon-" .. wid .. ".png"
-        -- Set _NET_WM_ICON via xseticon for titlebar/tasklist
-        awful.spawn.with_shell(
-            "rsvg-convert -w 48 -h 48 '" .. icon_path .. "' -o '" .. png_path .. "' && " ..
-            "xseticon -id " .. wid .. " '" .. png_path .. "' && " ..
-            "rm -f '" .. png_path .. "'"
-        )
+    -- Apply Papirus icon immediately (retry logic handles apps that overwrite it)
+    if c.valid then
+        apply_papirus_icon(c)
     end
 
     if awesome.startup
@@ -1258,6 +1335,31 @@ client.connect_signal("manage", function(c)
         -- Prevent clients from being unreachable after screen count changes.
         awful.placement.no_offscreen(c)
     end
+end)
+
+-- Re-apply Papirus icon when app tries to change it
+client.connect_signal("property::icon", function(c)
+    if not c.valid then return end
+    
+    -- Ignore our own emit from apply_papirus_icon
+    if c._papirus_own_emit then return end
+    
+    -- Allow up to 3 retries within 10 seconds of first application
+    local now = os.time()
+    if not c._papirus_first_time then c._papirus_first_time = now end
+    c._papirus_retry_count = (c._papirus_retry_count or 0) + 1
+    
+    if (now - c._papirus_first_time) > 10 or c._papirus_retry_count > 3 then
+        return -- Stop retrying after 10 seconds or 3 attempts
+    end
+    
+    -- Delay before re-applying (batch rapid changes)
+    gears.timer.start_new(0.2, function()
+        if c.valid and not c._papirus_applying then
+            apply_papirus_icon(c)
+        end
+        return false
+    end)
 end)
 
 -- {{{ Remember window state (position, size, floating mode) per app class
