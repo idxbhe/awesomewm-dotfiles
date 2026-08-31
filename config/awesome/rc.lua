@@ -334,8 +334,8 @@ cal_month_year.align = "center"
 cal_month_year.valign = "center"
 
 local function render_calendar()
-    -- Update month/year label
-    cal_month_year.markup = string.format("<b>%s %d</b>", month_names[cal_month], cal_year)
+    -- Update month/year label (dark blue for current month)
+    cal_month_year.markup = string.format("<span foreground='#89b4fa'><b>%s %d</b></span>", month_names[cal_month], cal_year)
     
     -- Calculate days
     local first_day = first_day_of_month(cal_month, cal_year)
@@ -359,8 +359,8 @@ local function render_calendar()
         local fg, bg
         
         if is_today then
-            fg = "#f5e0dc"
-            bg = "#313244"
+            fg = "#ffffff"  -- White text on dark blue
+            bg = "#1e3a8a"  -- Dark blue background
         elseif col_idx == 1 then  -- Sunday
             fg = "#f38ba8"
             bg = "#1e1e2e"
