@@ -285,6 +285,8 @@ for i = 1, 42 do
     tb.font = font_popup
     tb.align = "center"
     tb.valign = "center"
+    tb.forced_width = 24
+    tb.forced_height = 24
     day_widgets[i] = tb
 end
 
@@ -317,13 +319,18 @@ for w = 1, 6 do
     local row = wibox.widget { layout = wibox.layout.fixed.horizontal, spacing = 4 }
     for d = 1, 7 do
         local idx = (w-1)*7 + d
-        -- Square cell 28x28 with circle background
-        local cell = wibox.container.background(day_widgets[idx])
+        -- Create a fixed-size container with circle background
+        local cell = wibox.container.background()
         cell.forced_width = 28
         cell.forced_height = 28
         cell.bg = "#1e1e2e"
         cell.shape = gears.shape.circle
         cell.shape_clip = true
+        -- Place textbox in center of circle
+        local place = wibox.container.place(day_widgets[idx])
+        place.halign = "center"
+        place.valign = "center"
+        cell.widget = place
         day_cells[idx] = cell
         row:add(cell)
     end
