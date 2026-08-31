@@ -285,8 +285,6 @@ for i = 1, 42 do
     tb.font = font_popup
     tb.align = "center"
     tb.valign = "center"
-    tb.forced_width = 28
-    tb.forced_height = 20
     day_widgets[i] = tb
 end
 
@@ -313,16 +311,21 @@ end
 cal_grid_widget:add(header_row)
 
 -- Week rows (6 rows max)
+local day_cells = {}  -- indexed by widget position 1..42, holds the circle bg container
 local week_rows = {}
 for w = 1, 6 do
     local row = wibox.widget { layout = wibox.layout.fixed.horizontal, spacing = 4 }
     for d = 1, 7 do
         local idx = (w-1)*7 + d
-        local bg = wibox.container.background(day_widgets[idx])
-        bg.bg = "#1e1e2e"
-        bg.shape = gears.shape.rounded_rect
-        bg.shape_clip = true
-        row:add(bg)
+        -- Square cell 28x28 with circle background
+        local cell = wibox.container.background(day_widgets[idx])
+        cell.forced_width = 28
+        cell.forced_height = 28
+        cell.bg = "#1e1e2e"
+        cell.shape = gears.shape.circle
+        cell.shape_clip = true
+        day_cells[idx] = cell
+        row:add(cell)
     end
     week_rows[w] = row
     cal_grid_widget:add(row)
@@ -347,8 +350,7 @@ local function render_calendar()
     -- Clear all cells first
     for i = 1, 42 do
         day_widgets[i].markup = ""
-        local bg = week_rows[math.ceil(i/7)]:get_children()[((i-1)%7)+1]
-        if bg.set_bg then bg.bg = "#1e1e2e" end
+        day_cells[i].bg = "#1e1e2e"
     end
     
     -- Fill in the days
@@ -373,12 +375,7 @@ local function render_calendar()
         end
         
         day_widgets[i].markup = string.format("<span foreground='%s'>%d</span>", fg, day_num)
-        
-        local row_idx = math.ceil(i/7)
-        if week_rows[row_idx] then
-            local container = week_rows[row_idx]:get_children()[col_idx]
-            if container.set_bg then container.bg = bg end
-        end
+        day_cells[i].bg = bg
         
         day_num = day_num + 1
     end
