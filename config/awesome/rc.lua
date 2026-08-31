@@ -272,11 +272,15 @@ end)
 local cal_year, cal_month = tonumber(os.date("%Y")), tonumber(os.date("%m"))
 local days_in_month = {31,28,31,30,31,30,31,31,30,31,30,31}
 local month_names = {"January","February","March","April","May","June","July","August","September","October","November","December"}
-local day_names = {"Su","Mo","Tu","We","Th","Fr","Sa"}
+local day_names = {"Mo","Tu","We","Th","Fr","Sa","Su"}
 
 local function is_leap_year(y) return (y%4==0 and y%100~=0) or (y%400==0) end
 local function days_in(m,y) return m==2 and is_leap_year(y) and 29 or days_in_month[m] end
-local function first_day_of_month(m,y) return tonumber(os.date("%w", os.time{year=y,month=m,day=1})) end
+local function first_day_of_month(m,y)
+    local wday = tonumber(os.date("%w", os.time{year=y,month=m,day=1}))
+    -- Convert from Sunday=0 to Monday=0
+    return wday == 0 and 6 or wday - 1
+end
 
 -- Pre-create all day widgets (7x6 grid = 42 cells max)
 local day_widgets = {}
@@ -298,7 +302,7 @@ local cal_grid_widget = wibox.widget {
 
 -- Header row
 local header_row = wibox.widget { layout = wibox.layout.fixed.horizontal, spacing = 4 }
-local header_colors = {"#f38ba8","#cdd6f4","#cdd6f4","#cdd6f4","#cdd6f4","#a6e3a1","#cdd6f4"} -- Su red, Fr green
+local header_colors = {"#cdd6f4","#cdd6f4","#cdd6f4","#cdd6f4","#74c7a4","#cdd6f4","#e06c8a"} -- Fr green darker, Su red darker
 for idx, day in ipairs(day_names) do
     header_row:add(wibox.widget {
         markup = string.format("<span foreground='%s'>%s</span>", header_colors[idx], day),
@@ -354,27 +358,61 @@ local function render_calendar()
     local current_month = tonumber(os.date("%m"))
     local current_year = tonumber(os.date("%Y"))
     
+    -- Calculate previous month
+    local prev_month = cal_month - 1
+    local prev_year = cal_year
+    if prev_month < 1 then
+        prev_month = 12
+        prev_year = cal_year - 1
+    end
+    local prev_days = days_in(prev_month, prev_year)
+    
+    -- Calculate next month
+    local next_month = cal_month + 1
+    local next_year = cal_year
+    if next_month > 12 then
+        next_month = 1
+        next_year = cal_year + 1
+    end
+    
     -- Clear all cells first
     for i = 1, 42 do
         day_widgets[i].markup = ""
         day_cells[i].bg = "#1e1e2e"
     end
     
-    -- Fill in the days
-    local day_num = 1
+    -- Fill previous month days (before current month)
+    for i = 1, first_day do
+        local day_num = prev_days - first_day + i
+        local col_idx = i  -- 1=Monday, 7=Sunday
+        local fg
+        
+        if col_idx == 7 then  -- Sunday
+            fg = "#78424d"  -- Darker faded red
+        elseif col_idx == 5 then  -- Friday
+            fg = "#4a7a68"  -- Darker faded green
+        else
+            fg = "#585b70"  -- Faded gray
+        end
+        
+        day_widgets[i].markup = string.format("<span foreground='%s'>%d</span>", fg, day_num)
+    end
+    
+    -- Fill current month days
     for i = first_day + 1, first_day + num_days do
-        local col_idx = ((i-1)%7)+1  -- 1=Sunday, 6=Friday
+        local day_num = i - first_day
+        local col_idx = ((i-1)%7)+1  -- 1=Monday, 7=Sunday
         local is_today = (day_num == today and cal_month == current_month and cal_year == current_year)
         local fg, bg
         
         if is_today then
             fg = "#ffffff"  -- White text on dark blue
             bg = "#1e3a8a"  -- Dark blue background
-        elseif col_idx == 1 then  -- Sunday
-            fg = "#f38ba8"
+        elseif col_idx == 7 then  -- Sunday
+            fg = "#e06c8a"
             bg = "#1e1e2e"
-        elseif col_idx == 6 then  -- Friday
-            fg = "#a6e3a1"
+        elseif col_idx == 5 then  -- Friday
+            fg = "#74c7a4"
             bg = "#1e1e2e"
         else
             fg = "#cdd6f4"
@@ -383,8 +421,25 @@ local function render_calendar()
         
         day_widgets[i].markup = string.format("<span foreground='%s'>%d</span>", fg, day_num)
         day_cells[i].bg = bg
+    end
+    
+    -- Fill next month days (after current month)
+    local next_start = first_day + num_days + 1
+    local next_day_num = 1
+    for i = next_start, 42 do
+        local col_idx = ((i-1)%7)+1  -- 1=Monday, 7=Sunday
+        local fg
         
-        day_num = day_num + 1
+        if col_idx == 7 then  -- Sunday
+            fg = "#78424d"  -- Darker faded red
+        elseif col_idx == 5 then  -- Friday
+            fg = "#4a7a68"  -- Darker faded green
+        else
+            fg = "#585b70"  -- Faded gray
+        end
+        
+        day_widgets[i].markup = string.format("<span foreground='%s'>%d</span>", fg, next_day_num)
+        next_day_num = next_day_num + 1
     end
 end
 
@@ -392,10 +447,11 @@ local calendar_popup = awful.popup {
     widget = {
         {
             {
-                text = "◀",
+                text = "<-",
                 font = font_popup,
                 align = "center",
                 valign = "center",
+                forced_height = 18,
                 widget = wibox.widget.textbox,
                 buttons = gears.table.join(
                     awful.button({}, 1, function() 
@@ -407,10 +463,11 @@ local calendar_popup = awful.popup {
             },
             cal_month_year,
             {
-                text = "▶",
+                text = "->",
                 font = font_popup,
                 align = "center",
                 valign = "center",
+                forced_height = 18,
                 widget = wibox.widget.textbox,
                 buttons = gears.table.join(
                     awful.button({}, 1, function() 
@@ -422,13 +479,9 @@ local calendar_popup = awful.popup {
             },
             layout = wibox.layout.align.horizontal,
         },
-        {
-            cal_grid_widget,
-            margins = 8,
-            widget = wibox.container.margin,
-        },
+        wibox.container.margin(cal_grid_widget, 20, 20, 8, 8),
         layout = wibox.layout.fixed.vertical,
-        spacing = 8,
+        spacing = 4,
     },
     bg = "#1e1e2eee",
     border_width = 1,
