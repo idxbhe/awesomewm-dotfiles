@@ -34,6 +34,7 @@ local useless_gap = beautiful.useless_gap
 local font       = "JetBrainsMono Nerd Font Mono Bold 10"
 local font_icon  = "JetBrainsMono Nerd Font Mono Bold 14"
 local font_popup = "JetBrainsMono Nerd Font Mono Bold 11"
+local font_popup_regular = "JetBrainsMono Nerd Font Mono 11"
 local icon = function(t) return string.format('<span font="%s">%s</span>', font_icon, t) end
 local wibar_height = beautiful.wibar_height
 local wibar_bg = beautiful.wibar_bg
@@ -286,7 +287,7 @@ end
 local day_widgets = {}
 for i = 1, 42 do
     local tb = wibox.widget.textbox()
-    tb.font = font_popup
+    tb.font = font_popup_regular
     tb.align = "center"
     tb.valign = "center"
     tb.forced_width = 24
@@ -484,12 +485,12 @@ local calendar_popup = awful.popup {
             layout = wibox.layout.fixed.vertical,
             spacing = 12,
         },
-        24, 24, 16, 16  -- left, right, top, bottom
+        24, 24, 16, 20  -- left, right, top, bottom
     ),
     bg = "#1e1e2eee",
     border_width = 1,
     border_color = "#313244",
-    shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+    shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 6) end,
     ontop = true,
     visible = false,
 }
