@@ -225,6 +225,143 @@ local clock_timer = gears.timer {
 }
 clock_timer:start()
 
+-- Clock tooltip showing date
+local clock_tooltip = awful.tooltip {
+    objects = { clock_widget },
+    text = os.date("%A, %d %B %Y"),
+    delay_show = 0.5,
+    mode = "outside",
+    preferred_positions = {"bottom"},
+    margins = 6,
+    timeout = 1,
+}
+clock_tooltip:connect_signal("property::visible", function()
+    clock_tooltip.text = os.date("%A, %d %B %Y")
+end)
+
+-- Calendar popup widget
+local calendar_popup = awful.popup {
+    widget = {
+        {
+            {
+                {
+                    {
+                        id = "month_year",
+                        font = font_popup,
+                        align = "center",
+                        widget = wibox.widget.textbox,
+                    },
+                    layout = wibox.layout.align.horizontal,
+                    {
+                        text = "◀",
+                        font = font_popup,
+                        align = "center",
+                        valign = "center",
+                        widget = wibox.widget.textbox,
+                        buttons = gears.table.join(
+                            awful.button({}, 1, function() 
+                                cal_month = cal_month - 1
+                                if cal_month < 1 then cal_month = 12; cal_year = cal_year - 1 end
+                                render_calendar()
+                            end)
+                        ),
+                    },
+                    nil,
+                    {
+                        text = "▶",
+                        font = font_popup,
+                        align = "center",
+                        valign = "center",
+                        widget = wibox.widget.textbox,
+                        buttons = gears.table.join(
+                            awful.button({}, 1, function() 
+                                cal_month = cal_month + 1
+                                if cal_month > 12 then cal_month = 1; cal_year = cal_year + 1 end
+                                render_calendar()
+                            end)
+                        ),
+                    },
+                },
+                margins = 8,
+                widget = wibox.container.margin,
+            },
+            {
+                id = "calendar_grid",
+                spacing = 4,
+                expand = true,
+                layout = wibox.layout.grid,
+            },
+            layout = wibox.layout.fixed.vertical,
+        },
+        margins = 12,
+        widget = wibox.container.margin,
+    },
+    bg = "#1e1e2eee",
+    border_width = 1,
+    border_color = "#313244",
+    shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 6) end,
+    ontop = true,
+    visible = false,
+}
+
+-- Calendar state
+local cal_year, cal_month = tonumber(os.date("%Y")), tonumber(os.date("%m"))
+local days_in_month = {31,28,31,30,31,30,31,31,30,31,30,31}
+local month_names = {"January","February","March","April","May","June","July","August","September","October","November","December"}
+local day_names = {"Su","Mo","Tu","We","Th","Fr","Sa"}
+
+local function is_leap_year(y) return (y%4==0 and y%100~=0) or (y%400==0) end
+local function days_in(m,y) return m==2 and is_leap_year(y) and 29 or days_in_month[m] end
+local function first_day_of_month(m,y) return tonumber(os.date("%w", os.time{year=y,month=m,day=1})) end
+
+local function render_calendar()
+    local grid = calendar_popup:get_children_by_id("calendar_grid")[1]
+    local month_label = calendar_popup:get_children_by_id("month_year")[1]
+    
+    -- Clear existing children
+    grid:reset()
+    
+    -- Update month/year label
+    month_label.markup = string.format("<b>%s %d</b>", month_names[cal_month], cal_year)
+    
+    -- Add day headers
+    for _, day in ipairs(day_names) do
+        grid:add(wibox.widget.textbox(string.format("<span foreground='#89b4fa'>%s</span>", day)))
+    end
+    
+    -- Add padding for empty cells at start
+    local first = first_day_of_month(cal_month, cal_year)
+    for _ = 1, first do
+        grid:add(wibox.widget.textbox(""))
+    end
+    
+    -- Add day numbers
+    local today = tonumber(os.date("%d"))
+    local current_month = cal_month == tonumber(os.date("%m")) and cal_year == tonumber(os.date("%Y"))
+    
+    for day = 1, days_in(cal_month, cal_year) do
+        local is_today = current_month and day == today
+        local color = is_today and "#89b4fa" or "#cdd6f4"
+        local weight = is_today and "bold" or "normal"
+        local cell = wibox.widget.textbox(string.format("<span foreground='%s' weight='%s'>%2d</span>", color, weight, day))
+        grid:add(cell)
+    end
+end
+
+-- Toggle calendar on clock click
+clock_widget:buttons(gears.table.join(
+    awful.button({}, 1, function()
+        calendar_popup.visible = not calendar_popup.visible
+        if calendar_popup.visible then
+            cal_year, cal_month = tonumber(os.date("%Y")), tonumber(os.date("%m"))
+            render_calendar()
+            local s = awful.screen.focused().geometry
+            calendar_popup.x = s.x + s.width - 300
+            calendar_popup.y = s.y + 30
+        end
+    end)
+))
+
 -- Layout indicator widget — icon only, no text
 local layout_widget = wibox.widget {
     {
