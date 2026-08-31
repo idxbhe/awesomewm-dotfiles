@@ -444,45 +444,48 @@ local function render_calendar()
 end
 
 local calendar_popup = awful.popup {
-    widget = {
-        {
+    widget = wibox.container.margin(
+        wibox.widget {
             {
-                text = "<-",
-                font = font_popup,
-                align = "center",
-                valign = "center",
-                forced_height = 18,
-                widget = wibox.widget.textbox,
-                buttons = gears.table.join(
-                    awful.button({}, 1, function() 
-                        cal_month = cal_month - 1
-                        if cal_month < 1 then cal_month = 12; cal_year = cal_year - 1 end
-                        render_calendar()
-                    end)
-                ),
+                {
+                    text = "<-",
+                    font = font_popup,
+                    align = "center",
+                    valign = "center",
+                    forced_height = 18,
+                    widget = wibox.widget.textbox,
+                    buttons = gears.table.join(
+                        awful.button({}, 1, function() 
+                            cal_month = cal_month - 1
+                            if cal_month < 1 then cal_month = 12; cal_year = cal_year - 1 end
+                            render_calendar()
+                        end)
+                    ),
+                },
+                cal_month_year,
+                {
+                    text = "->",
+                    font = font_popup,
+                    align = "center",
+                    valign = "center",
+                    forced_height = 18,
+                    widget = wibox.widget.textbox,
+                    buttons = gears.table.join(
+                        awful.button({}, 1, function() 
+                            cal_month = cal_month + 1
+                            if cal_month > 12 then cal_month = 1; cal_year = cal_year + 1 end
+                            render_calendar()
+                        end)
+                    ),
+                },
+                layout = wibox.layout.align.horizontal,
             },
-            cal_month_year,
-            {
-                text = "->",
-                font = font_popup,
-                align = "center",
-                valign = "center",
-                forced_height = 18,
-                widget = wibox.widget.textbox,
-                buttons = gears.table.join(
-                    awful.button({}, 1, function() 
-                        cal_month = cal_month + 1
-                        if cal_month > 12 then cal_month = 1; cal_year = cal_year + 1 end
-                        render_calendar()
-                    end)
-                ),
-            },
-            layout = wibox.layout.align.horizontal,
+            cal_grid_widget,
+            layout = wibox.layout.fixed.vertical,
+            spacing = 12,
         },
-        wibox.container.margin(cal_grid_widget, 20, 20, 8, 8),
-        layout = wibox.layout.fixed.vertical,
-        spacing = 4,
-    },
+        24, 24, 16, 16  -- left, right, top, bottom
+    ),
     bg = "#1e1e2eee",
     border_width = 1,
     border_color = "#313244",
