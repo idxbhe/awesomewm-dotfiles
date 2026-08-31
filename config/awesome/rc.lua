@@ -689,23 +689,23 @@ end)
 -- Toggle button helper (wifi/bt/airplane) — settings-style switch
 -- Drawn entirely with cairo: pill track + sliding knob circle.
 local function make_switch(sz)
-    sz = sz or 4
+    sz = sz or 10
     local state = false
     local sw = wibox.widget.base.make_widget(nil, nil, { enable_properties = true })
-    local function fit(_, _, _, _) return 10, sz + 2 end
+    local function fit(_, _, _, _) return 24, sz + 2 end
     local function draw(_, _, cr, w, h)
         -- track pill
         cr:set_source(gears.color(state and "#89b4fa" or "#585b70"))
         gears.shape.rounded_rect(cr, w, h, h / 2)
         cr:fill()
         -- knob circle: left when off, right when on
-        local r = h / 2 - 2.5
+        local r = h / 2 - 1
         local cx = state and (w - h / 2) or (h / 2)
         cr:set_source(gears.color(state and "#1e1e2e" or "#cdd6f4"))
         cr:arc(cx, h / 2, r, 0, 2 * math.pi)
         cr:fill_preserve()
         cr:set_source(gears.color("#00000022"))
-        cr:set_line_width(1)
+        cr:set_line_width(0.5)
         cr:stroke()
     end
     rawset(sw, "fit", fit)
@@ -715,6 +715,14 @@ local function make_switch(sz)
         sw:emit_signal("widget::redraw_needed")
     end
     return sw
+end
+
+local function wrap_switch(sw)
+    return wibox.widget {
+        sw,
+        valign = "center",
+        widget = wibox.container.place,
+    }
 end
 
 local icon_font_str = "JetBrainsMono Nerd Font Mono 12"
@@ -784,6 +792,7 @@ local function make_row(icon, label, fnt)
         nil,
         right_slot,
         layout = wibox.layout.align.horizontal,
+        forced_height = row_h,
     }
 
     row.icon_widget = icon_proxy
@@ -816,7 +825,7 @@ local wifi_row = make_row(glyph.wifi_off, "Wi-Fi", font_popup)
 -- insert refresh + switch into right slot
 do
     wifi_row.right_slot:add(wifi_refresh)
-    wifi_row.right_slot:add(wifi_switch)
+    wifi_row.right_slot:add(wrap_switch(wifi_switch))
 end
 
 -- WiFi network list: container rebuilt on each scan, one clickable row per SSID
@@ -1033,7 +1042,7 @@ wifi_switch:buttons(gears.table.join(
 -- Bluetooth section
 local bt_switch = make_switch()
 local bt_row = make_row(glyph.bt_off, "Bluetooth", font_popup)
-bt_row.right_slot:add(bt_switch)
+bt_row.right_slot:add(wrap_switch(bt_switch))
 
 bt_switch:buttons(gears.table.join(
     awful.button({ }, 1, function()
@@ -1057,7 +1066,7 @@ bt_switch:buttons(gears.table.join(
 -- Airplane mode toggle
 local ap_switch = make_switch()
 local ap_row = make_row(glyph.airplane_off, "Airplane Mode", font_popup)
-ap_row.right_slot:add(ap_switch)
+ap_row.right_slot:add(wrap_switch(ap_switch))
 
 ap_switch:buttons(gears.table.join(
     awful.button({ }, 1, function()
