@@ -713,7 +713,7 @@ local vol_popup_timer = gears.timer {
     timeout   = 0.5,
     single_shot = true,
     callback  = function()
-        vol_popup.visible = false
+        hide_popup(vol_popup)
     end,
 }
 vol_popup:connect_signal("mouse::leave", function()
@@ -735,8 +735,10 @@ end)
 local vol_widget, vol_icon_tb, vol_text_tb, vol_layout = pill_icon_text(glyph.vol_high, "%d%%", pill_bg, pill_fg)
 vol_widget:buttons(gears.table.join(
     awful.button({ }, 1, function()
-        vol_popup.visible = not vol_popup.visible
         if vol_popup.visible then
+            hide_popup(vol_popup)
+        else
+            show_popup(vol_popup)
             local s = awful.screen.focused().geometry
             vol_popup.x = s.x + s.width - 260
             vol_popup.y = s.y + 30
@@ -1277,7 +1279,7 @@ end)
 
 set_popup:connect_signal("mouse::leave", function()
     if popup_entered then
-        set_popup.visible = false
+        hide_popup(set_popup)
         set_wifi_visible(false)
         popup_entered = false
     end
@@ -1291,8 +1293,11 @@ set_widget:set_markup_silently(glyph.settings)
 set_widget:buttons(gears.table.join(
     awful.button({ }, 1, function()
         popup_entered = false
-        set_popup.visible = not set_popup.visible
         if set_popup.visible then
+            hide_popup(set_popup)
+            set_wifi_visible(false)
+        else
+            show_popup(set_popup)
             local s = awful.screen.focused().geometry
             set_popup.x = s.x + s.width - 300
             set_popup.y = s.y + 30
