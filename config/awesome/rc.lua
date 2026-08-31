@@ -665,8 +665,8 @@ local bri_slider = wibox.widget {
     bar_color  = "#585b70",
     bar_active_color = "#f9e2af",
     bar_shape  = gears.shape.rounded_bar,
-    bar_margins = { bottom = 8, top = 8 },
-    handle_width = 12,
+    bar_margins = { bottom = 10, top = 10 },
+    handle_width = 10,
     handle_color = "#cdd6f4",
     handle_shape = gears.shape.circle,
     handle_border_width = 2,
@@ -689,17 +689,17 @@ end)
 -- Toggle button helper (wifi/bt/airplane) — settings-style switch
 -- Drawn entirely with cairo: pill track + sliding knob circle.
 local function make_switch(sz)
-    sz = sz or 16
+    sz = sz or 4
     local state = false
     local sw = wibox.widget.base.make_widget(nil, nil, { enable_properties = true })
-    local function fit(_, _, _, _) return 32, sz + 2 end
+    local function fit(_, _, _, _) return 10, sz + 2 end
     local function draw(_, _, cr, w, h)
         -- track pill
         cr:set_source(gears.color(state and "#89b4fa" or "#585b70"))
         gears.shape.rounded_rect(cr, w, h, h / 2)
         cr:fill()
         -- knob circle: left when off, right when on
-        local r = h / 2 - 3
+        local r = h / 2 - 2.5
         local cx = state and (w - h / 2) or (h / 2)
         cr:set_source(gears.color(state and "#1e1e2e" or "#cdd6f4"))
         cr:arc(cx, h / 2, r, 0, 2 * math.pi)
@@ -717,43 +717,77 @@ local function make_switch(sz)
     return sw
 end
 
-local function make_row(icon, label, fnt)
-    fnt = fnt or font
-    local icon_w = wibox.widget {
-        text = icon,
-        font = fnt,
+local icon_font_str = "JetBrainsMono Nerd Font Mono 12"
+local row_h = 24
+local icon_w  = 20
+
+local function make_icon_tb(icon_char)
+    return wibox.widget {
+        markup = icon_char,
+        font = icon_font_str,
         align = "center",
         valign = "center",
-        forced_width = 22,
+        forced_width = icon_w,
+        forced_height = row_h,
         widget = wibox.widget.textbox,
     }
-    local label_w = wibox.widget {
+end
+
+local function make_row(icon, label, fnt)
+    fnt = fnt or font
+
+    local icon_tb = make_icon_tb(icon)
+
+    local label_tb = wibox.widget {
         markup = label,
         font = fnt,
         align = "left",
         valign = "center",
+        forced_height = row_h,
         widget = wibox.widget.textbox,
     }
+
+    local left = wibox.widget {
+        icon_tb,
+        label_tb,
+        spacing = 8,
+        layout = wibox.layout.fixed.horizontal,
+    }
+
+    -- Proxy for icon_widget
+    local icon_proxy = {}
+    function icon_proxy:set_text(new_icon)
+        icon_tb.markup = new_icon
+    end
+
+    -- Proxy for label_widget
+    local label_proxy = {}
+    setmetatable(label_proxy, {
+        __newindex = function(self, key, value)
+            if key == "markup" then
+                label_tb.markup = value
+            end
+        end,
+        __index = function(self, key)
+            if key == "markup" then return label_tb.markup end
+            return label_tb[key]
+        end,
+    })
+
     local right_slot = wibox.widget {
         layout = wibox.layout.fixed.horizontal,
         spacing = 8,
     }
-    -- example2 connections.lua pattern: 3 slots in align.horizontal
-    -- first child pinned left, last child pinned right, middle expands
+
     local row = wibox.widget {
-        { -- left: icon + label
-            icon_w,
-            label_w,
-            spacing = 8,
-            layout = wibox.layout.fixed.horizontal,
-            valign = "center",
-        },
-        nil, -- middle: nothing, left group hugs left edge
-        right_slot, -- right: refresh + switch
+        left,
+        nil,
+        right_slot,
         layout = wibox.layout.align.horizontal,
     }
-    row.icon_widget = icon_w
-    row.label_widget = label_w
+
+    row.icon_widget = icon_proxy
+    row.label_widget = label_proxy
     row.right_slot = right_slot
     return row
 end
@@ -808,15 +842,64 @@ local function connect_to(ssid)
             if exit_code == 0 then
                 naughty.notify({ text = "Connected to " .. ssid, timeout = 3 })
             else
-                -- likely needs a password; prompt for it
+                -- likely needs a password; prompt for it via popup
+                local pass_popup
+                local pass_tb = wibox.widget.textbox()
+                pass_tb.font = font_popup
+                pass_tb.align = "left"
+                pass_tb.valign = "center"
+                pass_tb.forced_width = 240
+                
+                local function close_popup()
+                    if pass_popup then
+                        awful.keygrabber.stop()
+                        pass_popup.visible = false
+                        pass_popup = nil
+                    end
+                end
+                
+                pass_popup = awful.popup {
+                    widget = wibox.widget {
+                        {
+                            {
+                                markup = "<b>Password for " .. ssid .. "</b>",
+                                font = font_popup,
+                                widget = wibox.widget.textbox,
+                            },
+                            {
+                                pass_tb,
+                                forced_height = 28,
+                                bg = "#313244",
+                                shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+                                widget = wibox.container.background,
+                            },
+                            spacing = 8,
+                            layout = wibox.layout.fixed.vertical,
+                        },
+                        margins = 12,
+                        widget = wibox.container.margin,
+                    },
+                    bg = "#1e1e2eee",
+                    border_width = 1,
+                    border_color = "#313244",
+                    shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 6) end,
+                    ontop = true,
+                    visible = true,
+                }
+                
+                local s = awful.screen.focused().geometry
+                pass_popup.x = s.x + s.width / 2 - 150
+                pass_popup.y = s.y + s.height / 2 - 60
+                
                 awful.prompt.run {
-                    prompt = "Password for " .. ssid .. ": ",
-                    textbox = awful.screen.focused().mypromptbox.widget,
+                    prompt = "",
+                    textbox = pass_tb,
+                    bg_cursor = "#cdd6f4",
                     exe_callback = function(pass)
+                        close_popup()
                         if pass and pass ~= "" then
                             awful.spawn.easy_async_with_shell(
-                                "nmcli dev wifi connect '" .. ssid:gsub("'", "'\\''") .. "' password '"
-                                .. pass:gsub("'", "'\\''") .. "'",
+                                "nmcli dev wifi connect '" .. ssid:gsub("'", "'\\''") .. "' password '" .. pass:gsub("'", "'\\''") .. "'",
                                 function(o, e, r, c)
                                     if c == 0 then
                                         naughty.notify({ text = "Connected to " .. ssid, timeout = 3 })
@@ -826,6 +909,9 @@ local function connect_to(ssid)
                                 end
                             )
                         end
+                    end,
+                    done_callback = function()
+                        close_popup()
                     end,
                 }
             end
@@ -1007,15 +1093,15 @@ local set_popup = awful.popup {
     widget = wibox.widget {
         {
             { -- Brightness row
-                { text = icon(glyph.clock), font = font_popup, forced_width = 24, align = "center", valign = "center", widget = wibox.widget.textbox },
+                make_icon_tb(glyph.brightness),
                 bri_slider,
                 bri_text,
-                spacing = 10,
-                forced_height = 32,
+                spacing = 8,
+                forced_height = row_h,
                 layout = wibox.layout.fixed.horizontal,
             },
             { -- spacing after brightness
-                forced_height = 8,
+                forced_height = 6,
                 widget = wibox.container.background,
             },
             make_sep(),

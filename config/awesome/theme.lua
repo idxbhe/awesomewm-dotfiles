@@ -252,10 +252,11 @@ theme.glyph = {
     launcher    = "",  -- U+E732 Arch Linux logo
     wifi_on     = "󰖪",  -- U+F05AA
     wifi_off    = "󰖰",  -- U+F05B0
-    bt_on       = "󰂯",  -- U+F00AF
-    bt_off      = "󰂮",  -- U+F00AE
-    airplane_on = "",  -- U+F015D
-    airplane_off = "",  -- U+F015E
+    bt_on       = "",  -- U+F293
+    bt_off      = "",  -- U+F294
+    airplane_on = "",  -- U+F072
+    airplane_off = "",  -- U+F072
+    brightness  = "",  -- U+F185 fa-sun
     settings    = "󰒓",  -- U+F0493
 }
 
