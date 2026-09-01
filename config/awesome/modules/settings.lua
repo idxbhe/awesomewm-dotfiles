@@ -530,6 +530,7 @@ set_widget:buttons(gears.table.join(
                     wifi_row.label_widget.markup = "<b>Wi-Fi</b>"
                     wifi_row.icon_widget:set_text(m.glyph.wifi_on)
                     set_wifi_visible(true)
+                    refresh_wifi()
                 else
                     wifi_switch.set_switch(false)
                     set_wifi_visible(false)
