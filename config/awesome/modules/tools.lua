@@ -26,20 +26,17 @@ end
 -- Helper: Create clickable tool row
 local function make_tool_row(icon, label, callback)
     local row = wibox.widget {
+        nil,
         {
-            {
-                markup = string.format('<span font="%s">%s</span> %s', m.font_icon, icon, label),
-                font = m.font_popup,
-                align = "center",
-                valign = "center",
-                widget = wibox.widget.textbox,
-            },
-            widget = wibox.container.place,
-            halign = "center",
+            markup = string.format('<span font="%s">%s</span> %s', m.font_icon, icon, label),
+            font = m.font_popup,
+            align = "center",
             valign = "center",
+            widget = wibox.widget.textbox,
         },
-        margins = { left = 0, right = 0, top = 0, bottom = 0 },
-        widget = wibox.container.margin,
+        nil,
+        expand = "inside",
+        layout = wibox.layout.align.horizontal,
     }
     
     -- Make row clickable
