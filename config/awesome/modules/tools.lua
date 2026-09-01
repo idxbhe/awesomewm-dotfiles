@@ -73,7 +73,7 @@ local function make_tool_row(icon, label, callback)
 end
 
 -- Screenshot icon (camera)
-local screenshot_icon = "󰹑"  -- U+F0E91 fa-camera
+local screenshot_icon = "󰵝"  -- U+F0D5D fa-camera
 
 -- Create tools list
 local tools_list = wibox.widget {
