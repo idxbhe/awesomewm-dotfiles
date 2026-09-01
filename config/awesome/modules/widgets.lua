@@ -130,26 +130,6 @@ local clock_timer = gears.timer {
 clock_timer:start()
 -- }}}
 
--- {{{ Tools widget
-M.tools_widget = wibox.widget {
-    {
-        widget = wibox.widget.textbox,
-        font = m.font_icon,
-        align = "center",
-        valign = "center",
-    },
-    left = m.pill_padding,
-    right = m.pill_padding,
-    top = 2,
-    bottom = 2,
-    widget = wibox.container.margin,
-    forced_width = 24,
-}
-M.tools_widget.forced_height = m.wibar_height - 4
-local tools_icon_tb = M.tools_widget.children[1]
-tools_icon_tb:set_markup_silently(m.glyph.tools)
--- }}}
-
 -- {{{ Layout widget
 M.layout_widget = wibox.widget {
     {
