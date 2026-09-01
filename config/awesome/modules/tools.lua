@@ -63,12 +63,17 @@ local screenshot_icon = "󰵝"  -- U+F0D5D fa-camera
 
 -- Create tools list
 local tools_list = wibox.widget {
-    layout = wibox.layout.fixed.vertical,
-    spacing = 4,
+    {
+        layout = wibox.layout.fixed.vertical,
+        spacing = 4,
+    },
+    widget = wibox.container.place,
+    halign = "center",
+    valign = "center",
 }
 
 -- Add Screenshot tool
-tools_list:add(make_tool_row(
+tools_list.children[1]:add(make_tool_row(
     screenshot_icon,
     "Screenshot",
     function()
