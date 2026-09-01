@@ -39,15 +39,16 @@ local function make_screenshot_option(icon, label, callback)
     )
 
     local row = wibox.widget {
+        nil,
         {
             markup = markup,
             align = "center",
             valign = "center",
             widget = wibox.widget.textbox,
         },
-        widget = wibox.container.place,
-        halign = "center",
-        valign = "center",
+        nil,
+        expand = "inside",
+        layout = wibox.layout.align.horizontal,
         forced_width = 200,
         forced_height = 32,
     }
@@ -103,7 +104,7 @@ function M.show_screenshot_menu()
     local screen = awful.screen.focused()
     local geo = screen.geometry
     local popup_w = 220
-    local popup_h = 150
+    local popup_h = 180
 
     screenshot_popup = awful.popup {
         widget = {
@@ -112,28 +113,33 @@ function M.show_screenshot_menu()
                     markup = '<b><span font="' .. m.font_popup .. '">Screenshot</span></b>',
                     align = "center",
                     valign = "center",
-                    forced_height = 28,
+                    forced_height = 30,
+                    forced_width = popup_w,
                     widget = wibox.widget.textbox,
                 },
-                make_screenshot_option(
-                    "󰥑",  -- nf-md-monitor_screenshot (full)
-                    "Full Screen",
-                    function() take_screenshot("maim") end
-                ),
-                make_screenshot_option(
-                    "󰼔",  -- nf-md-crop (selection)
-                    "Selection",
-                    function() take_screenshot("maim -s") end
-                ),
-                make_screenshot_option(
-                    "󰃗",  -- nf-md-application (window)
-                    "Window",
-                    function() take_screenshot("maim -i") end
-                ),
-                spacing = 4,
+                {
+                    make_screenshot_option(
+                        "󰥑",  -- nf-md-monitor_screenshot (full)
+                        "Full Screen",
+                        function() take_screenshot("maim") end
+                    ),
+                    make_screenshot_option(
+                        "󰼔",  -- nf-md-crop (selection)
+                        "Selection",
+                        function() take_screenshot("maim -s") end
+                    ),
+                    make_screenshot_option(
+                        "󰃗",  -- nf-md-application (window)
+                        "Window",
+                        function() take_screenshot("maim -i") end
+                    ),
+                    spacing = 6,
+                    layout = wibox.layout.fixed.vertical,
+                },
+                spacing = 8,
                 layout = wibox.layout.fixed.vertical,
             },
-            margins = 12,
+            margins = 10,
             widget = wibox.container.margin,
         },
         bg = "#1e1e2eee",
@@ -146,8 +152,7 @@ function M.show_screenshot_menu()
         visible = true,
         x = geo.x + (geo.width - popup_w) / 2,
         y = geo.y + (geo.height - popup_h) / 2,
-        minimum_width = popup_w,
-        maximum_width = popup_w,
+        width = popup_w,
     }
 
     -- Register with popup registry
