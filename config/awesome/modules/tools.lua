@@ -116,17 +116,17 @@ function M.show_screenshot_menu()
                     widget = wibox.widget.textbox,
                 },
                 make_screenshot_option(
-                    "󰹑",  -- nf-md-monitor_screenshot (full)
+                    "󰥑",  -- nf-md-monitor_screenshot (full)
                     "Full Screen",
                     function() take_screenshot("maim") end
                 ),
                 make_screenshot_option(
-                    "󰒖",  -- nf-md-crop (selection)
+                    "󰼔",  -- nf-md-crop (selection)
                     "Selection",
                     function() take_screenshot("maim -s") end
                 ),
                 make_screenshot_option(
-                    "󰀏",  -- nf-md-application (window)
+                    "󰃗",  -- nf-md-application (window)
                     "Window",
                     function() take_screenshot("maim -i") end
                 ),
@@ -217,7 +217,7 @@ local tools_list = wibox.widget {
 }
 
 -- Screenshot icon (camera)
-local screenshot_icon = ""  -- U+F0D5D fa-camera
+local screenshot_icon = "󰵝"  -- U+F0D5D fa-camera
 
 tools_list:add(make_tool_row(
     screenshot_icon,
