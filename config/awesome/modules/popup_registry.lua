@@ -6,6 +6,7 @@ local M = {
     active_popup = nil,
     active_tooltip = nil,
     password_popup = nil,
+    DEBUG_MODE = true,  -- Set false for production to enable auto-hide and single-popup rules
 }
 
 local function hide_active_tooltip()
@@ -29,10 +30,15 @@ function M.show_popup(popup, is_password)
         popup.visible = true
         return
     end
-    -- Regular popup: hide tooltip and other popups
-    hide_active_tooltip()
-    hide_active_popup()
-    M.active_popup = popup
+    
+    -- In debug mode, allow multiple popups
+    if not M.DEBUG_MODE then
+        -- Regular popup: hide tooltip and other popups
+        hide_active_tooltip()
+        hide_active_popup()
+        M.active_popup = popup
+    end
+    
     popup.visible = true
 end
 
@@ -50,12 +56,15 @@ function M.hide_popup(popup, is_password)
 end
 
 function M.show_tooltip(popup)
-    -- Tooltip: don't show if there's already a popup active
-    if M.active_popup then
-        return
+    -- In debug mode, don't block tooltips
+    if not M.DEBUG_MODE then
+        -- Tooltip: don't show if there's already a popup active
+        if M.active_popup then
+            return
+        end
+        hide_active_tooltip()
+        M.active_tooltip = popup
     end
-    hide_active_tooltip()
-    M.active_tooltip = popup
     popup.visible = true
 end
 
@@ -64,6 +73,11 @@ function M.hide_tooltip(popup)
         M.active_tooltip = nil
     end
     popup.visible = false
+end
+
+-- Helper for modules to check if auto-hide should be enabled
+function M.should_auto_hide()
+    return not M.DEBUG_MODE
 end
 
 return M

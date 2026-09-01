@@ -249,6 +249,7 @@ M.tools_popup = awful.popup {
 
 -- Auto-hide on mouse leave
 M.tools_popup:connect_signal("mouse::leave", function()
+    if not popup_registry.should_auto_hide() then return end
     gears.timer.start_new(0.5, function()
         local coords = mouse.coords()
         local geo = M.tools_popup:geometry()

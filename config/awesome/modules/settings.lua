@@ -498,6 +498,7 @@ set_popup:connect_signal("mouse::enter", function()
 end)
 
 set_popup:connect_signal("mouse::leave", function()
+    if not popup_registry.should_auto_hide() then return end
     if popup_entered then
         popup_registry.hide_popup(set_popup)
         set_wifi_visible(false)

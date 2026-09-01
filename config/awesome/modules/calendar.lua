@@ -296,6 +296,7 @@ function M.setup_clock_tooltip(clock_widget)
     end)
 
     clock_widget:connect_signal("mouse::leave", function()
+        if not popup_registry.should_auto_hide() then return end
         gears.timer.start_new(0.3, function()
             local mouse_x, mouse_y = mouse.coords().x, mouse.coords().y
             local popup_geo = clock_tooltip_popup:geometry()
@@ -314,6 +315,7 @@ end
 
 function M.setup_autoclose()
     calendar_popup:connect_signal("mouse::leave", function()
+        if not popup_registry.should_auto_hide() then return end
         gears.timer.start_new(0.3, function()
             local mouse_x, mouse_y = mouse.coords().x, mouse.coords().y
             local popup_geo = calendar_popup:geometry()

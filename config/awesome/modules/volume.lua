@@ -74,6 +74,7 @@ local vol_popup_timer = gears.timer {
 }
 
 vol_popup:connect_signal("mouse::leave", function()
+    if not popup_registry.should_auto_hide() then return end
     vol_popup_timer:start()
 end)
 
