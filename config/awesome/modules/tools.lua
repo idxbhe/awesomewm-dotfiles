@@ -26,13 +26,17 @@ end
 -- Helper: Create clickable tool row
 local function make_tool_row(icon, label, callback)
     local row = wibox.widget {
-        markup = string.format('<span font="%s">%s</span> %s', m.font_icon, icon, label),
-        font = m.font_popup,
-        align = "center",
-        valign = "center",
+        {
+            markup = string.format('<span font="%s">%s</span> %s', m.font_icon, icon, label),
+            font = m.font_popup,
+            align = "center",
+            valign = "center",
+            widget = wibox.widget.textbox,
+        },
         forced_height = 30,
-        forced_width = 180,
-        widget = wibox.widget.textbox,
+        widget = wibox.container.place,
+        halign = "center",
+        valign = "center",
     }
     
     -- Make row clickable
@@ -40,7 +44,6 @@ local function make_tool_row(icon, label, callback)
         awful.button({}, 1, function()
             if callback then
                 callback()
-                -- Hide popup after clicking
                 popup_registry.hide_popup(tools_popup)
             end
         end)
