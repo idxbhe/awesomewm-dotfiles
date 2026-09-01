@@ -258,7 +258,7 @@ theme.glyph = {
     airplane_off = "",  -- U+F072
     brightness  = "",  -- U+F185 fa-sun
     settings    = "󰒓",  -- U+F0493 gear
-    tools       = "󰭺",  -- U+F0B7A tools
+    tools       = "󰖷",  -- U+F05B7 tools
 }
 
 -- Load default theme as fallback for missing properties (titlebar button images, etc.)
