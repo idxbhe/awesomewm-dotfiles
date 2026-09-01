@@ -39,17 +39,17 @@ local function make_screenshot_option(icon, label, callback)
     )
 
     local row = wibox.widget {
-        nil,
         {
             markup = markup,
             align = "center",
             valign = "center",
-            forced_height = 28,
             widget = wibox.widget.textbox,
         },
-        nil,
-        expand = "inside",
-        layout = wibox.layout.align.horizontal,
+        widget = wibox.container.place,
+        halign = "center",
+        valign = "center",
+        forced_width = 200,
+        forced_height = 32,
     }
 
     row:connect_signal("mouse::enter", function() row.bg = "#313244" end)
@@ -185,7 +185,6 @@ end
 
 local function make_tool_row(icon, label, callback)
     local row = wibox.widget {
-        nil,
         {
             markup = string.format('<span font="%s">%s</span>  %s', m.font_icon, icon, label),
             font = m.font_popup,
@@ -193,9 +192,11 @@ local function make_tool_row(icon, label, callback)
             valign = "center",
             widget = wibox.widget.textbox,
         },
-        nil,
-        expand = "inside",
-        layout = wibox.layout.align.horizontal,
+        widget = wibox.container.place,
+        halign = "center",
+        valign = "center",
+        forced_width = 200,
+        forced_height = 32,
     }
 
     row:connect_signal("mouse::enter", function() row.bg = m.surface0 end)
