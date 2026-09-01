@@ -190,6 +190,7 @@ awful.screen.connect_for_each_screen(function(s)
                 widgets.pill_widget(widgets.ram_widget),
                 widgets.pill_widget(widgets.net_widget),
                 widgets.pill_widget(volume.vol_widget),
+                widgets.pill_widget(widgets.tools_widget),
                 widgets.pill_widget(settings.set_widget),
                 widgets.pill_widget(widgets.clock_widget),
                 widgets.pill_widget(widgets.layout_widget),
