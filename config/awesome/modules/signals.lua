@@ -239,9 +239,21 @@ client.connect_signal("manage", function(c)
     gears.timer.start_new(0.1, function()
         if not c.valid then return false end
 
-        -- Handle fullscreen separately (let layout system handle it)
+        -- Handle fullscreen separately
         if state.fullscreen then
             c.fullscreen = true
+            -- Force fullscreen geometry using screen.geometry (not workarea)
+            gears.timer.start_new(0.05, function()
+                if not c.valid then return false end
+                local s = c.screen and c.screen.geometry or screen.primary.geometry
+                c:geometry({
+                    x = s.x,
+                    y = s.y,
+                    width = s.width,
+                    height = s.height,
+                })
+                return false
+            end)
             return false
         end
 
