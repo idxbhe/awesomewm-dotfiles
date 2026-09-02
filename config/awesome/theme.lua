@@ -50,7 +50,7 @@ theme.fg_urgent     = mocha.crust
 theme.fg_minimize   = mocha.overlay1
 
 -- Borders
-theme.useless_gap         = 4
+theme.useless_gap         = 1
 theme.border_width        = 1
 theme.border_normal       = mocha.surface0
 theme.border_focus        = mocha.blue
