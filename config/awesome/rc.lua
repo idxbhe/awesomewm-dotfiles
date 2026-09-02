@@ -139,6 +139,14 @@ end
 screen.connect_signal("property::geometry", set_wallpaper)
 screen.connect_signal("request::wallpaper", set_wallpaper)
 
+-- Force wallpaper refresh on startup to avoid display manager residue
+gears.timer.start_new(1, function()
+    for _, s in ipairs(screen) do
+        set_wallpaper(s)
+    end
+    return false
+end)
+
 -- Tags
 awful.screen.connect_for_each_screen(function(s)
     awful.tag({ "1", "2", "3", "4", "5", "6", "7" }, s, awful.layout.layouts[1])
@@ -215,5 +223,8 @@ awful.screen.connect_for_each_screen(function(s)
             valign = "center",
         },
     }
+
+    -- Set wallpaper after all screen elements are created
+    set_wallpaper(s)
 end)
 -- }}}
