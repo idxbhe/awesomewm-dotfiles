@@ -5,6 +5,7 @@
 local gears = require("gears")
 local awful = require("awful")
 require("awful.autofocus")
+require("awful.titlebar")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local naughty = require("naughty")
