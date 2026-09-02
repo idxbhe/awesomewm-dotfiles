@@ -1,0 +1,14 @@
+{
+    "diagnostics.globals": [
+        "client",
+        "screen",
+        "root",
+        "awesome",
+        "mouse",
+        "mousegrabber",
+        "keygrabber",
+        "dbus",
+        "drawin",
+        "tag"
+    ]
+}
