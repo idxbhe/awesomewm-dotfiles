@@ -404,16 +404,16 @@ client.connect_signal("request::titlebars", function(c)
     }
 end)
 
--- Ensure titlebar exists when client is managed
-client.connect_signal("manage", function(c)
-    -- Ensure titlebar exists for normal and dialog windows
+-- Ensure titlebars are always shown for normal and dialog windows
+local function ensure_titlebars(c)
     if c.type == "normal" or c.type == "dialog" then
-        -- Force titlebar creation if it doesn't exist
-        if not awful.titlebar(c) then
-            c:emit_signal("request::titlebars")
+        -- Get existing titlebar or create one
+        local tb = awful.titlebar(c)
+        if tb then
+            tb.visible = true
         end
     end
-end)
+end
 
 -- Hide titlebar when fullscreen, show when not
 client.connect_signal("property::fullscreen", function(c)
@@ -423,15 +423,20 @@ client.connect_signal("property::fullscreen", function(c)
     end
 end)
 
--- Restore titlebar visibility when layout changes
+-- Restore titlebar visibility when layout changes or window state changes
 tag.connect_signal("property::layout", function()
     for _, c in ipairs(client.get()) do
-        if not c.fullscreen and (c.type == "normal" or c.type == "dialog") then
-            local tb = awful.titlebar(c)
-            if tb then
-                tb.visible = true
-            end
-        end
+        ensure_titlebars(c)
+    end
+end)
+
+client.connect_signal("property::floating", function(c)
+    ensure_titlebars(c)
+end)
+
+client.connect_signal("property::maximized", function(c)
+    if not c.fullscreen then
+        ensure_titlebars(c)
     end
 end)
 
