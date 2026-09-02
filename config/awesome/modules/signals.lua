@@ -37,10 +37,12 @@ end
 -- Find Papirus icon path for a given icon name
 local function find_papirus_icon(icon_name)
     if not icon_name or icon_name == "" then return nil end
-    for _, size in ipairs({"48x48", "32x32", "24x24", "22x22", "16x16"}) do
-        local p = "/usr/share/icons/Papirus-Dark/" .. size .. "/apps/" .. icon_name .. ".svg"
-        if gears.filesystem.file_readable(p) then
-            return p
+    for _, theme in ipairs({"Papirus-Dark", "Papirus"}) do
+        for _, size in ipairs({"48x48", "32x32", "24x24", "22x22", "16x16"}) do
+            local p = "/usr/share/icons/" .. theme .. "/" .. size .. "/apps/" .. icon_name .. ".svg"
+            if gears.filesystem.file_readable(p) then
+                return p
+            end
         end
     end
     return nil
@@ -48,6 +50,15 @@ end
 
 -- Look up icon for a client, trying multiple strategies
 local function lookup_client_icon(c)
+    -- Strategy 0: Terminal apps use generic "terminal" icon
+    if c.class then
+        local cls_lower = c.class:lower()
+        if cls_lower == "alacritty" or cls_lower == "kitty" or cls_lower == "xterm" or cls_lower == "st" then
+            local p = find_papirus_icon("terminal")
+            if p then return p end
+        end
+    end
+
     -- Strategy 1: Check .desktop file mapping by WM_CLASS
     if c.class then
         local icon_name = desktop_icon_map[c.class:lower()]
@@ -68,6 +79,8 @@ local function lookup_client_icon(c)
         -- Handle dotted names: md.obsidian.Obsidian -> obsidian
         local last_part = cls:match("([^.]+)$")
         if last_part and last_part ~= cls then table.insert(candidates, last_part) end
+        -- Try dotted form with original case: com.alacritty.Alacritty
+        table.insert(candidates, "com." .. cls .. "." .. c.class)
     end
 
     for _, name in ipairs(candidates) do
