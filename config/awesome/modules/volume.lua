@@ -113,6 +113,18 @@ local function update_vol_icon(vol)
     vol_icon_tb:set_text(vol_icon(vol))
 end
 
+-- Scroll throttle to prevent queued up events
+local scroll_throttle = false
+local function scroll_action(action)
+    if scroll_throttle then return end
+    scroll_throttle = true
+    awful.spawn(action, false)
+    gears.timer.start_new(0.05, function()
+        scroll_throttle = false
+        return false
+    end)
+end
+
 vol_widget:buttons(gears.table.join(
     awful.button({}, 1, function()
         if vol_popup.visible then
@@ -124,9 +136,9 @@ vol_widget:buttons(gears.table.join(
             vol_popup.y = s.y + 30
         end
     end),
-    awful.button({}, 4, function() awful.spawn({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "+5%"}) end),
-    awful.button({}, 5, function() awful.spawn({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "-5%"}) end),
-    awful.button({}, 3, function() awful.spawn({"pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle"}) end)
+    awful.button({}, 4, function() scroll_action({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "+5%"}) end),
+    awful.button({}, 5, function() scroll_action({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "-5%"}) end),
+    awful.button({}, 3, function() scroll_action({"pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle"}) end)
 ))
 
 vol_text_tb.markup = "45%"
