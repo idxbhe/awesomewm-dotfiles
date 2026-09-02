@@ -27,7 +27,7 @@ local M = {
     naughty = naughty,
     menubar = menubar,
     hotkeys_popup = hotkeys_popup,
-    
+
     -- Theme values
     glyph = beautiful.glyph,
     pill_bg = beautiful.pill_bg,
@@ -43,7 +43,7 @@ local M = {
     overlay0 = beautiful.overlay0,
     surface0 = beautiful.surface0,
     blue = beautiful.blue,
-    
+
     -- Font sizes
     font = "Maple Mono NF Bold 10",
     font_icon = "icons 12",

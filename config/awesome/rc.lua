@@ -18,6 +18,7 @@ local settings = require("modules.settings")
 local calendar = require("modules.calendar")
 local tools = require("modules.tools")
 local power = require("modules.power")
+local signals = require("modules.signals")
 
 -- {{{ Error handling
 if awesome.startup_errors then
@@ -212,7 +213,4 @@ awful.screen.connect_for_each_screen(function(s)
         },
     }
 end)
-
--- Client signals
-require("modules.signals")
 -- }}}
