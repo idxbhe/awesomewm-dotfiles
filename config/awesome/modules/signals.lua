@@ -157,20 +157,21 @@ end)
 -- {{{ Remember window state (position, size, floating mode) per app class
 local state_file = gears.filesystem.get_cache_dir() .. "/window_state"
 
--- Load saved states (format: class|x|y|width|height|maximized|floating)
+-- Load saved states (format: class|x|y|width|height|maximized|floating|fullscreen)
 local window_states = {}
 do
     local f = io.open(state_file, "r")
     if f then
         for line in f:lines() do
-            local class, x, y, w, h, maximized, floating =
-                line:match("^(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.+)$")
+            local class, x, y, w, h, maximized, floating, fullscreen =
+                line:match("^(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.+)$")
             if class and x then
                 window_states[class] = {
                     x = tonumber(x), y = tonumber(y),
                     width = tonumber(w), height = tonumber(h),
                     maximized = maximized == "1",
                     floating = floating == "1",
+                    fullscreen = fullscreen == "1",
                 }
             end
         end
@@ -182,12 +183,13 @@ local function save_window_states()
     local f = io.open(state_file, "w")
     if not f then return end
     for class, s in pairs(window_states) do
-        f:write(string.format("%s|%d|%d|%d|%d|%s|%s\n",
+        f:write(string.format("%s|%d|%d|%d|%d|%s|%s|%s\n",
             class,
             math.floor(s.x or 0), math.floor(s.y or 0),
             math.floor(s.width or 0), math.floor(s.height or 0),
             s.maximized and "1" or "0",
-            s.floating and "1" or "0"))
+            s.floating and "1" or "0",
+            s.fullscreen and "1" or "0"))
     end
     f:close()
 end
@@ -199,47 +201,102 @@ local save_timer = gears.timer {
     callback = save_window_states,
 }
 
+-- Flag to prevent recording during startup
+local startup_phase = true
+
 local function record_window_state(c)
-    if not (c.class and c.valid and not c.fullscreen) then return end
+    if not (c.class and c.valid) then return end
+
+    -- Skip recording fullscreen windows to avoid state pollution
+    -- They should always be managed by layout system
+    if c.fullscreen then
+        window_states[c.class] = nil
+        save_timer:again()
+        return
+    end
+
     window_states[c.class] = {
         x = c.x, y = c.y,
         width = c.width, height = c.height,
         maximized = c.maximized,
         floating = c.floating,
+        fullscreen = false,
     }
     save_timer:again()
 end
 
+-- Restore window state with proper handling
 client.connect_signal("manage", function(c)
-    -- Restore last state for this app
+    -- Skip restoration during startup to let windows position themselves
+    if awesome.startup then return end
+
     local state = c.class and window_states[c.class]
-    if state then
+    if not state then return end
+
+    -- Delay restoration slightly to ensure window is ready
+    gears.timer.start_new(0.1, function()
+        if not c.valid then return false end
+
+        -- Handle fullscreen separately (let layout system handle it)
+        if state.fullscreen then
+            c.fullscreen = true
+            return false
+        end
+
+        -- Handle maximized
         if state.maximized then
             c.maximized = true
-        else
-            c.floating = state.floating or false
-            if c.floating and state.width and state.width > 0 then
-                pcall(function()
-                    c.x = state.x
-                    c.y = state.y
-                    c.width = state.width
-                    c.height = state.height
-                end)
-            end
+            -- Apply gap after maximized
+            gears.timer.start_new(0.05, function()
+                if not c.valid then return false end
+                local gap = beautiful.useless_gap or 1
+                local screen = c.screen or screen.primary
+                c:geometry({
+                    x = screen.workarea.x + gap,
+                    y = screen.workarea.y + gap,
+                    width = screen.workarea.width - gap * 2,
+                    height = screen.workarea.height - gap * 2,
+                })
+                return false
+            end)
+            return false
         end
-    end
+
+        -- Handle floating windows
+        if state.floating and state.width and state.width > 0 then
+            c.floating = true
+            pcall(function()
+                c.x = state.x
+                c.y = state.y
+                c.width = state.width
+                c.height = state.height
+            end)
+        end
+
+        return false
+    end)
 end)
 
+-- Start recording after startup is complete
 client.connect_signal("property::geometry", function(c)
-    if not awesome.startup then record_window_state(c) end
+    if not startup_phase then record_window_state(c) end
 end)
 client.connect_signal("property::floating", function(c)
-    if not awesome.startup then record_window_state(c) end
+    if not startup_phase then record_window_state(c) end
 end)
 client.connect_signal("property::maximized", function(c)
-    if not awesome.startup then record_window_state(c) end
+    if not startup_phase then record_window_state(c) end
+end)
+client.connect_signal("property::fullscreen", function(c)
+    if not startup_phase then record_window_state(c) end
 end)
 client.connect_signal("unmanage", function(c) record_window_state(c) end)
+
+-- Mark startup as complete after a short delay
+gears.timer.start_new(3, function()
+    startup_phase = false
+    return false
+end)
 -- }}}
 
 client.connect_signal("request::titlebars", function(c)
