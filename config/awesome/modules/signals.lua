@@ -408,27 +408,18 @@ end)
 local function ensure_titlebars(c)
     if c.type ~= "normal" and c.type ~= "dialog" then return end
 
-    -- Get existing titlebar
-    local tb = awful.titlebar(c)
+    -- Always force-create titlebar (recreates if missing/destroyed)
+    local tb = awful.titlebar(c, { size = 28 })
+    print("DEBUG ensure_titlebars: class=" .. tostring(c.class) .. " tb=" .. tostring(tb ~= nil) .. " visible=" .. tostring(tb and tb.visible))
     if tb then
         tb.visible = true
-    else
-        -- Titlebar doesn't exist, force create by emitting request
-        c:emit_signal("request::titlebars")
-        -- Try again to set visibility
-        gears.timer.start_new(0.05, function()
-            if c.valid then
-                local new_tb = awful.titlebar(c)
-                if new_tb then new_tb.visible = true end
-            end
-            return false
-        end)
     end
 end
 
 -- Hide titlebar when fullscreen, show when not
 client.connect_signal("property::fullscreen", function(c)
     local tb = awful.titlebar(c)
+    print("DEBUG fullscreen: class=" .. tostring(c.class) .. " fullscreen=" .. tostring(c.fullscreen) .. " tb=" .. tostring(tb ~= nil))
     if tb then
         tb.visible = not c.fullscreen
     end
@@ -436,6 +427,7 @@ end)
 
 -- Restore titlebar visibility when layout changes or window state changes
 tag.connect_signal("property::layout", function()
+    print("DEBUG property::layout fired")
     for _, c in ipairs(client.get()) do
         ensure_titlebars(c)
     end
