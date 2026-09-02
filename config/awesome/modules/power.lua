@@ -93,7 +93,7 @@ M.power_popup = awful.popup {
     border_width = 1,
     border_color = "#313244",
     shape = function(cr, w, h)
-        gears.shape.rounded_rect(cr, w, h, 10)
+        gears.shape.rounded_rect(cr, w, h, 6)
     end,
     ontop = true,
     visible = false,
