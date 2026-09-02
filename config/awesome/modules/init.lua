@@ -45,7 +45,7 @@ local M = {
     
     -- Font sizes
     font = "Maple Mono NF Bold 10",
-    font_icon = "icons 13",
+    font_icon = "icons 12",
     font_popup = "Maple Mono NF Bold 11",
     font_popup_regular = "Maple Mono NF 11",
     
