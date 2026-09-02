@@ -13,8 +13,8 @@ local M = {}
 -- Layout constants
 local popup_w = 300
 local option_h = 50
-local font_icon_big = "icons 20"
-local font_label_big = "JetBrainsMono Nerd Font Mono Bold 14"
+local font_icon_big = "icons 24"
+local font_label_big = "JetBrainsMono Nerd Font Mono Bold 16"
 
 local function make_power_option(icon, label, callback)
     local markup = string.format(
@@ -23,17 +23,13 @@ local function make_power_option(icon, label, callback)
     )
 
     local row = wibox.widget {
-        nil,
         {
             markup = markup,
-            align = "center",
+            align = "left",
             valign = "center",
             widget = wibox.widget.textbox,
         },
-        nil,
-        expand = "inside",
-        layout = wibox.layout.align.horizontal,
-        forced_width = popup_w - 24,  -- minus margins
+        layout = wibox.layout.fixed.horizontal,
         forced_height = option_h,
     }
 
@@ -60,16 +56,8 @@ M.power_popup = awful.popup {
     widget = {
         {
             {
-                markup = '<b><span font="' .. font_label_big .. '">Power</span></b>',
-                align = "center",
-                valign = "center",
-                forced_height = 40,
-                forced_width = popup_w - 24,
-                widget = wibox.widget.textbox,
-            },
-            {
                 make_power_option(
-                    m.glyph.shutdown or "",
+                    m.glyph.shutdown or "",
                     "Shutdown",
                     function() awful.spawn("systemctl poweroff") end
                 ),
@@ -86,8 +74,8 @@ M.power_popup = awful.popup {
                 spacing = 8,
                 layout = wibox.layout.fixed.vertical,
             },
-            spacing = 10,
-            layout = wibox.layout.fixed.vertical,
+            halign = "center",
+            widget = wibox.container.place,
         },
         margins = 12,
         widget = wibox.container.margin,
