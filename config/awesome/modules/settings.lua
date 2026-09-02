@@ -542,7 +542,7 @@ set_widget:buttons(gears.table.join(
         else
             popup_registry.show_popup(set_popup)
             local s = awful.screen.focused().geometry
-            set_popup.x = s.x + s.width - 300
+            set_popup.x = s.x + s.width - 340
             set_popup.y = s.y + 30
             awful.spawn.easy_async_with_shell("nmcli radio wifi", function(stdout)
                 if stdout:match("enabled") then
