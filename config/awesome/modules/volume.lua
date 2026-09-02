@@ -113,16 +113,18 @@ local function update_vol_icon(vol)
     vol_icon_tb:set_text(vol_icon(vol))
 end
 
--- Scroll throttle to prevent queued up events
-local scroll_throttle = false
-local function scroll_action(action)
-    if scroll_throttle then return end
-    scroll_throttle = true
-    awful.spawn(action, false)
-    gears.timer.start_new(0.05, function()
-        scroll_throttle = false
-        return false
-    end)
+-- Get current volume from bar widget text
+local function get_current_vol()
+    local text = vol_text_tb:get_text()
+    return math.floor(tonumber(text:match("(%d+)")) or 0)
+end
+
+-- Update bar widget UI immediately
+local function update_bar_vol(vol)
+    vol = math.max(0, math.min(100, vol))
+    vol_text_tb:set_text(string.format("%d%%", vol))
+    update_vol_icon(vol)
+    vol_slider.value = vol
 end
 
 vol_widget:buttons(gears.table.join(
@@ -136,9 +138,17 @@ vol_widget:buttons(gears.table.join(
             vol_popup.y = s.y + 30
         end
     end),
-    awful.button({}, 4, function() scroll_action({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "+5%"}) end),
-    awful.button({}, 5, function() scroll_action({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "-5%"}) end),
-    awful.button({}, 3, function() scroll_action({"pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle"}) end)
+    awful.button({}, 4, function()
+        local new_vol = get_current_vol() + 5
+        awful.spawn({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "+5%"})
+        update_bar_vol(new_vol)
+    end),
+    awful.button({}, 5, function()
+        local new_vol = get_current_vol() - 5
+        awful.spawn({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "-5%"})
+        update_bar_vol(new_vol)
+    end),
+    awful.button({}, 3, function() awful.spawn({"pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle"}) end)
 ))
 
 vol_text_tb.markup = "45%"
