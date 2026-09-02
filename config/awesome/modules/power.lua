@@ -24,13 +24,18 @@ local function make_power_option(icon, label, callback)
 
     local row = wibox.widget {
         {
-            markup = markup,
-            align = "left",
-            valign = "center",
-            widget = wibox.widget.textbox,
+            {
+                markup = markup,
+                align = "left",
+                valign = "center",
+                widget = wibox.widget.textbox,
+            },
+            layout = wibox.layout.fixed.horizontal,
+            forced_height = option_h,
         },
-        layout = wibox.layout.fixed.horizontal,
-        forced_height = option_h,
+        bg = "#00000000",
+        shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+        widget = wibox.container.background,
     }
 
     row:connect_signal("mouse::enter", function() row.bg = m.surface0 end)
