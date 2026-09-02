@@ -440,3 +440,55 @@ end)
 client.connect_signal("manage", function(c)
     if c.maximized and not c.fullscreen then apply_max_gap(c) end
 end)
+
+-- {{{ Persist active tag per screen
+local tag_state_file = gears.filesystem.get_cache_dir() .. "/tag_state"
+
+-- Load saved tag states
+local saved_tags = {}
+do
+    local f = io.open(tag_state_file, "r")
+    if f then
+        for line in f:lines() do
+            local idx, tag_idx = line:match("^(%d+)|(.+)$")
+            if idx and tag_idx then
+                saved_tags[tonumber(idx)] = tag_idx
+            end
+        end
+        f:close()
+    end
+end
+
+local function save_tag_states()
+    local f = io.open(tag_state_file, "w")
+    if not f then return end
+    for idx, tag_idx in pairs(saved_tags) do
+        f:write(string.format("%d|%s\n", idx, tag_idx))
+    end
+    f:close()
+end
+
+-- Restore active tag after startup
+gears.timer.start_new(1, function()
+    for idx, tag_name in pairs(saved_tags) do
+        local s = screen[idx]
+        if s then
+            for _, t in ipairs(s.tags) do
+                if t.name == tag_name then
+                    t:view_only()
+                    break
+                end
+            end
+        end
+    end
+    return false
+end)
+
+-- Save tag state when tag changes
+tag.connect_signal("property::selected", function(t)
+    if t.selected then
+        saved_tags[t.screen.index] = t.name
+        save_tag_states()
+    end
+end)
+-- }}}
