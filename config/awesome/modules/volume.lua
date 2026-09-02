@@ -88,7 +88,7 @@ vol_slider:connect_signal("property::value", function(self)
     local val = self.value
     if val then
         vol_text.markup = math.floor(val) .. "%"
-        awful.spawn("pamixer --set-volume " .. math.floor(val), false)
+        awful.spawn({"pamixer", "--set-volume", math.floor(val)})
     end
 end)
 
@@ -124,9 +124,9 @@ vol_widget:buttons(gears.table.join(
             vol_popup.y = s.y + 30
         end
     end),
-    awful.button({}, 4, function() awful.spawn.with_shell("pamixer -i 5") end),
-    awful.button({}, 5, function() awful.spawn.with_shell("pamixer -d 5") end),
-    awful.button({}, 3, function() awful.spawn.with_shell("pamixer -t") end)
+    awful.button({}, 4, function() awful.spawn({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "+5%"}) end),
+    awful.button({}, 5, function() awful.spawn({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "-5%"}) end),
+    awful.button({}, 3, function() awful.spawn({"pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle"}) end)
 ))
 
 vol_text_tb.markup = "45%"
