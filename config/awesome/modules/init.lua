@@ -51,7 +51,7 @@ local M = {
     font_popup_regular = "Maple Mono NF 11",
     
     -- Settings
-    terminal = "kitty",
+    terminal = "alacritty",
     editor = os.getenv("EDITOR") or "nano",
     modkey = "Mod4",
 }
