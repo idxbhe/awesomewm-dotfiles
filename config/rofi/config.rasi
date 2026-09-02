@@ -5,91 +5,169 @@ configuration {
     show-icons: true;
     icon-theme: "Papirus-Dark";
     terminal: "kitty";
-    font: "JetBrainsMono Nerd Font Bold 10";
-    display-drun: " Apps";
-    display-run: " Run";
-    display-window: " Windows";
+    font: "Maple Mono NF Bold 10";
+    display-drun: "Apps";
+    display-run: "Run";
+    display-window: "Windows";
     drun-display-format: "{name}";
+    window-format: "{c}  {t}";
+    hover-select: true;
+    me-select-entry: "";
+    me-accept-entry: "MousePrimary";
+    click-to-release: true;
+    kb-cancel: "Escape,Control+g,Control+bracketleft";
+    kb-mode-next: "Control+l Shift+Right";
+    kb-mode-previous: "Control+h Shift+Left";
 }
 
-/* Catppuccin Mocha colors */
+/* Catppuccin Mocha palette */
 * {
+    /* Base colors */
     bg:       #1e1e2e;
-    bg-alt:   #313244;
-    bg-sel:   #585b70;
+    bg-alt:   #181825;
+    bg-sel:   #313244;
+    bg-hover: #45475a;
     fg:       #cdd6f4;
     fg-alt:   #a6adc8;
+    fg-dim:   #6c7086;
+
+    /* Accent colors */
     blue:     #89b4fa;
+    sapphire: #74c7ec;
+    lavender: #b4befe;
     red:      #f38ba8;
     green:    #a6e3a1;
     yellow:   #f9e2af;
+    peach:    #fab387;
+    mauve:    #cba6f7;
     urgent:   #f38ba8;
 
+    /* Layout */
     background-color: transparent;
     text-color:       @fg;
+    margin:           0;
+    padding:          0;
     spacing:          0;
 }
 
+/* Window */
 window {
-    width:            640px;
+    width:            680px;
     background-color: @bg;
     border:           1px;
-    border-color:     @blue;
-    border-radius:    10px;
+    border-color:     @bg-sel;
+    border-radius:    12px;
     padding:          0;
 }
 
+/* Main layout */
 mainbox {
-    children: [ inputbar, listview ];
+    children: [ inputbar, mode-switcher, listview ];
     background-color: @bg;
-    border-radius: 10px;
+    border-radius: 12px;
 }
 
+/* Input bar */
 inputbar {
     children: [ prompt, entry ];
     background-color: @bg-alt;
-    border-radius: 8px 8px 0 0;
-    padding: 14px;
+    border-radius: 12px 12px 0 0;
+    padding: 16px 20px;
     margin: 0;
+    border: 0;
 }
 
 prompt {
     background-color: @blue;
     text-color:       @bg;
-    padding:          8px 16px;
-    margin:           0 12px 0 0;
+    padding:          6px 14px;
+    margin:           0 14px 0 0;
     border-radius:    6px;
 }
 
 entry {
-    padding:  10px 12px;
-    placeholder: "Search...";
-    placeholder-color: @fg-alt;
-    background-color: @bg-sel;
-    border-radius: 6px;
+    padding:           8px 14px;
+    placeholder:       "Search...";
+    placeholder-color: @fg-dim;
+    background-color:  @bg-sel;
+    border-radius:     6px;
+    text-color:        @fg;
+    cursor-color:      @blue;
 }
 
+/* Mode switcher */
+mode-switcher {
+    spacing: 0;
+    padding: 10px 20px;
+    background-color: @bg;
+    border: 0;
+}
+
+button {
+    text-color:   @fg-dim;
+    padding:      6px 16px;
+    border-radius: 6px;
+    background-color: transparent;
+}
+
+button selected {
+    text-color:       @blue;
+    background-color: @bg-sel;
+}
+
+button hovered {
+    text-color:       @fg;
+    background-color: @bg-sel;
+}
+
+/* List view */
 listview {
-    lines:   10;
+    lines:   8;
     columns: 1;
     fixed-height: true;
-    padding:  12px 4px;
+    padding: 12px 12px 16px;
+    spacing: 2px;
+    scrollbar: true;
+    border: 0;
 }
 
+/* Element */
 element {
     padding:       10px 16px;
-    border-radius: 6px;
-    margin: 0 8px;
+    border-radius: 8px;
+    margin: 0;
+    background-color: transparent;
 }
 
-element selected {
+element normal.normal,
+element alternate.normal {
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+element selected.normal {
     background-color: @blue;
     text-color:       @bg;
 }
 
+element selected hovered.normal {
+    background-color: @lavender;
+    text-color:       @bg;
+}
+
+element alternate.normal:hover,
+element normal.normal:hover {
+    background-color: @bg-sel;
+    text-color:       @fg;
+}
+
 element active {
     background-color: @bg-sel;
-    text-color:       @green;
+}
+
+element selected.active {
+    background-color: @blue;
+    text-color:       @bg;
 }
 
 element urgent {
@@ -97,21 +175,26 @@ element urgent {
     text-color:       @bg;
 }
 
+/* Element icon */
 element-icon {
-    size: 24px;
+    size: 22px;
     padding: 0 12px 0 0;
+    vertical-align: 0.5;
 }
 
+/* Element text */
 element-text {
     padding: 0;
+    vertical-align: 0.5;
 }
 
+/* Scrollbar */
 scrollbar {
-    width: 6px;
-    background-color: @bg;
-    border-radius: 3px;
-}
-scrollbar handle {
-    background-color: @blue;
-    border-radius: 3px;
+    width: 4px;
+    padding: 0;
+    handle-color:    @blue;
+    handle-width:    4px;
+    background-color: transparent;
+    border-radius:   2px;
+    margin: 0 4px;
 }
