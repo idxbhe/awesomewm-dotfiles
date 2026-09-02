@@ -148,6 +148,8 @@ theme.titlebar_bg_normal = mocha.mantle
 theme.titlebar_bg_focus = mocha.surface0
 theme.titlebar_fg_normal = mocha.subtext1
 theme.titlebar_fg_focus = mocha.text
+theme.titlebar_size = 22
+theme.titlebar_font = "Maple Mono NF Bold 9"
 
 -- Titlebar button icons (Papirus-Dark 16x16, forced 14x14 render)
 local pi = "/usr/share/icons/Papirus-Dark/16x16/actions/"

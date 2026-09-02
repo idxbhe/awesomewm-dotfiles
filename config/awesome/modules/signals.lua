@@ -321,7 +321,7 @@ client.connect_signal("request::titlebars", function(c)
 
     -- Helper: titlebar icon button in a square box
     local function tbbtn(widget, size, shift_up, bg)
-        size = size or 16
+        size = size or 14
         shift_up = shift_up or 0
         widget.resize = true
         widget.forced_width  = size
@@ -332,14 +332,14 @@ client.connect_signal("request::titlebars", function(c)
                     widget,
                     widget = wibox.container.place,
                 },
-                top    = 4,
-                left   = 4,
-                right  = 4,
-                bottom = 4 + shift_up,
+                top    = 2,
+                left   = 2,
+                right  = 2,
+                bottom = 2 + shift_up,
                 widget = wibox.container.margin,
             },
-            forced_width  = 26,
-            forced_height = 26,
+            forced_width  = 20,
+            forced_height = 20,
             bg = bg or beautiful.surface1,
             border_width = 1,
             border_color = beautiful.surface0,
@@ -349,7 +349,7 @@ client.connect_signal("request::titlebars", function(c)
 
     -- Helper: toggle button — same icon, blue tint when active
     local function tbbtn_toggled(c, prop, svg_path, action, size)
-        size = size or 13
+        size = size or 11
         local img = wibox.widget {
             image = gears.surface.load(svg_path),
             resize = true, forced_width = size, forced_height = size,
@@ -358,10 +358,10 @@ client.connect_signal("request::titlebars", function(c)
         local box = wibox.widget {
             {
                 { img, widget = wibox.container.place },
-                top = 4, left = 4, right = 4, bottom = 4,
+                top = 2, left = 2, right = 2, bottom = 2,
                 widget = wibox.container.margin,
             },
-            forced_width = 26, forced_height = 26,
+            forced_width = 20, forced_height = 20,
             bg = beautiful.surface1,
             border_width = 1, border_color = beautiful.surface0,
             widget = wibox.container.background,
@@ -384,9 +384,9 @@ client.connect_signal("request::titlebars", function(c)
         return box
     end
 
-    awful.titlebar(c, { size = 28 }):setup {
+    awful.titlebar(c, { size = 22 }):setup {
         { awful.titlebar.widget.iconwidget(c), buttons = buttons, layout = wibox.layout.fixed.horizontal },
-        { { align = "center", widget = awful.titlebar.widget.titlewidget(c) }, buttons = buttons, layout = wibox.layout.flex.horizontal },
+        { { { align = "center", widget = awful.titlebar.widget.titlewidget(c), font = "Maple Mono NF Bold 9" }, buttons = buttons, layout = wibox.layout.flex.horizontal }, align = "center", valign = "center", widget = wibox.container.place },
         { tbbtn(awful.titlebar.widget.minimizebutton(c), 16, 2),
           tbbtn(awful.titlebar.widget.floatingbutton(c), 13),
           tbbtn_toggled(c, "maximized",
@@ -408,18 +408,28 @@ end)
 local function ensure_titlebars(c)
     if c.type ~= "normal" and c.type ~= "dialog" then return end
 
-    local tb = awful.titlebar(c)
+    local tb = awful.titlebar(c, { size = 22 })
     if tb then
+        tb.size = 22  -- Force resize if titlebar already exists
         tb.visible = true
-    else
-        -- Titlebar doesn't exist yet, request creation (triggers request::titlebars handler)
-        c:emit_signal("request::titlebars")
     end
 end
 
+-- Resize existing titlebars to current size after restart
+gears.timer.start_new(0.5, function()
+    local new_size = 22
+    for _, c in ipairs(client.get()) do
+        local tb = awful.titlebar(c, { size = new_size })
+        if tb and tb.size ~= new_size then
+            tb.size = new_size
+        end
+    end
+    return false
+end)
+
 -- Hide titlebar when fullscreen, show when not
 client.connect_signal("property::fullscreen", function(c)
-    local tb = awful.titlebar(c)
+    local tb = awful.titlebar(c, { size = 22 })
     if tb then
         tb.visible = not c.fullscreen
     end
