@@ -404,27 +404,33 @@ client.connect_signal("request::titlebars", function(c)
     }
 end)
 
--- Hide titlebar when fullscreen, show when not
-client.connect_signal("property::fullscreen", function(c)
-    local tb = awful.titlebar(c)
-    print("[titlebar] fullscreen changed for " .. (c.class or "?") .. ", tb=" .. tostring(tb ~= nil) .. ", fullscreen=" .. tostring(c.fullscreen))
-    if tb then
-        if c.fullscreen then
-            tb.visible = false
-        else
-            tb.visible = true
+-- Ensure titlebar exists when client is managed
+client.connect_signal("manage", function(c)
+    -- Ensure titlebar exists for normal and dialog windows
+    if c.type == "normal" or c.type == "dialog" then
+        -- Force titlebar creation if it doesn't exist
+        if not awful.titlebar(c) then
+            c:emit_signal("request::titlebars")
         end
     end
 end)
 
--- Restore titlebar visibility when exiting fullscreen via layout change
+-- Hide titlebar when fullscreen, show when not
+client.connect_signal("property::fullscreen", function(c)
+    local tb = awful.titlebar(c)
+    if tb then
+        tb.visible = not c.fullscreen
+    end
+end)
+
+-- Restore titlebar visibility when layout changes
 tag.connect_signal("property::layout", function()
-    print("[titlebar] layout changed, checking all clients")
     for _, c in ipairs(client.get()) do
-        if not c.fullscreen then
+        if not c.fullscreen and (c.type == "normal" or c.type == "dialog") then
             local tb = awful.titlebar(c)
-            print("[titlebar] " .. (c.class or "?") .. " tb=" .. tostring(tb ~= nil))
-            if tb then tb.visible = true end
+            if tb then
+                tb.visible = true
+            end
         end
     end
 end)
