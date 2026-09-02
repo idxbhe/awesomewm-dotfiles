@@ -406,12 +406,23 @@ end)
 
 -- Ensure titlebars are always shown for normal and dialog windows
 local function ensure_titlebars(c)
-    if c.type == "normal" or c.type == "dialog" then
-        -- Get existing titlebar or create one
-        local tb = awful.titlebar(c)
-        if tb then
-            tb.visible = true
-        end
+    if c.type ~= "normal" and c.type ~= "dialog" then return end
+
+    -- Get existing titlebar
+    local tb = awful.titlebar(c)
+    if tb then
+        tb.visible = true
+    else
+        -- Titlebar doesn't exist, force create by emitting request
+        c:emit_signal("request::titlebars")
+        -- Try again to set visibility
+        gears.timer.start_new(0.05, function()
+            if c.valid then
+                local new_tb = awful.titlebar(c)
+                if new_tb then new_tb.visible = true end
+            end
+            return false
+        end)
     end
 end
 
@@ -438,6 +449,16 @@ client.connect_signal("property::maximized", function(c)
     if not c.fullscreen then
         ensure_titlebars(c)
     end
+end)
+
+-- Also ensure titlebars on manage
+client.connect_signal("manage", function(c)
+    gears.timer.start_new(0.1, function()
+        if c.valid then
+            ensure_titlebars(c)
+        end
+        return false
+    end)
 end)
 
 client.connect_signal("mouse::enter", function(c) c:emit_signal("request::activate", "mouse_enter", {raise = false}) end)
