@@ -57,7 +57,7 @@ local M = {
 
 -- Icon helper function (uses custom "icons" font)
 M.icon = function(t)
-    return string.format('<span font="icons 13">%s</span>', t)
+    return string.format('<span font="icons 12">%s</span>', t)
 end
 
 -- Editor command
