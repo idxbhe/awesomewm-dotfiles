@@ -200,11 +200,11 @@ theme.titlebar_ontop_button_focus_inactive  = pi .. "window-shade.svg"
 theme.titlebar_ontop_button_normal_active = pi .. "window-unshade.svg"
 theme.titlebar_ontop_button_focus_active  = pi .. "window-unshade.svg"
 
--- Layout icons (text fallback - icons.ttf has no layout glyphs)
-theme.layout_floating     = "FL"
-theme.layout_tile         = "TL"
-theme.layout_tilebottom   = "TB"
-theme.layout_max          = "MX"
+-- Layout icons (custom icons.ttf layout glyphs)
+theme.layout_floating     = "\u{f260}"   -- wm-floating
+theme.layout_tile         = "\u{fb96}"   -- wm-tile
+theme.layout_tilebottom   = "\u{fa2e}"   -- wm-tile-bottom
+theme.layout_max          = "\u{1002d}"  -- wm-full
 
 -- Icon theme
 theme.icon_theme = "Papirus-Dark"
@@ -256,6 +256,10 @@ theme.glyph = {
     logout          = "\u{fe35}",  -- power-logout
     toggle_on       = "\u{fa3f}",  -- toggle-on
     toggle_off      = "\u{f6e3}",  -- toggle-off
+    wm_floating     = "\u{f260}",  -- wm-floating
+    wm_tile         = "\u{fb96}",  -- wm-tile
+    wm_tile_bottom  = "\u{fa2e}",  -- wm-tile-bottom
+    wm_full         = "\u{1002d}", -- wm-full
 }
 
 -- Load default theme as fallback for missing properties (titlebar button images, etc.)
