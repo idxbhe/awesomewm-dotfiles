@@ -14,12 +14,12 @@ local vol_slider = wibox.widget {
     widget = wibox.widget.slider,
     value = 40,
     maximum = 100,
-    forced_width = 160,
+    forced_width = 180,
     bar_color = "#585b70",
     bar_active_color = "#89b4fa",
     bar_shape = gears.shape.rounded_bar,
-    bar_margins = { bottom = 8, top = 8 },
-    handle_width = 12,
+    bar_margins = { bottom = 10, top = 10 },
+    handle_width = 10,
     handle_color = "#cdd6f4",
     handle_shape = gears.shape.circle,
     handle_border_width = 2,
@@ -29,26 +29,26 @@ local vol_slider = wibox.widget {
 local vol_text = wibox.widget {
     markup = string.format('<span font="%s">40%%</span>', m.font),
     align = "center",
-    forced_width = 36,
+    forced_width = 48,
     widget = wibox.widget.textbox,
 }
 
 local vol_popup_widget = wibox.widget {
     {
         {
-            text = m.icon(m.glyph.vol_high),
-            forced_width = 20,
+            markup = m.icon(m.glyph.vol_high),
+            forced_width = 24,
             align = "center",
             valign = "center",
             widget = wibox.widget.textbox,
         },
         vol_slider,
         vol_text,
-        spacing = 10,
+        spacing = 8,
+        forced_height = 24,
         layout = wibox.layout.fixed.horizontal,
     },
     margins = 10,
-    forced_height = 42,
     widget = wibox.container.margin,
 }
 
@@ -58,6 +58,8 @@ local vol_popup = awful.popup {
     border_width = 1,
     border_color = "#313244",
     shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+    minimum_width = 288,
+    maximum_width = 288,
     ontop = true,
     visible = false,
     x = 0,
@@ -118,7 +120,7 @@ vol_widget:buttons(gears.table.join(
         else
             popup_registry.show_popup(vol_popup)
             local s = awful.screen.focused().geometry
-            vol_popup.x = s.x + s.width - 260
+            vol_popup.x = s.x + s.width - 440
             vol_popup.y = s.y + 30
         end
     end),
