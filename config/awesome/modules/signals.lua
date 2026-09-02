@@ -1,6 +1,8 @@
 -- modules/signals.lua
 -- Client signals: Papirus icons, window state, titlebars
 
+---@diagnostic disable: undefined-global
+
 local m = require("modules")
 local gears = m.gears
 local awful = m.awful
@@ -54,7 +56,7 @@ local function lookup_client_icon(c)
             if path then return path end
         end
     end
-    
+
     -- Strategy 2: Try direct Papirus lookup with various name transformations
     local candidates = {}
     if c.class and c.class ~= "" then
@@ -67,29 +69,29 @@ local function lookup_client_icon(c)
         local last_part = cls:match("([^.]+)$")
         if last_part and last_part ~= cls then table.insert(candidates, last_part) end
     end
-    
+
     for _, name in ipairs(candidates) do
         local path = find_papirus_icon(name)
         if path then return path end
     end
-    
+
     return nil
 end
 
 -- Apply Papirus icon to a client via xseticon
 local function apply_papirus_icon(c)
     if not c.valid then return end
-    
+
     -- Guard: prevent infinite loops
     if c._papirus_applying then return end
-    
+
     local icon_path = lookup_client_icon(c)
     if not icon_path or not c.window then return end
-    
+
     c._papirus_applying = true
     local wid = tostring(c.window)
     local png_path = "/tmp/awesome-icon-" .. wid .. ".png"
-    
+
     awful.spawn.easy_async_with_shell(
         "rsvg-convert -w 48 -h 48 '" .. icon_path .. "' -o '" .. png_path .. "' 2>/dev/null && " ..
         "xseticon -id " .. wid .. " '" .. png_path .. "' 2>/dev/null && " ..
@@ -132,19 +134,19 @@ end)
 -- Re-apply Papirus icon when app tries to change it
 client.connect_signal("property::icon", function(c)
     if not c.valid then return end
-    
+
     -- Ignore our own emit from apply_papirus_icon
     if c._papirus_own_emit then return end
-    
+
     -- Allow up to 3 retries within 10 seconds of first application
     local now = os.time()
     if not c._papirus_first_time then c._papirus_first_time = now end
     c._papirus_retry_count = (c._papirus_retry_count or 0) + 1
-    
+
     if (now - c._papirus_first_time) > 10 or c._papirus_retry_count > 3 then
         return -- Stop retrying after 10 seconds or 3 attempts
     end
-    
+
     -- Delay before re-applying (batch rapid changes)
     gears.timer.start_new(0.2, function()
         if c.valid and not c._papirus_applying then
@@ -243,19 +245,19 @@ client.connect_signal("manage", function(c)
             return false
         end
 
-        -- Handle maximized
-        if state.maximized then
+        -- Handle maximized (but not if window is already fullscreen)
+        if state.maximized and not c.fullscreen then
             c.maximized = true
             -- Apply gap after maximized
             gears.timer.start_new(0.05, function()
-                if not c.valid then return false end
+                if not c.valid or c.fullscreen then return false end
                 local gap = beautiful.useless_gap or 1
-                local screen = c.screen or screen.primary
+                local s = c.screen or screen.primary
                 c:geometry({
-                    x = screen.workarea.x + gap,
-                    y = screen.workarea.y + gap,
-                    width = screen.workarea.width - gap * 2,
-                    height = screen.workarea.height - gap * 2,
+                    x = s.workarea.x + gap,
+                    y = s.workarea.y + gap,
+                    width = s.workarea.width - gap * 2,
+                    height = s.workarea.height - gap * 2,
                 })
                 return false
             end)
@@ -394,20 +396,34 @@ client.connect_signal("mouse::enter", function(c) c:emit_signal("request::activa
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 
--- Apply gap to maximized windows
+-- Apply gap to maximized windows (skip fullscreen)
 local function apply_max_gap(c)
-    if c.maximized then
+    if c.maximized and not c.fullscreen then
         local gap = beautiful.useless_gap or 1
+        local s = c.screen or screen.primary
         c:geometry({
-            x = c.screen.workarea.x + gap,
-            y = c.screen.workarea.y + gap,
-            width = c.screen.workarea.width - gap * 2,
-            height = c.screen.workarea.height - gap * 2,
+            x = s.workarea.x + gap,
+            y = s.workarea.y + gap,
+            width = s.workarea.width - gap * 2,
+            height = s.workarea.height - gap * 2,
         })
     end
 end
 
 client.connect_signal("property::maximized", apply_max_gap)
+client.connect_signal("property::fullscreen", function(c)
+    if c.fullscreen then
+        -- Ensure fullscreen covers entire screen
+        c:geometry({
+            x = c.screen.workarea.x,
+            y = c.screen.workarea.y,
+            width = c.screen.workarea.width,
+            height = c.screen.workarea.height,
+        })
+    else
+        apply_max_gap(c)
+    end
+end)
 client.connect_signal("manage", function(c)
-    if c.maximized then apply_max_gap(c) end
+    if c.maximized and not c.fullscreen then apply_max_gap(c) end
 end)
