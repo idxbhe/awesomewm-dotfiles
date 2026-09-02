@@ -45,7 +45,20 @@ globalkeys = gears.table.join(
     awful.key({ modkey }, "b", function() awful.spawn("firefox") end, {description = "open browser", group = "launcher"}),
     awful.key({ modkey }, "space", function() awful.spawn("rofi -show drun") end, {description = "rofi app launcher", group = "launcher"}),
     awful.key({ modkey }, "o", function() awful.spawn("obsidian") end, {description = "open notes", group = "launcher"}),
-    awful.key({ modkey, "Control" }, "r", awesome.restart, {description = "reload awesome", group = "awesome"}),
+    awful.key({ modkey, "Control" }, "r", function()
+        -- Save current tag states before restart
+        local state_file = gears.filesystem.get_cache_dir() .. "/tag_state"
+        local f = io.open(state_file, "w")
+        if f then
+            for _, s in ipairs(screen) do
+                if s.selected_tag then
+                    f:write(string.format("%d|%s\n", s.index, s.selected_tag.name))
+                end
+            end
+            f:close()
+        end
+        awesome.restart()
+    end, {description = "reload awesome", group = "awesome"}),
     awful.key({ modkey, "Shift" }, "q", awesome.quit, {description = "quit awesome", group = "awesome"}),
 
     awful.key({ modkey }, "l", function() awful.tag.incmwfact(0.05) end, {description = "increase master width factor", group = "layout"}),

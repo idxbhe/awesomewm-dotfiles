@@ -468,6 +468,40 @@ local function save_tag_states()
     f:close()
 end
 
+-- Record current active tag for each screen
+local function record_current_tags()
+    for _, s in ipairs(screen) do
+        if s.selected_tag then
+            saved_tags[s.index] = s.selected_tag.name
+        end
+    end
+    save_tag_states()
+end
+
+-- Save before restart/quit
+awesome.connect_signal("exit", function()
+    print("[awesome] Saving tag states on exit")
+    record_current_tags()
+end)
+
+-- Also save when switching between screens (in case tag changed)
+awful.screen.connect_for_each_screen(function(s)
+    s:connect_signal("focus", function()
+        if s.selected_tag then
+            saved_tags[s.index] = s.selected_tag.name
+            save_tag_states()
+        end
+    end)
+end)
+
+-- Save when tag changes
+tag.connect_signal("property::selected", function(t)
+    if t.selected then
+        saved_tags[t.screen.index] = t.name
+        save_tag_states()
+    end
+end)
+
 -- Restore active tag after startup
 gears.timer.start_new(1, function()
     for idx, tag_name in pairs(saved_tags) do
@@ -482,13 +516,5 @@ gears.timer.start_new(1, function()
         end
     end
     return false
-end)
-
--- Save tag state when tag changes
-tag.connect_signal("property::selected", function(t)
-    if t.selected then
-        saved_tags[t.screen.index] = t.name
-        save_tag_states()
-    end
 end)
 -- }}}
