@@ -413,12 +413,13 @@ end
 client.connect_signal("property::maximized", apply_max_gap)
 client.connect_signal("property::fullscreen", function(c)
     if c.fullscreen then
-        -- Ensure fullscreen covers entire screen
+        -- Fullscreen uses screen.geometry (ignores bar/wibar)
+        local s = c.screen and c.screen.geometry or screen.primary.geometry
         c:geometry({
-            x = c.screen.workarea.x,
-            y = c.screen.workarea.y,
-            width = c.screen.workarea.width,
-            height = c.screen.workarea.height,
+            x = s.x,
+            y = s.y,
+            width = s.width,
+            height = s.height,
         })
     else
         apply_max_gap(c)
