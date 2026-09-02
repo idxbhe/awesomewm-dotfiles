@@ -336,3 +336,21 @@ end)
 client.connect_signal("mouse::enter", function(c) c:emit_signal("request::activate", "mouse_enter", {raise = false}) end)
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
+
+-- Apply gap to maximized windows
+local function apply_max_gap(c)
+    if c.maximized then
+        local gap = beautiful.useless_gap or 1
+        c:geometry({
+            x = c.screen.workarea.x + gap,
+            y = c.screen.workarea.y + gap,
+            width = c.screen.workarea.width - gap * 2,
+            height = c.screen.workarea.height - gap * 2,
+        })
+    end
+end
+
+client.connect_signal("property::maximized", apply_max_gap)
+client.connect_signal("manage", function(c)
+    if c.maximized then apply_max_gap(c) end
+end)
