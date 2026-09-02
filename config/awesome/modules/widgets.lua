@@ -131,32 +131,37 @@ clock_timer:start()
 -- }}}
 
 -- {{{ Layout widget
+local layout_icon_tb = wibox.widget {
+    text   = m.glyph.wm_floating,  -- initial: floating icon from theme
+    font   = m.font_icon,
+    align  = "center",
+    valign = "center",
+    widget = wibox.widget.textbox,
+}
+
 M.layout_widget = wibox.widget {
     {
-        widget = wibox.widget.textbox,
-        font = m.font_icon,
-        align = "center",
-        valign = "center",
+        layout_icon_tb,
+        left = m.pill_padding,
+        right = m.pill_padding,
+        top = 2,
+        bottom = 2,
+        widget = wibox.container.margin,
     },
-    left = m.pill_padding,
-    right = m.pill_padding,
-    top = 2,
-    bottom = 2,
-    widget = wibox.container.margin,
-    forced_width = 24,
+    bg = m.pill_bg,
+    fg = m.pill_fg,
+    forced_height = m.wibar_height - 4,
+    shape = function(cr, w, h)
+        gears.shape.rounded_rect(cr, w, h, m.border_radius)
+    end,
+    widget = wibox.container.background,
 }
-M.layout_widget.forced_height = m.wibar_height - 4
-local layout_icon_tb = M.layout_widget.children[1]
 
 local function update_layout_w()
     local s = awful.screen.focused()
     local layout = s.selected_tag and s.selected_tag.layout or awful.layout.suit.floating
     local name = layout.name or "floating"
-    local icons = {
-        floating = "\u{f260}", tile = "\u{fb96}", tilebottom = "\u{fa2e}",
-        max = "\u{1002d}"
-    }
-    layout_icon_tb:set_markup_silently(icons[name] or icons.floating)
+    layout_icon_tb:set_text(m.glyph[name] or m.glyph.wm_floating)
 end
 
 awful.screen.connect_for_each_screen(function(s)
@@ -166,6 +171,19 @@ end)
 client.connect_signal("property::fullscreen", update_layout_w)
 client.connect_signal("focus", update_layout_w)
 update_layout_w()
+
+-- Enable debug logging - check ~/.xsession-errors or journalctl
+if os.getenv("AWESOME_DEBUG") then
+    print("DEBUG: Layout widget initialized")
+    local old_update = update_layout_w
+    update_layout_w = function()
+        old_update()
+        local s = awful.screen.focused()
+        local layout = s.selected_tag and s.selected_tag.layout or awful.layout.suit.floating
+        local name = layout.name or "floating"
+        print("DEBUG: Layout name:", name, "Text:", layout_icon_tb:get_text())
+    end
+end
 -- }}}
 
 -- {{{ Taglist with Arch icons (7 static tags)

@@ -256,10 +256,16 @@ theme.glyph = {
     logout          = "\u{fe35}",  -- power-logout
     toggle_on       = "\u{fa3f}",  -- toggle-on
     toggle_off      = "\u{f6e3}",  -- toggle-off
+    -- Window manager layout icons (mapped to AwesomeWM layout names)
     wm_floating     = "\u{f260}",  -- wm-floating
     wm_tile         = "\u{fb96}",  -- wm-tile
     wm_tile_bottom  = "\u{fa2e}",  -- wm-tile-bottom
     wm_full         = "\u{1002d}", -- wm-full
+    -- AwesomeWM layout name mappings
+    floating        = "\u{f260}",
+    tile            = "\u{fb96}",
+    tilebottom      = "\u{fa2e}",
+    max             = "\u{1002d}",
 }
 
 -- Load default theme as fallback for missing properties (titlebar button images, etc.)
