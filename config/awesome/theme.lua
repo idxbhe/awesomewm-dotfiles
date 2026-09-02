@@ -33,9 +33,9 @@ local mocha = {
 }
 
 -- Font
-theme.font          = "JetBrainsMono Nerd Font Mono Bold 12"
-theme.font_bold     = "JetBrainsMono Nerd Font Mono Bold 12"
-theme.font_mono     = "JetBrainsMono Nerd Font Mono Bold 12"
+theme.font          = "Maple Mono NF Bold 12"
+theme.font_bold     = "Maple Mono NF Bold 12"
+theme.font_mono     = "Maple Mono NF Bold 12"
 
 -- Colors
 theme.bg_normal     = mocha.mantle .. "ee"  -- translucent mantle
@@ -60,7 +60,7 @@ theme.border_marked       = mocha.red
 theme.border_radius       = 2
 
 -- Taglist
-theme.taglist_font        = "JetBrainsMono Nerd Font Mono Bold 10"
+theme.taglist_font        = "Maple Mono NF Bold 10"
 theme.taglist_bg_focus    = mocha.surface1
 theme.taglist_bg_occupied = mocha.surface0
 theme.taglist_bg_urgent   = mocha.red
@@ -200,20 +200,11 @@ theme.titlebar_ontop_button_focus_inactive  = pi .. "window-shade.svg"
 theme.titlebar_ontop_button_normal_active = pi .. "window-unshade.svg"
 theme.titlebar_ontop_button_focus_active  = pi .. "window-unshade.svg"
 
--- Layout icons (will use text fallback)
-theme.layout_floating     = "󰝴"
-theme.layout_tile         = "󰕰"
-theme.layout_tileleft     = "󰕱"
-theme.layout_tilebottom   = "󰕲"
-theme.layout_tiletop      = "󰕳"
-theme.layout_fairv        = "󰕴"
-theme.layout_fairh        = "󰕵"
-theme.layout_spiral       = "󰕶"
-theme.layout_dwindle      = "󰕷"
-theme.layout_max          = "󰕸"
-theme.layout_fullscreen   = "󰕹"
-theme.layout_magnifier    = "󰕺"
-theme.layout_corner_nw    = "󰕻"
+-- Layout icons (text fallback - icons.ttf has no layout glyphs)
+theme.layout_floating     = "FL"
+theme.layout_tile         = "TL"
+theme.layout_tilebottom   = "TB"
+theme.layout_max          = "MX"
 
 -- Icon theme
 theme.icon_theme = "Papirus-Dark"
@@ -231,34 +222,40 @@ theme.blue = mocha.blue
 theme.blue_dark = "#3b5998"
 theme.red_dark = "#a33b4e"
 
--- Glyphs (Nerd Font codepoints verified)
+-- Glyphs (custom "icons" font, codepoints from demo.html)
 theme.glyph = {
-    arch        = "󰣇",  -- U+F08C7 dev-archlinux
-    cpu         = "󰻠",  -- U+F0EE0 fa-microchip (alt)
-    ram         = "󰍛",  -- U+F035B fa-memory
-    net_up      = "󰁝",  -- U+F005D
-    net_down    = "󰁅",  -- U+F0045
-    clock       = "󰥔",  -- U+F0954
-    layout      = "󰕰",  -- U+F0570
-    vol_high    = "󰕾",  -- U+F057E
-    vol_mid     = "󰖀",  -- U+F0580
-    vol_low     = "󰕿",  -- U+F057F
-    vol_mute    = "󰝟",  -- U+F075F
-    bat_full    = "󰁹",  -- U+F0079
-    bat_mid     = "󰁿",  -- U+F007F
-    bat_low     = "󰂎",  -- U+F008E
-    bat_charge  = "󰂄",  -- U+F0084
-    sep         = "│",
-    launcher    = "",  -- U+E732 Arch Linux logo
-    wifi_on     = "󰖪",  -- U+F05AA
-    wifi_off    = "󰖰",  -- U+F05B0
-    bt_on       = "",  -- U+F293
-    bt_off      = "",  -- U+F294
-    airplane_on = "",  -- U+F072
-    airplane_off = "",  -- U+F072
-    brightness  = "",  -- U+F185 fa-sun
-    settings    = "󰒓",  -- U+F0493 gear
-    tools       = "󰖷",  -- U+F05B7 tools
+    cpu             = "\u{f810}",  -- bar-cpu
+    ram             = "\u{ffdc}",  -- bar-memory
+    clock           = "\u{f02b}",  -- bar-clock
+    net_down        = "\u{f46a}",  -- bar-netspeed
+    layout          = "\u{f174}",  -- bar-tools
+    vol_high        = "\u{f2d5}",  -- volume-high
+    vol_mid         = "\u{fc41}",  -- volume-none
+    vol_low         = "\u{fd71}",  -- volume-low
+    vol_none        = "\u{fc41}",  -- volume-none (alias)
+    vol_mute        = "\u{f635}",  -- volume-mute
+    bat_full        = "\u{ffdc}",  -- bar-memory (reuse)
+    bat_mid         = "\u{ffdc}",  -- bar-memory (reuse)
+    bat_low         = "\u{ffdc}",  -- bar-memory (reuse)
+    bat_charge      = "\u{ffdc}",  -- bar-memory (reuse)
+    sep             = "|",
+    launcher        = "\u{f174}",  -- bar-tools (reuse)
+    wifi_on         = "\u{fcfe}",  -- settings-wifi
+    wifi_off        = "\u{fcfe}",  -- settings-wifi
+    bt_on           = "\u{f90e}",  -- settings-bluetooth
+    bt_off          = "\u{f90e}",  -- settings-bluetooth
+    airplane_on     = "\u{fbba}",  -- settings-airplane
+    airplane_off    = "\u{fbba}",  -- settings-airplane
+    brightness      = "\u{fae1}",  -- settings-brightness
+    bar_brightness  = "\u{fae2}",  -- bar-brightness
+    settings        = "\u{fcd8}",  -- bar-settings
+    tools           = "\u{f174}",  -- bar-tools
+    power           = "\u{f8cf}",  -- power-shutdown
+    shutdown        = "\u{f8cf}",  -- power-shutdown
+    restart         = "\u{ff0c}",  -- power-restart
+    logout          = "\u{fe35}",  -- power-logout
+    toggle_on       = "\u{fa3f}",  -- toggle-on
+    toggle_off      = "\u{f6e3}",  -- toggle-off
 }
 
 -- Load default theme as fallback for missing properties (titlebar button images, etc.)

@@ -10,59 +10,78 @@ local popup_registry = require("modules.popup_registry")
 local M = {}
 
 -- Helper functions
-local icon_font_str = "JetBrainsMono Nerd Font Mono 14"
+local icon_font_str = m.font_icon
 local row_h = 24
-local icon_w = 20
+local icon_w = row_h
 
 local function make_icon_tb(icon_char)
-    return wibox.widget {
+    local inner_tb = wibox.widget {
         markup = icon_char,
         font = icon_font_str,
-        align = "center",
-        valign = "center",
-        forced_width = icon_w,
-        forced_height = row_h,
         widget = wibox.widget.textbox,
     }
+    -- Nested align layouts for true geometric centering (from drawBox.lua pattern)
+    local wrapper = wibox.widget {
+        {
+            nil,
+            {
+                nil,
+                inner_tb,
+                expand = "none",
+                layout = wibox.layout.align.vertical,
+            },
+            expand = "none",
+            layout = wibox.layout.align.horizontal,
+        },
+        forced_width = icon_w,
+        forced_height = row_h,
+        widget = wibox.container.background,
+    }
+    wrapper.inner = inner_tb
+    return wrapper
 end
 
 local function make_row(icon, label, fnt)
-    fnt = fnt or m.font
+    fnt = fnt or "Maple Mono NF Bold 10"
 
     local icon_tb = make_icon_tb(icon)
-    local label_tb = wibox.widget {
+    local inner_label = wibox.widget {
         markup = label,
         font = fnt,
-        align = "left",
-        valign = "center",
-        forced_height = row_h,
         widget = wibox.widget.textbox,
+    }
+    local label_container = wibox.widget {
+        inner_label,
+        forced_height = row_h,
+        halign = "left",
+        valign = "center",
+        widget = wibox.container.place,
     }
 
     local left = wibox.widget {
         icon_tb,
-        label_tb,
+        label_container,
         spacing = 8,
         layout = wibox.layout.fixed.horizontal,
     }
 
-    -- Proxy for icon_widget
+    -- Proxy for icon_widget - write to inner textbox
     local icon_proxy = {}
     function icon_proxy:set_text(new_icon)
-        icon_tb.markup = new_icon
+        icon_tb.inner.markup = new_icon
     end
 
-    -- Proxy for label_widget
+    -- Proxy for label_widget - write to inner textbox
     local label_proxy = {}
     setmetatable(label_proxy, {
         __newindex = function(self, key, value)
             if key == "markup" then
-                label_tb.markup = value
+                inner_label.markup = value
             end
         end,
         __index = function(self, key)
-            if key == "markup" then return label_tb.markup end
-            return label_tb[key]
+            if key == "markup" then return inner_label.markup end
+            return inner_label[key]
         end,
     })
 
@@ -501,7 +520,7 @@ set_popup:connect_signal("mouse::leave", function()
     if not popup_registry.should_auto_hide() then return end
     if popup_entered then
         popup_registry.hide_popup(set_popup)
-        set_wifi_visible(false)
+        -- set_wifi_visible(false) -- Removed: WiFi list should stay visible if popup is still shown
         popup_entered = false
     end
 end)
@@ -531,7 +550,7 @@ set_widget:buttons(gears.table.join(
                     wifi_row.label_widget.markup = "<b>Wi-Fi</b>"
                     wifi_row.icon_widget:set_text(m.glyph.wifi_on)
                     set_wifi_visible(true)
-                    refresh_wifi()
+                    awful.spawn.easy_async("nmcli device wifi rescan", function() refresh_wifi() end)
                 else
                     wifi_switch.set_switch(false)
                     set_wifi_visible(false)

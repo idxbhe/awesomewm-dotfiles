@@ -119,17 +119,17 @@ function M.show_screenshot_menu()
                 },
                 {
                     make_screenshot_option(
-                        "󰥑",  -- nf-md-monitor_screenshot (full)
+                        "",  -- nf-md-monitor_screenshot (full)
                         "Full Screen",
                         function() take_screenshot("maim") end
                     ),
                     make_screenshot_option(
-                        "󰼔",  -- nf-md-crop (selection)
+                        "",  -- nf-md-crop (selection)
                         "Selection",
                         function() take_screenshot("maim -s") end
                     ),
                     make_screenshot_option(
-                        "󰃗",  -- nf-md-application (window)
+                        "",  -- nf-md-application (window)
                         "Window",
                         function() take_screenshot("maim -i") end
                     ),
@@ -188,27 +188,111 @@ local function make_icon_tb(icon_char)
     }
 end
 
+-- Track selected row
+local selected_row = nil
+
 local function make_tool_row(icon, label, callback)
-    local row = wibox.widget {
-        {
-            markup = string.format('<span font="%s">%s</span>  %s', m.font_icon, icon, label),
-            font = m.font_popup,
-            align = "center",
-            valign = "center",
-            widget = wibox.widget.textbox,
-        },
-        widget = wibox.container.place,
-        halign = "center",
+    -- Icon widget centered vertically
+    local icon_tb = wibox.widget {
+        markup = icon,
+        font = m.font_icon,
+        align = "center",
         valign = "center",
+        forced_width = 24,
+        forced_height = 32,
+        widget = wibox.widget.textbox,
+    }
+
+    local icon_container = wibox.widget {
+        nil,
+        icon_tb,
+        expand = "none",
+        layout = wibox.layout.align.vertical,
+        forced_width = 24,
+        forced_height = 32,
+    }
+
+    -- Label widget centered vertically
+    local label_tb = wibox.widget {
+        markup = label,
+        font = m.font_popup,
+        align = "left",
+        valign = "center",
+        forced_height = 32,
+        widget = wibox.widget.textbox,
+    }
+
+    local label_container = wibox.widget {
+        nil,
+        label_tb,
+        expand = "none",
+        layout = wibox.layout.align.vertical,
+        forced_height = 32,
+    }
+
+    local layout = wibox.widget {
+        icon_container,
+        {
+            label_container,
+            left = 8,
+            widget = wibox.container.margin,
+        },
+        nil,
+        expand = "inside",
+        layout = wibox.layout.align.horizontal,
         forced_width = 200,
         forced_height = 32,
     }
 
-    row:connect_signal("mouse::enter", function() row.bg = m.surface0 end)
-    row:connect_signal("mouse::leave", function() row.bg = "#00000000" end)
+    -- Wrap in background container to enable .bg property
+    local row = wibox.widget {
+        layout,
+        shape = function(cr, w, h)
+            gears.shape.rounded_rect(cr, w, h, 2)
+        end,
+        widget = wibox.container.background,
+    }
+
+    -- Selection highlight functions
+    local function apply_selected()
+        row.bg = m.blue or "#89b4fa"
+        selected_row = row
+    end
+
+    local function apply_hover()
+        row.bg = m.surface0
+    end
+
+    local function apply_normal()
+        row.bg = "#00000000"
+    end
+
+    row:connect_signal("mouse::enter", function()
+        if selected_row ~= row then
+            apply_hover()
+        end
+    end)
+
+    row:connect_signal("mouse::leave", function()
+        if selected_row ~= row then
+            apply_normal()
+        end
+    end)
 
     row:buttons(gears.table.join(
         awful.button({}, 1, function()
+            if selected_row == row then
+                -- Deselect
+                selected_row = nil
+                apply_normal()
+            else
+                -- Deselect previous
+                if selected_row then
+                    selected_row.bg = "#00000000"
+                end
+                -- Select this
+                apply_selected()
+            end
             if callback then callback() end
         end)
     ))
@@ -223,7 +307,7 @@ local tools_list = wibox.widget {
 }
 
 -- Screenshot icon (camera)
-local screenshot_icon = "󰵝"  -- U+F0D5D fa-camera
+local screenshot_icon = "曆"  -- U+F0D5D fa-camera
 
 tools_list:add(make_tool_row(
     screenshot_icon,

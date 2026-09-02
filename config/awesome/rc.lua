@@ -17,6 +17,7 @@ local volume = require("modules.volume")
 local settings = require("modules.settings")
 local calendar = require("modules.calendar")
 local tools = require("modules.tools")
+local power = require("modules.power")
 
 -- {{{ Error handling
 if awesome.startup_errors then
@@ -49,19 +50,10 @@ editor_cmd = m.editor_cmd
 modkey = m.modkey
 
 awful.layout.layouts = {
-    awful.layout.suit.floating,
     awful.layout.suit.tile,
-    awful.layout.suit.tile.left,
     awful.layout.suit.tile.bottom,
-    awful.layout.suit.tile.top,
-    awful.layout.suit.fair,
-    awful.layout.suit.fair.horizontal,
-    awful.layout.suit.spiral,
-    awful.layout.suit.spiral.dwindle,
+    awful.layout.suit.floating,
     awful.layout.suit.max,
-    awful.layout.suit.max.fullscreen,
-    awful.layout.suit.magnifier,
-    awful.layout.suit.corner.nw,
 }
 -- }}}
 
@@ -120,9 +112,27 @@ require("modules.rules")
 
 -- {{{ Signals
 
--- Wallpaper
+-- Wallpaper (random from ~/Pictures/Wallpapers)
 screen.connect_signal("property::geometry", function(s)
-    gears.wallpaper.maximized("/home/bhe/dotfiles/wallpapers/default.png", s, true)
+    local wallpaper_dir = os.getenv("HOME") .. "/Pictures/Wallpapers"
+    local exts = { "%.jpg$", "%.jpeg$", "%.png$", "%.webp$" }
+    local wallpapers = {}
+    local handle = io.popen('ls -1 "' .. wallpaper_dir .. '" 2>/dev/null')
+    if handle then
+        for file in handle:lines() do
+            for _, ext in ipairs(exts) do
+                if file:lower():match(ext) then
+                    wallpapers[#wallpapers + 1] = wallpaper_dir .. "/" .. file
+                    break
+                end
+            end
+        end
+        handle:close()
+    end
+    if #wallpapers > 0 then
+        local chosen = wallpapers[math.random(#wallpapers)]
+        gears.wallpaper.maximized(chosen, s, true)
+    end
 end)
 
 -- Tags
@@ -195,6 +205,7 @@ awful.screen.connect_for_each_screen(function(s)
                 widgets.pill_widget(settings.set_widget),
                 widgets.pill_widget(widgets.clock_widget),
                 widgets.pill_widget(widgets.layout_widget),
+                widgets.pill_widget(power.power_widget),
             },
             widget = wibox.container.place,
             valign = "center",

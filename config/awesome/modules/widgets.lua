@@ -153,9 +153,9 @@ local function update_layout_w()
     local layout = s.selected_tag and s.selected_tag.layout or awful.layout.suit.floating
     local name = layout.name or "floating"
     local icons = {
-        floating = "󰝴", tile = "󰕰", tileleft = "󰕱", tilebottom = "󰕲",
-        tiletop = "󰕳", fairv = "󰕴", fairh = "󰕵", spiral = "󰕶",
-        dwindle = "󰕷", max = "󰕸", fullscreen = "󰕹", magnifier = "󰕺", cornernw = "󰕻"
+        floating = "FL", tile = "TL", tileleft = "TT", tilebottom = "TB",
+        tiletop = "TR", fairv = "FV", fairh = "FH", spiral = "SP",
+        dwindle = "DW", max = "MX", fullscreen = "FS", magnifier = "MG", cornernw = "NW"
     }
     layout_icon_tb:set_markup_silently(icons[name] or icons.floating)
 end

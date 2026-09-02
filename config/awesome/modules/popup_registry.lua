@@ -6,7 +6,7 @@ local M = {
     active_popup = nil,
     active_tooltip = nil,
     password_popup = nil,
-    DEBUG_MODE = true,  -- Set false for production to enable auto-hide and single-popup rules
+    DEBUG_MODE = false,  -- Set false for production to enable auto-hide and single-popup rules
 }
 
 local function hide_active_tooltip()

@@ -40,12 +40,14 @@ local M = {
     tooltip_bg = beautiful.tooltip_bg,
     tooltip_fg = beautiful.tooltip_fg,
     overlay0 = beautiful.overlay0,
+    surface0 = beautiful.surface0,
+    blue = beautiful.blue,
     
     -- Font sizes
-    font = "JetBrainsMono Nerd Font Mono Bold 10",
-    font_icon = "JetBrainsMono Nerd Font Mono Bold 14",
-    font_popup = "JetBrainsMono Nerd Font Mono Bold 11",
-    font_popup_regular = "JetBrainsMono Nerd Font Mono 11",
+    font = "Maple Mono NF Bold 10",
+    font_icon = "icons 13",
+    font_popup = "Maple Mono NF Bold 11",
+    font_popup_regular = "Maple Mono NF 11",
     
     -- Settings
     terminal = "kitty",
@@ -53,9 +55,9 @@ local M = {
     modkey = "Mod4",
 }
 
--- Icon helper function
-M.icon = function(t) 
-    return string.format('<span font="%s">%s</span>', M.font_icon, t) 
+-- Icon helper function (uses custom "icons" font)
+M.icon = function(t)
+    return string.format('<span font="icons 13">%s</span>', t)
 end
 
 -- Editor command

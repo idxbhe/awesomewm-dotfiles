@@ -90,9 +90,26 @@ vol_slider:connect_signal("property::value", function(self)
     end
 end)
 
+-- Helper: choose icon based on volume level
+local function vol_icon(vol)
+    if vol == 0 then
+        return m.glyph.vol_mute
+    elseif vol <= 10 then
+        return m.glyph.vol_none
+    elseif vol <= 50 then
+        return m.glyph.vol_low
+    else
+        return m.glyph.vol_high
+    end
+end
+
 -- Volume bar widget
 local widgets = require("modules.widgets")
 local vol_widget, vol_icon_tb, vol_text_tb, vol_layout = widgets.pill_icon_text(m.glyph.vol_high, "%d%%", m.pill_bg, m.pill_fg)
+
+local function update_vol_icon(vol)
+    vol_icon_tb:set_text(vol_icon(vol))
+end
 
 vol_widget:buttons(gears.table.join(
     awful.button({}, 1, function()
@@ -116,12 +133,14 @@ awful.spawn.easy_async_with_shell("pamixer --get-volume", function(stdout)
     local vol = math.floor(tonumber(stdout) or 0)
     vol_slider.value = vol
     vol_text_tb.markup = string.format("%d%%", vol)
+    update_vol_icon(vol)
 end)
 
 awful.widget.watch("pamixer --get-volume 2>/dev/null", 1, function(_, stdout)
     local vol = math.floor(tonumber(stdout) or 0)
     vol_slider.value = vol
     vol_text_tb.markup = string.format("%d%%", vol)
+    update_vol_icon(vol)
 end, vol_layout)
 
 M.vol_widget = vol_widget
