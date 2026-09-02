@@ -32,7 +32,6 @@ local function make_power_option(icon, label, callback)
             },
             layout = wibox.layout.fixed.horizontal,
             forced_height = option_h,
-            forced_width = popup_w - 24,
         },
         bg = "#00000000",
         shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
