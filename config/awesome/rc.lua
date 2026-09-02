@@ -114,7 +114,7 @@ require("modules.rules")
 -- {{{ Signals
 
 -- Wallpaper (random from ~/Pictures/Wallpapers)
-screen.connect_signal("property::geometry", function(s)
+local function set_wallpaper(s)
     local wallpaper_dir = os.getenv("HOME") .. "/Pictures/Wallpapers"
     local exts = { "%.jpg$", "%.jpeg$", "%.png$", "%.webp$" }
     local wallpapers = {}
@@ -134,7 +134,10 @@ screen.connect_signal("property::geometry", function(s)
         local chosen = wallpapers[math.random(#wallpapers)]
         gears.wallpaper.maximized(chosen, s, true)
     end
-end)
+end
+
+screen.connect_signal("property::geometry", set_wallpaper)
+screen.connect_signal("request::wallpaper", set_wallpaper)
 
 -- Tags
 awful.screen.connect_for_each_screen(function(s)
