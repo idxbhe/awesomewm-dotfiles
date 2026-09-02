@@ -11,13 +11,6 @@ configuration {
     display-window: "Windows";
     drun-display-format: "{name}";
     window-format: "{c}  {t}";
-    hover-select: true;
-    me-select-entry: "";
-    me-accept-entry: "MousePrimary";
-    click-to-release: true;
-    kb-cancel: "Escape,Control+g,Control+bracketleft";
-    kb-mode-next: "Control+l Shift+Right";
-    kb-mode-previous: "Control+h Shift+Left";
 }
 
 /* Catppuccin Mocha palette */
@@ -148,17 +141,6 @@ element alternate.normal {
 element selected.normal {
     background-color: @blue;
     text-color:       @bg;
-}
-
-element selected hovered.normal {
-    background-color: @lavender;
-    text-color:       @bg;
-}
-
-element alternate.normal:hover,
-element normal.normal:hover {
-    background-color: @bg-sel;
-    text-color:       @fg;
 }
 
 element active {
