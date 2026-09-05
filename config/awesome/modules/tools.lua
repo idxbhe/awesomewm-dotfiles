@@ -34,36 +34,59 @@ local screenshot_popup = nil
 
 -- Helper: create one clickable option row for screenshot popup
 local function make_screenshot_option(icon, label, callback)
-    local markup = string.format(
-        '<span font="%s">%s</span>  <span font="%s">%s</span>',
-        m.font_icon, icon, m.font_popup, label
-    )
+    local icon_tb = wibox.widget {
+        markup = string.format('<span font="%s">%s</span>', m.font_icon, icon),
+        align = "center",
+        valign = "center",
+        forced_width = 24,
+        forced_height = 32,
+        widget = wibox.widget.textbox,
+    }
+
+    local label_tb = wibox.widget {
+        markup = string.format('<span font="%s">%s</span>', m.font_popup, label),
+        align = "left",
+        valign = "center",
+        forced_height = 32,
+        widget = wibox.widget.textbox,
+    }
 
     local row = wibox.widget {
-        nil,
+        icon_tb,
         {
-            markup = markup,
-            align = "center",
-            valign = "center",
-            widget = wibox.widget.textbox,
+            label_tb,
+            left = 8,
+            widget = wibox.container.margin,
         },
         nil,
         expand = "inside",
         layout = wibox.layout.align.horizontal,
-        forced_width = 200,
         forced_height = 32,
     }
 
-    row:connect_signal("mouse::enter", function() row.bg = "#313244" end)
-    row:connect_signal("mouse::leave", function() row.bg = "#00000000" end)
+    local bg = wibox.widget {
+        {
+            row,
+            left = 16,
+            right = 8,
+            widget = wibox.container.margin,
+        },
+        shape = function(cr, w, h)
+            gears.shape.rounded_rect(cr, w, h, 4)
+        end,
+        widget = wibox.container.background,
+    }
 
-    row:buttons(gears.table.join(
+    bg:connect_signal("mouse::enter", function() bg.bg = m.surface0 or "#313244" end)
+    bg:connect_signal("mouse::leave", function() bg.bg = "#00000000" end)
+
+    bg:buttons(gears.table.join(
         awful.button({}, 1, function()
             if callback then callback() end
         end)
     ))
 
-    return row
+    return bg
 end
 
 -- Take screenshot after a short delay (let popup close first)
@@ -102,76 +125,106 @@ function M.show_screenshot_menu()
         return
     end
 
-    local screen = awful.screen.focused()
-    local geo = screen.geometry
-    local popup_w = 220
-    local popup_h = 180
+    -- Back arrow (returns to tools popup)
+    local back_icon = wibox.widget {
+        text = "<-",
+        font = m.font_popup,
+        align = "center",
+        valign = "center",
+        forced_width = 24,
+        forced_height = 24,
+        widget = wibox.widget.textbox,
+    }
+
+    local back_btn = wibox.widget {
+        back_icon,
+        shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+        widget = wibox.container.background,
+    }
+
+    back_btn:connect_signal("mouse::enter", function() back_btn.bg = m.surface0 end)
+    back_btn:connect_signal("mouse::leave", function() back_btn.bg = nil end)
+
+    back_btn:buttons(gears.table.join(
+        awful.button({}, 1, function()
+            popup_registry.hide_popup(screenshot_popup)
+            local tools = require("modules.tools")
+            popup_registry.show_popup(tools.tools_popup)
+            local s = awful.screen.focused().geometry
+            tools.tools_popup.x = s.x + s.width - 380
+            tools.tools_popup.y = s.y + 30
+        end)
+    ))
+
+    local title_widget = wibox.widget {
+        {
+            back_btn,
+            forced_width = 24,
+            widget = wibox.container.place,
+        },
+        {
+            markup = '<b><span font="' .. m.font_popup .. '">Screenshot</span></b>',
+            align = "center",
+            valign = "center",
+            widget = wibox.widget.textbox,
+        },
+        {
+            forced_width = 24,
+            widget = wibox.widget.textbox,
+        },
+        expand = "inside",
+        layout = wibox.layout.align.horizontal,
+    }
+
+    local content = wibox.widget {
+        title_widget,
+        make_screenshot_option(
+            "",  -- nf-md-monitor_screenshot (full)
+            "Full Screen",
+            function() take_screenshot("maim") end
+        ),
+        make_screenshot_option(
+            "",  -- nf-md-crop (selection)
+            "Selection",
+            function() take_screenshot("maim -s") end
+        ),
+        make_screenshot_option(
+            "",  -- nf-md-application (window)
+            "Window",
+            function() take_screenshot("maim -i") end
+        ),
+        spacing = 8,
+        layout = wibox.layout.fixed.vertical,
+    }
+
+    local container = wibox.widget {
+        content,
+        margins = 12,
+        widget = wibox.container.margin,
+    }
 
     screenshot_popup = awful.popup {
-        widget = {
-            {
-                {
-                    markup = '<b><span font="' .. m.font_popup .. '">Screenshot</span></b>',
-                    align = "center",
-                    valign = "center",
-                    forced_height = 30,
-                    forced_width = popup_w,
-                    widget = wibox.widget.textbox,
-                },
-                {
-                    make_screenshot_option(
-                        "",  -- nf-md-monitor_screenshot (full)
-                        "Full Screen",
-                        function() take_screenshot("maim") end
-                    ),
-                    make_screenshot_option(
-                        "",  -- nf-md-crop (selection)
-                        "Selection",
-                        function() take_screenshot("maim -s") end
-                    ),
-                    make_screenshot_option(
-                        "",  -- nf-md-application (window)
-                        "Window",
-                        function() take_screenshot("maim -i") end
-                    ),
-                    spacing = 6,
-                    layout = wibox.layout.fixed.vertical,
-                },
-                spacing = 8,
-                layout = wibox.layout.fixed.vertical,
-            },
-            margins = 10,
-            widget = wibox.container.margin,
-        },
+        widget = container,
         bg = "#1e1e2eee",
         border_width = 1,
         border_color = "#313244",
         shape = function(cr, w, h)
             gears.shape.rounded_rect(cr, w, h, 6)
         end,
+        minimum_width = 280,
+        maximum_width = 280,
         ontop = true,
-        visible = true,
-        x = geo.x + (geo.width - popup_w) / 2,
-        y = geo.y + (geo.height - popup_h) / 2,
-        width = popup_w,
+        visible = false,
     }
+    screenshot_popup.ontop = true
 
     -- Register with popup registry
     popup_registry.show_child_popup(screenshot_popup)
 
-    -- Auto-hide on mouse leave
-    screenshot_popup:connect_signal("mouse::leave", function()
-        if not popup_registry.should_auto_hide() then return end
-        gears.timer.start_new(0.5, function()
-            local coords = mouse.coords()
-            local geo = screenshot_popup:geometry()
-            if coords.x < geo.x or coords.x > geo.x + geo.width or
-               coords.y < geo.y or coords.y > geo.y + geo.height then
-                popup_registry.hide_popup(screenshot_popup)
-            end
-            return false
-        end)
-    end)
+    -- Position same as tools popup
+    local s = awful.screen.focused().geometry
+    screenshot_popup.x = s.x + s.width - 380
+    screenshot_popup.y = s.y + 30
 end
 
 -- =============================================================================
