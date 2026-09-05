@@ -87,13 +87,24 @@ cal_month_year.valign = "center"
 
 local function render_calendar()
     cal_month_year.markup = string.format("<span foreground='#89b4fa'><b>%s %d</b></span>", month_names[cal_month], cal_year)
-    
+
     local first_day = first_day_of_month(cal_month, cal_year)
     local num_days = days_in(cal_month, cal_year)
     local today = tonumber(os.date("%d"))
     local current_month = tonumber(os.date("%m"))
     local current_year = tonumber(os.date("%Y"))
-    
+
+    -- Calculate how many weeks are needed
+    local total_cells = first_day + num_days
+    local weeks_needed = math.ceil(total_cells / 7)
+    if weeks_needed < 4 then weeks_needed = 4 end  -- minimum 4 rows
+    if weeks_needed > 6 then weeks_needed = 6 end  -- maximum 6 rows
+
+    -- Hide unused week rows
+    for w = 1, 6 do
+        week_rows[w].visible = (w <= weeks_needed)
+    end
+
     local prev_month = cal_month - 1
     local prev_year = cal_year
     if prev_month < 1 then
