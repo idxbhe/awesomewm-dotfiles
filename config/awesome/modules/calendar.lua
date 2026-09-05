@@ -26,7 +26,7 @@ end
 local day_widgets = {}
 for i = 1, 42 do
     local tb = wibox.widget.textbox()
-    tb.font = m.font_popup_regular
+    tb.font = "Maple Mono NF 10"
     tb.align = "center"
     tb.valign = "center"
     tb.forced_width = 24
