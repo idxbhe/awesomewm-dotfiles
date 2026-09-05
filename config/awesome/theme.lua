@@ -267,6 +267,7 @@ theme.glyph = {
     btn_delete_alt  = "\u{f890}",  -- button-delete-alt
     btn_edit        = "\u{f565}",  -- button-edit
     btn_edit_alt    = "\u{fd33}",  -- button-edit-alt
+    btn_arrow_left  = "\u{f03d}",  -- arrow-left (back arrow)
     btn_cancel      = "\u{f488}",  -- button-cancel
     btn_save        = "\u{f0ce}",  -- button-save
     btn_add         = "\u{f99c}",  -- button-add
