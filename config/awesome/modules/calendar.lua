@@ -268,45 +268,23 @@ function M.setup_clock_tooltip(clock_widget)
         type = "tooltip",
     }
 
-    local clock_tooltip_follow_timer = nil
-
     clock_widget:connect_signal("mouse::enter", function()
         tooltip_text_widget.markup = '<span foreground="#cdd6f4">' .. os.date("%A, %d %B %Y") .. '</span>'
         popup_registry.show_tooltip(clock_tooltip_popup)
-        
-        local x, y = mouse.coords().x, mouse.coords().y
-        clock_tooltip_popup.x = x - 100
-        clock_tooltip_popup.y = y + 20
-        
-        clock_tooltip_follow_timer = gears.timer {
-            timeout = 0.016,
-            call_now = false,
-            autostart = true,
-            callback = function()
-                if clock_tooltip_popup.visible then
-                    local mx, my = mouse.coords().x, mouse.coords().y
-                    clock_tooltip_popup.x = mx - 100
-                    clock_tooltip_popup.y = my + 20
-                else
-                    clock_tooltip_follow_timer:stop()
-                    clock_tooltip_follow_timer = nil
-                end
-            end
-        }
+
+        -- Position tooltip same as calendar popup (right side, below wibar)
+        local s = awful.screen.focused().geometry
+        clock_tooltip_popup.x = s.x + s.width - 275
+        clock_tooltip_popup.y = s.y + 30
     end)
 
     clock_widget:connect_signal("mouse::leave", function()
-        if not popup_registry.should_auto_hide() then return end
-        gears.timer.start_new(0.3, function()
+        gears.timer.start_new(0.1, function()
             local mouse_x, mouse_y = mouse.coords().x, mouse.coords().y
             local popup_geo = clock_tooltip_popup:geometry()
             if mouse_x < popup_geo.x or mouse_x > popup_geo.x + popup_geo.width or
                mouse_y < popup_geo.y or mouse_y > popup_geo.y + popup_geo.height then
                 popup_registry.hide_tooltip(clock_tooltip_popup)
-                if clock_tooltip_follow_timer then
-                    clock_tooltip_follow_timer:stop()
-                    clock_tooltip_follow_timer = nil
-                end
             end
             return false
         end)
