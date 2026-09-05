@@ -261,6 +261,7 @@ theme.glyph = {
     shutdown        = "\u{f8cf}",  -- power-shutdown
     restart         = "\u{ff0c}",  -- power-restart
     logout          = "\u{fe35}",  -- power-logout
+    restart_wm      = "\u{f421}",  -- power-restart-wm
     toggle_on       = "\u{fa3f}",  -- toggle-on
     toggle_off      = "\u{f6e3}",  -- toggle-off
     btn_delete      = "\u{f32f}",  -- button-delete

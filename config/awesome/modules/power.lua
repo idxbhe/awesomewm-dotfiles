@@ -55,7 +55,7 @@ end
 
 local function position_on_screen(popup)
     local s = awful.screen.focused().geometry
-    popup.x = s.x + s.width - 380
+    popup.x = s.x + s.width - 285
     popup.y = s.y + 30
 end
 
@@ -73,6 +73,11 @@ M.power_popup = awful.popup {
                     m.glyph.restart or "，",
                     "Restart",
                     function() awful.spawn("systemctl reboot") end
+                ),
+                make_power_option(
+                    m.glyph.restart_wm or "",
+                    "Restart WM",
+                    function() awesome.restart() end
                 ),
                 make_power_option(
                     m.glyph.logout or "︵",
