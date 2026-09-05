@@ -57,7 +57,7 @@ theme.border_focus        = mocha.blue
 theme.border_marked       = mocha.red
 
 -- Rounded corners radius
-theme.border_radius       = 2
+theme.border_radius       = 6
 
 -- Taglist
 theme.taglist_font        = "Maple Mono NF Bold 10"
@@ -216,6 +216,7 @@ theme.pill_bg       = mocha.surface0
 theme.pill_fg       = mocha.text
 theme.pill_spacing  = 6
 theme.pill_padding  = 6
+theme.pill_radius   = 4
 
 -- Surface colors (for widget backgrounds)
 theme.surface0 = mocha.surface0
@@ -223,6 +224,7 @@ theme.surface1 = mocha.surface1
 theme.blue = mocha.blue
 theme.blue_dark = "#3b5998"
 theme.red_dark = "#a33b4e"
+theme.green_dark = "#2a9d4f"
 
 -- Glyphs (custom "icons" font, codepoints from demo.html)
 theme.glyph = {
@@ -252,12 +254,22 @@ theme.glyph = {
     bar_brightness  = "\u{fae2}",  -- bar-brightness
     settings        = "\u{fcd8}",  -- bar-settings
     tools           = "\u{f174}",  -- bar-tools
+    tools_ss        = "\u{f98b}",  -- tools-ss (screenshot)
+    alarm           = "\u{fecd}",  -- tools-alarm
+    clipboard       = "\u{fec5}",  -- tools-clipboard
     power           = "\u{f8cf}",  -- power-shutdown
     shutdown        = "\u{f8cf}",  -- power-shutdown
     restart         = "\u{ff0c}",  -- power-restart
     logout          = "\u{fe35}",  -- power-logout
     toggle_on       = "\u{fa3f}",  -- toggle-on
     toggle_off      = "\u{f6e3}",  -- toggle-off
+    btn_delete      = "\u{f32f}",  -- button-delete
+    btn_delete_alt  = "\u{f890}",  -- button-delete-alt
+    btn_edit        = "\u{f565}",  -- button-edit
+    btn_edit_alt    = "\u{fd33}",  -- button-edit-alt
+    btn_cancel      = "\u{f488}",  -- button-cancel
+    btn_save        = "\u{f0ce}",  -- button-save
+    btn_add         = "\u{f99c}",  -- button-add
     -- Window manager layout icons (mapped to AwesomeWM layout names)
     wm_floating     = "\u{f260}",  -- wm-floating
     wm_tile         = "\u{fb96}",  -- wm-tile

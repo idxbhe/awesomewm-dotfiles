@@ -34,6 +34,7 @@ local M = {
     pill_fg = beautiful.pill_fg,
     pill_padding = beautiful.pill_padding,
     pill_spacing = beautiful.pill_spacing,
+    pill_radius = beautiful.pill_radius,
     border_radius = beautiful.border_radius,
     useless_gap = beautiful.useless_gap,
     wibar_height = beautiful.wibar_height,
@@ -43,13 +44,16 @@ local M = {
     overlay0 = beautiful.overlay0,
     surface0 = beautiful.surface0,
     blue = beautiful.blue,
+    blue_dark = beautiful.blue_dark,
+    green_dark = beautiful.green_dark,
+    red_dark = beautiful.red_dark,
 
     -- Font sizes
     font = "Maple Mono NF Bold 10",
     font_icon = "icons 12",
     font_popup = "Maple Mono NF Bold 11",
     font_popup_regular = "Maple Mono NF 11",
-    
+
     -- Settings
     terminal = "alacritty",
     editor = os.getenv("EDITOR") or "nano",

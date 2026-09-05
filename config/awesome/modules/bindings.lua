@@ -11,6 +11,16 @@ local modkey = m.modkey
 
 -- Mouse bindings
 root.buttons(gears.table.join(
+    awful.button({ }, 1, function()
+        -- Dismiss active popup on left click (except priority popups)
+        local popup_registry = require("modules.popup_registry")
+        if popup_registry and not popup_registry.is_priority_popup_active() then
+            if popup_registry.active_popup and popup_registry.active_popup.visible then
+                popup_registry.active_popup.visible = false
+                popup_registry.active_popup = nil
+            end
+        end
+    end),
     awful.button({ }, 3, function() mymainmenu:toggle() end),
     awful.button({ }, 4, awful.tag.viewnext),
     awful.button({ }, 5, awful.tag.viewprev)

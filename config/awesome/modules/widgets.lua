@@ -25,7 +25,7 @@ local function pill_widget(widget, bg, fg)
         fg = fg or m.pill_fg,
         forced_height = m.wibar_height - 4,
         shape = function(cr, w, h)
-            gears.shape.rounded_rect(cr, w, h, m.border_radius)
+            gears.shape.rounded_rect(cr, w, h, m.pill_radius)
         end,
         widget = wibox.container.background
     }
@@ -152,7 +152,7 @@ M.layout_widget = wibox.widget {
     fg = m.pill_fg,
     forced_height = m.wibar_height - 4,
     shape = function(cr, w, h)
-        gears.shape.rounded_rect(cr, w, h, m.border_radius)
+        gears.shape.rounded_rect(cr, w, h, m.pill_radius)
     end,
     widget = wibox.container.background,
 }

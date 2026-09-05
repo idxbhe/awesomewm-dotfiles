@@ -105,6 +105,9 @@ menubar.utils.terminal = terminal
 
 -- {{{ Key bindings
 require("modules.bindings")
+
+-- Setup global popup click handler (after root is configured)
+popup_registry.setup_global_click_handler()
 -- }}}
 
 -- {{{ Rules

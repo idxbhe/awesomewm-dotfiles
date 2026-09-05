@@ -510,21 +510,6 @@ awful.spawn.easy_async_with_shell(
     end
 )
 
--- Mouse enter/leave
-local popup_entered = false
-set_popup:connect_signal("mouse::enter", function()
-    popup_entered = true
-end)
-
-set_popup:connect_signal("mouse::leave", function()
-    if not popup_registry.should_auto_hide() then return end
-    if popup_entered then
-        popup_registry.hide_popup(set_popup)
-        -- set_wifi_visible(false) -- Removed: WiFi list should stay visible if popup is still shown
-        popup_entered = false
-    end
-end)
-
 -- Settings button
 local set_widget = wibox.widget.textbox()
 set_widget.font = m.font_icon

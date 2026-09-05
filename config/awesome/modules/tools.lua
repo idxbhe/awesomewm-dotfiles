@@ -7,6 +7,7 @@ local gears = m.gears
 local awful = m.awful
 local wibox = m.wibox
 local popup_registry = require("modules.popup_registry")
+local alarm = require("modules.alarm")
 
 local M = {}
 
@@ -156,17 +157,17 @@ function M.show_screenshot_menu()
     }
 
     -- Register with popup registry
-    popup_registry.show_popup(screenshot_popup)
+    popup_registry.show_child_popup(screenshot_popup)
 
     -- Auto-hide on mouse leave
     screenshot_popup:connect_signal("mouse::leave", function()
+        if not popup_registry.should_auto_hide() then return end
         gears.timer.start_new(0.5, function()
             local coords = mouse.coords()
-            local pgeo = screenshot_popup:geometry()
-            if coords.x < pgeo.x or coords.x > pgeo.x + pgeo.width or
-               coords.y < pgeo.y or coords.y > pgeo.y + pgeo.height then
-                screenshot_popup.visible = false
-                screenshot_popup = nil
+            local geo = screenshot_popup:geometry()
+            if coords.x < geo.x or coords.x > geo.x + geo.width or
+               coords.y < geo.y or coords.y > geo.y + geo.height then
+                popup_registry.hide_popup(screenshot_popup)
             end
             return false
         end)
@@ -189,7 +190,6 @@ local function make_icon_tb(icon_char)
 end
 
 -- Track selected row
-local selected_row = nil
 
 local function make_tool_row(icon, label, callback)
     -- Icon widget centered vertically
@@ -246,7 +246,11 @@ local function make_tool_row(icon, label, callback)
 
     -- Wrap in background container to enable .bg property
     local row = wibox.widget {
-        layout,
+        {
+            layout,
+            left = 8,
+            widget = wibox.container.margin,
+        },
         shape = function(cr, w, h)
             gears.shape.rounded_rect(cr, w, h, 2)
         end,
@@ -254,11 +258,6 @@ local function make_tool_row(icon, label, callback)
     }
 
     -- Selection highlight functions
-    local function apply_selected()
-        row.bg = m.blue or "#89b4fa"
-        selected_row = row
-    end
-
     local function apply_hover()
         row.bg = m.surface0
     end
@@ -268,31 +267,15 @@ local function make_tool_row(icon, label, callback)
     end
 
     row:connect_signal("mouse::enter", function()
-        if selected_row ~= row then
-            apply_hover()
-        end
+        apply_hover()
     end)
 
     row:connect_signal("mouse::leave", function()
-        if selected_row ~= row then
-            apply_normal()
-        end
+        apply_normal()
     end)
 
     row:buttons(gears.table.join(
         awful.button({}, 1, function()
-            if selected_row == row then
-                -- Deselect
-                selected_row = nil
-                apply_normal()
-            else
-                -- Deselect previous
-                if selected_row then
-                    selected_row.bg = "#00000000"
-                end
-                -- Select this
-                apply_selected()
-            end
             if callback then callback() end
         end)
     ))
@@ -306,13 +289,31 @@ local tools_list = wibox.widget {
     spacing = 4,
 }
 
--- Screenshot icon (camera)
-local screenshot_icon = "曆"  -- U+F0D5D fa-camera
+-- Screenshot icon
+local screenshot_icon = m.glyph.tools_ss
+
+-- Alarm icon
+local alarm_icon = m.glyph.alarm
+
+-- Clipboard icon
+local clipboard_icon = m.glyph.clipboard
 
 tools_list:add(make_tool_row(
     screenshot_icon,
     "Screenshot",
     function() M.show_screenshot_menu() end
+))
+
+tools_list:add(make_tool_row(
+    alarm_icon,
+    "Alarm",
+    function() alarm.show_alarm_list() end
+))
+
+tools_list:add(make_tool_row(
+    clipboard_icon,
+    "Clipboard",
+    function() end  -- TODO
 ))
 
 -- Tools popup
@@ -325,8 +326,8 @@ M.tools_popup = awful.popup {
         },
         layout = wibox.layout.fixed.vertical,
     },
-    minimum_width = 200,
-    maximum_width = 200,
+    minimum_width = 280,
+    maximum_width = 280,
     bg = "#1e1e2eee",
     border_width = 1,
     border_color = "#313244",
@@ -340,7 +341,13 @@ M.tools_popup = awful.popup {
 -- Auto-hide on mouse leave
 M.tools_popup:connect_signal("mouse::leave", function()
     if not popup_registry.should_auto_hide() then return end
-    gears.timer.start_new(0.5, function()
+
+    -- Jangan close jika child popup baru saja ditutup via widget click
+    if popup_registry._child_popup_just_closed then
+        return
+    end
+
+    gears.timer.start_new(0.3, function()
         local coords = mouse.coords()
         local geo = M.tools_popup:geometry()
         if coords.x < geo.x or coords.x > geo.x + geo.width or
@@ -361,14 +368,23 @@ M.tools_widget:set_markup_silently(m.glyph.tools)
 
 M.tools_widget:buttons(gears.table.join(
     awful.button({}, 1, function()
+        -- Jika tools popup terbuka, tutup
         if M.tools_popup.visible then
             popup_registry.hide_popup(M.tools_popup)
-        else
-            popup_registry.show_popup(M.tools_popup)
-            local s = awful.screen.focused().geometry
-            M.tools_popup.x = s.x + s.width - 220
-            M.tools_popup.y = s.y + 30
+            return
         end
+
+        -- Jika child popup terbuka (alarm, screenshot, dll), tutup saja tanpa buka tools parent
+        if popup_registry.has_child_popup() then
+            popup_registry.hide_active(true) -- true = mark as just closed
+            return
+        end
+
+        -- Jika tidak ada yang terbuka, buka tools popup
+        popup_registry.show_popup(M.tools_popup)
+        local s = awful.screen.focused().geometry
+        M.tools_popup.x = s.x + s.width - 380
+        M.tools_popup.y = s.y + 30
     end)
 ))
 
