@@ -11,15 +11,15 @@ local popup_registry = require("modules.popup_registry")
 local M = {}
 
 -- Layout constants
-local popup_w = 300
-local option_h = 50
-local font_icon_big = "icons 24"
-local font_label_big = "JetBrainsMono Nerd Font Mono Bold 16"
+local popup_w = 280
+local option_h = 32
+local font_icon = "icons 14"
+local font_label = m.font_popup
 
 local function make_power_option(icon, label, callback)
     local markup = string.format(
         '<span font="%s">%s</span>  <span font="%s">%s</span>',
-        font_icon_big, icon, font_label_big, label
+        font_icon, icon, font_label, label
     )
 
     local row = wibox.widget {
@@ -30,7 +30,8 @@ local function make_power_option(icon, label, callback)
                 valign = "center",
                 widget = wibox.widget.textbox,
             },
-            left = 55,
+            left = 16,
+            right = 8,
             widget = wibox.container.margin,
         },
         forced_width = popup_w - 24,
@@ -52,10 +53,10 @@ local function make_power_option(icon, label, callback)
     return row
 end
 
-local function center_on_screen(popup)
+local function position_on_screen(popup)
     local s = awful.screen.focused().geometry
-    popup.x = s.x + (s.width - popup_w) / 2
-    popup.y = s.y + (s.height - 220) / 2
+    popup.x = s.x + s.width - 380
+    popup.y = s.y + 30
 end
 
 -- Power popup
@@ -113,7 +114,7 @@ M.power_widget:buttons(gears.table.join(
             popup_registry.hide_popup(M.power_popup)
         else
             popup_registry.show_popup(M.power_popup)
-            center_on_screen(M.power_popup)
+            position_on_screen(M.power_popup)
         end
     end)
 ))
