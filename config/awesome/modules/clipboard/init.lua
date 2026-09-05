@@ -179,7 +179,7 @@ local function create_clipboard_row(item, index)
     pin_bg:buttons(gears.table.join(
         awful.button({}, 1, function()
             add_item(item.text, not item.pinned)
-            M.show_clipboard_popup()
+            M.show_clipboard_popup(true)  -- refresh only, don't toggle
         end)
     ))
 
@@ -205,7 +205,7 @@ local function create_clipboard_row(item, index)
     delete_bg:buttons(gears.table.join(
         awful.button({}, 1, function()
             remove_item(index)
-            M.show_clipboard_popup()
+            M.show_clipboard_popup(true)  -- refresh only, don't toggle
         end)
     ))
 
@@ -242,23 +242,10 @@ local function create_clipboard_row(item, index)
     return row_bg, pin_bg, delete_bg
 end
 
-function M.show_clipboard_popup()
-    -- Close tools popup if open
-    if m.tools_popup then
-        popup_registry.hide_popup(m.tools_popup)
-    end
-
-    -- If already open, just toggle off
-    if clipboard_popup and clipboard_popup.visible then
-        clipboard_popup.visible = false
-        clipboard_popup = nil
-        return
-    end
-
-    -- Back arrow
+local function create_clipboard_header()
+    -- Back button
     local back_icon = wibox.widget {
-        text = "<-",
-        font = m.font_popup,
+        markup = string.format('<span font="icons 12">%s</span>', m.glyph.btn_edit),
         align = "center",
         valign = "center",
         forced_width = 24,
@@ -286,6 +273,14 @@ function M.show_clipboard_popup()
         end)
     ))
 
+    -- Title
+    local title = wibox.widget {
+        markup = string.format('<span font="%s">Clipboard</span>', m.font_popup),
+        align = "center",
+        valign = "center",
+        widget = wibox.widget.textbox,
+    }
+
     -- Clear all button
     local clear_icon = wibox.widget {
         markup = string.format('<span font="icons 14">%s</span>', m.glyph.btn_delete),
@@ -310,22 +305,17 @@ function M.show_clipboard_popup()
     clear_btn:buttons(gears.table.join(
         awful.button({}, 1, function()
             clear_all()
-            M.show_clipboard_popup()
+            M.show_clipboard_popup(true)  -- refresh only
         end)
     ))
 
-    local title_widget = wibox.widget {
+    return wibox.widget {
         {
             back_btn,
             forced_width = 24,
             widget = wibox.container.place,
         },
-        {
-            markup = string.format('<span font="%s">Clipboard</span>', m.font_popup),
-            align = "center",
-            valign = "center",
-            widget = wibox.widget.textbox,
-        },
+        title,
         {
             clear_btn,
             forced_width = 24,
@@ -334,8 +324,9 @@ function M.show_clipboard_popup()
         expand = "inside",
         layout = wibox.layout.align.horizontal,
     }
+end
 
-    -- Clipboard list
+local function build_list_widget()
     local list_widget = wibox.widget {
         layout = wibox.layout.fixed.vertical,
         spacing = 4,
@@ -378,19 +369,55 @@ function M.show_clipboard_popup()
         end
     end
 
+    return list_widget
+end
+
+local function build_container(list_widget)
     local content = wibox.widget {
-        title_widget,
+        create_clipboard_header(),
         list_widget,
         spacing = 8,
         layout = wibox.layout.fixed.vertical,
     }
 
-    local container = wibox.widget {
+    return wibox.widget {
         content,
         margins = 12,
         widget = wibox.container.margin,
     }
+end
 
+local function rebuild_popup_content()
+    if not clipboard_popup then return end
+    local list_widget = build_list_widget()
+    local container = build_container(list_widget)
+    clipboard_popup.widget = container
+end
+
+function M.show_clipboard_popup(refresh_only)
+    -- If refresh_only, just rebuild the popup content without toggling
+    if refresh_only and clipboard_popup and clipboard_popup.visible then
+        rebuild_popup_content()
+        return
+    end
+
+    -- Close tools popup if open
+    if m.tools_popup then
+        popup_registry.hide_popup(m.tools_popup)
+    end
+
+    -- If already open, just toggle off
+    if clipboard_popup and clipboard_popup.visible then
+        clipboard_popup.visible = false
+        clipboard_popup = nil
+        return
+    end
+
+    -- Build content first
+    local list_widget = build_list_widget()
+    local container = build_container(list_widget)
+
+    -- Create popup with content
     clipboard_popup = awful.popup {
         widget = container,
         bg = "#1e1e2eee",

@@ -134,7 +134,7 @@ function M.setup_global_click_handler()
     M._last_close_time = 0
 
     -- Listen for button press on clients (catches clicks on windows)
-    client.connect_signal("button::press", function(c, x, y, button, modifiers)
+    client.connect_signal("button::press", function()
         -- Ignore if child popup was just closed (prevents re-opening parent)
         if M._child_popup_just_closed then
             return
@@ -143,20 +143,19 @@ function M.setup_global_click_handler()
         -- Skip if priority popup is active (they have their own dismiss logic)
         if M.is_priority_popup_active() then return end
 
-        -- Convert client-relative coords to global screen coords
-        local geo = c:geometry()
-        local gx = geo.x + x
-        local gy = geo.y + y
+        -- Skip if no active popup
+        if not M.active_popup or not M.active_popup.visible then return end
 
-        -- Dismiss active popup if click is outside its bounds
-        if M.active_popup and M.active_popup.visible then
-            local pgeo = M.active_popup:geometry()
-            local is_inside = gx >= pgeo.x and gx <= pgeo.x + pgeo.width and
-                             gy >= pgeo.y and gy <= pgeo.y + pgeo.height
-            if not is_inside then
-                M.active_popup.visible = false
-                M.active_popup = nil
-            end
+        -- Use mouse coords directly for accurate global position
+        local mx, my = mouse.coords().x, mouse.coords().y
+        local pgeo = M.active_popup:geometry()
+        if not pgeo then return end
+
+        local is_inside = mx >= pgeo.x and mx <= pgeo.x + pgeo.width and
+                         my >= pgeo.y and my <= pgeo.y + pgeo.height
+        if not is_inside then
+            M.active_popup.visible = false
+            M.active_popup = nil
         end
     end)
 end
