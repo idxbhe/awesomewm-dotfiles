@@ -7,7 +7,7 @@
 #	gh0stzk - https://github.com/gh0stzk/dotfiles
 
 [general]
-import = ["/home/bhe/dotfiles/config/alacritty/rice-colors.toml", "/home/bhe/dotfiles/config/alacritty/fonts.toml"]
+import = ["~/dotfiles/config/alacritty/rice-colors.toml", "~/dotfiles/config/alacritty/fonts.toml"]
 
 live_config_reload = true
 
@@ -30,7 +30,7 @@ save_to_clipboard = true
 [window]
 decorations = "none"
 dynamic_title = true
-opacity = 0.8
+opacity = 0.95
 padding = { x = 15, y = 15 }
 dynamic_padding = true
 resize_increments = true

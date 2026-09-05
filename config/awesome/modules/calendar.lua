@@ -37,7 +37,7 @@ end
 -- Create calendar grid with header
 local cal_grid_widget = wibox.widget {
     layout = wibox.layout.fixed.vertical,
-    spacing = 2,
+    spacing = 4,
 }
 
 -- Header row
@@ -67,7 +67,7 @@ for w = 1, 6 do
         cell.forced_width = 28
         cell.forced_height = 28
         cell.bg = "#1e1e2e"
-        cell.shape = gears.shape.circle
+        cell.shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end
         cell.shape_clip = true
         local place = wibox.container.place(day_widgets[idx])
         place.halign = "center"
@@ -122,7 +122,7 @@ local function render_calendar()
     
     for i = 1, 42 do
         day_widgets[i].markup = ""
-        day_cells[i].bg = "#1e1e2e"
+        day_cells[i].bg = "#00000000"
     end
     
     for i = 1, first_day do

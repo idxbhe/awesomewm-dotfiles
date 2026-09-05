@@ -151,56 +151,40 @@ theme.titlebar_fg_focus = mocha.text
 theme.titlebar_size = 22
 theme.titlebar_font = "Maple Mono NF Bold 9"
 
--- Titlebar button icons (Papirus-Dark 16x16, forced 14x14 render)
-local pi = "/usr/share/icons/Papirus-Dark/16x16/actions/"
+-- Titlebar button icons (custom SVGs in config/awesome/icons/)
+local ic = gears.filesystem.get_configuration_dir() .. "icons/"
 
 -- Close
-theme.titlebar_close_button_normal = pi .. "window-close.svg"
-theme.titlebar_close_button_focus  = pi .. "window-close.svg"
-theme.titlebar_close_button_normal_hover = pi .. "window-close.svg"
-theme.titlebar_close_button_focus_hover  = pi .. "window-close.svg"
-theme.titlebar_close_button_normal_press = pi .. "window-close.svg"
-theme.titlebar_close_button_focus_press  = pi .. "window-close.svg"
+theme.titlebar_close_button_normal = ic .. "close-normal.svg"
+theme.titlebar_close_button_focus  = ic .. "close-normal.svg"
+theme.titlebar_close_button_normal_hover = ic .. "close-hover.svg"
+theme.titlebar_close_button_focus_hover  = ic .. "close-hover.svg"
+theme.titlebar_close_button_normal_press = ic .. "close-press.svg"
+theme.titlebar_close_button_focus_press  = ic .. "close-press.svg"
 
 -- Minimize
-theme.titlebar_minimize_button_normal = pi .. "window-minimize.svg"
-theme.titlebar_minimize_button_focus  = pi .. "window-minimize.svg"
-theme.titlebar_minimize_button_normal_hover = pi .. "window-minimize.svg"
-theme.titlebar_minimize_button_focus_hover  = pi .. "window-minimize.svg"
-theme.titlebar_minimize_button_normal_press = pi .. "window-minimize.svg"
-theme.titlebar_minimize_button_focus_press  = pi .. "window-minimize.svg"
+theme.titlebar_minimize_button_normal = ic .. "minimize-normal.svg"
+theme.titlebar_minimize_button_focus  = ic .. "minimize-normal.svg"
+theme.titlebar_minimize_button_normal_hover = ic .. "minimize-hover.svg"
+theme.titlebar_minimize_button_focus_hover  = ic .. "minimize-hover.svg"
+theme.titlebar_minimize_button_normal_press = ic .. "minimize-press.svg"
+theme.titlebar_minimize_button_focus_press  = ic .. "minimize-press.svg"
 
 -- Maximize
-theme.titlebar_maximized_button_normal = pi .. "window-maximize.svg"
-theme.titlebar_maximized_button_focus  = pi .. "window-maximize.svg"
-theme.titlebar_maximized_button_normal_inactive = pi .. "window-maximize.svg"
-theme.titlebar_maximized_button_focus_inactive  = pi .. "window-maximize.svg"
-theme.titlebar_maximized_button_normal_active = pi .. "window-maximize.svg"
-theme.titlebar_maximized_button_focus_active  = pi .. "window-maximize.svg"
-
--- Floating
-theme.titlebar_floating_button_normal = pi .. "focus-windows.svg"
-theme.titlebar_floating_button_focus  = pi .. "focus-windows.svg"
-theme.titlebar_floating_button_normal_inactive = pi .. "focus-windows.svg"
-theme.titlebar_floating_button_focus_inactive  = pi .. "focus-windows.svg"
-theme.titlebar_floating_button_normal_active = pi .. "focus-windows.svg"
-theme.titlebar_floating_button_focus_active  = pi .. "focus-windows.svg"
-
--- Sticky/Pin
-theme.titlebar_sticky_button_normal = pi .. "window-pin.svg"
-theme.titlebar_sticky_button_focus  = pi .. "window-pin.svg"
-theme.titlebar_sticky_button_normal_inactive = pi .. "window-pin.svg"
-theme.titlebar_sticky_button_focus_inactive  = pi .. "window-pin.svg"
-theme.titlebar_sticky_button_normal_active = pi .. "window-unpin.svg"
-theme.titlebar_sticky_button_focus_active  = pi .. "window-unpin.svg"
-
--- On top
-theme.titlebar_ontop_button_normal = pi .. "window-shade.svg"
-theme.titlebar_ontop_button_focus  = pi .. "window-shade.svg"
-theme.titlebar_ontop_button_normal_inactive = pi .. "window-shade.svg"
-theme.titlebar_ontop_button_focus_inactive  = pi .. "window-shade.svg"
-theme.titlebar_ontop_button_normal_active = pi .. "window-unshade.svg"
-theme.titlebar_ontop_button_focus_active  = pi .. "window-unshade.svg"
+theme.titlebar_maximized_button_normal = ic .. "maximize-normal.svg"
+theme.titlebar_maximized_button_focus  = ic .. "maximize-normal.svg"
+theme.titlebar_maximized_button_normal_inactive = ic .. "maximize-normal.svg"
+theme.titlebar_maximized_button_focus_inactive  = ic .. "maximize-normal.svg"
+theme.titlebar_maximized_button_normal_active = ic .. "maximize-normal.svg"
+theme.titlebar_maximized_button_focus_active  = ic .. "maximize-normal.svg"
+theme.titlebar_maximized_button_normal_hover = ic .. "maximize-hover.svg"
+theme.titlebar_maximized_button_focus_hover  = ic .. "maximize-hover.svg"
+theme.titlebar_maximized_button_normal_active_hover = ic .. "maximize-hover.svg"
+theme.titlebar_maximized_button_focus_active_hover = ic .. "maximize-hover.svg"
+theme.titlebar_maximized_button_normal_press = ic .. "maximize-press.svg"
+theme.titlebar_maximized_button_focus_press  = ic .. "maximize-press.svg"
+theme.titlebar_maximized_button_normal_active_press = ic .. "maximize-press.svg"
+theme.titlebar_maximized_button_focus_active_press = ic .. "maximize-press.svg"
 
 -- Layout icons (custom icons.ttf layout glyphs)
 theme.layout_floating     = "\u{f260}"   -- wm-floating

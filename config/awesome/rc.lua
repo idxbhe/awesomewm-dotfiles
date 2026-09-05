@@ -150,6 +150,9 @@ gears.timer.start_new(1, function()
     return false
 end)
 
+-- Autostart picom compositor
+awful.spawn.with_shell("picom -b --config ~/.config/picom/picom.conf")
+
 -- Tags
 awful.screen.connect_for_each_screen(function(s)
     awful.tag({ "1", "2", "3", "4", "5", "6", "7" }, s, awful.layout.layouts[1])

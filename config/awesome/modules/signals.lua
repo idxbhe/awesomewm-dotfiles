@@ -169,24 +169,32 @@ client.connect_signal("property::icon", function(c)
     end)
 end)
 
--- {{{ Remember window state (position, size, floating mode) per app class
+-- {{{ Remember window state (position, size) per app class, separately for floating and tiled
 local state_file = gears.filesystem.get_cache_dir() .. "/window_state"
 
--- Load saved states (format: class|x|y|width|height|maximized|floating|fullscreen)
+-- Load saved states (format: class|fx|fy|fw|fh|tx|ty|tw|th|last_mode)
 local window_states = {}
 do
     local f = io.open(state_file, "r")
     if f then
         for line in f:lines() do
-            local class, x, y, w, h, maximized, floating, fullscreen =
-                line:match("^(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.+)$")
-            if class and x then
+            local class, fx, fy, fw, fh, tx, ty, tw, th, last_mode =
+                line:match("^(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.+)$")
+            if class and fx then
                 window_states[class] = {
-                    x = tonumber(x), y = tonumber(y),
-                    width = tonumber(w), height = tonumber(h),
-                    maximized = maximized == "1",
-                    floating = floating == "1",
-                    fullscreen = fullscreen == "1",
+                    floating = {
+                        x = tonumber(fx) ~= -999 and tonumber(fx) or nil,
+                        y = tonumber(fy) ~= -999 and tonumber(fy) or nil,
+                        width = tonumber(fw) ~= -999 and tonumber(fw) or nil,
+                        height = tonumber(fh) ~= -999 and tonumber(fh) or nil,
+                    },
+                    tiled = {
+                        x = tonumber(tx) ~= -999 and tonumber(tx) or nil,
+                        y = tonumber(ty) ~= -999 and tonumber(ty) or nil,
+                        width = tonumber(tw) ~= -999 and tonumber(tw) or nil,
+                        height = tonumber(th) ~= -999 and tonumber(th) or nil,
+                    },
+                    last_mode = last_mode or "tiled",
                 }
             end
         end
@@ -198,13 +206,19 @@ local function save_window_states()
     local f = io.open(state_file, "w")
     if not f then return end
     for class, s in pairs(window_states) do
-        f:write(string.format("%s|%d|%d|%d|%d|%s|%s|%s\n",
+        local fl = s.floating or {}
+        local ti = s.tiled or {}
+        f:write(string.format("%s|%d|%d|%d|%d|%d|%d|%d|%d|%s\n",
             class,
-            math.floor(s.x or 0), math.floor(s.y or 0),
-            math.floor(s.width or 0), math.floor(s.height or 0),
-            s.maximized and "1" or "0",
-            s.floating and "1" or "0",
-            s.fullscreen and "1" or "0"))
+            fl.x and math.floor(fl.x) or -999,
+            fl.y and math.floor(fl.y) or -999,
+            fl.width and math.floor(fl.width) or -999,
+            fl.height and math.floor(fl.height) or -999,
+            ti.x and math.floor(ti.x) or -999,
+            ti.y and math.floor(ti.y) or -999,
+            ti.width and math.floor(ti.width) or -999,
+            ti.height and math.floor(ti.height) or -999,
+            s.last_mode or "tiled"))
     end
     f:close()
 end
@@ -222,21 +236,28 @@ local startup_phase = true
 local function record_window_state(c)
     if not (c.class and c.valid) then return end
 
-    -- Skip recording fullscreen windows to avoid state pollution
-    -- They should always be managed by layout system
-    if c.fullscreen then
-        window_states[c.class] = nil
-        save_timer:again()
-        return
+    -- Skip recording fullscreen windows
+    if c.fullscreen then return end
+
+    local class = c.class
+    if not window_states[class] then
+        window_states[class] = { floating = {}, tiled = {}, last_mode = "tiled" }
     end
 
-    window_states[c.class] = {
-        x = c.x, y = c.y,
-        width = c.width, height = c.height,
-        maximized = c.maximized,
-        floating = c.floating,
-        fullscreen = false,
-    }
+    local geo = c:geometry()
+    if c.floating then
+        window_states[class].floating = {
+            x = geo.x, y = geo.y,
+            width = geo.width, height = geo.height,
+        }
+        window_states[class].last_mode = "floating"
+    elseif not c.maximized then
+        window_states[class].tiled = {
+            x = geo.x, y = geo.y,
+            width = geo.width, height = geo.height,
+        }
+        window_states[class].last_mode = "tiled"
+    end
     save_timer:again()
 end
 
@@ -252,51 +273,24 @@ client.connect_signal("manage", function(c)
     gears.timer.start_new(0.1, function()
         if not c.valid then return false end
 
-        -- Handle fullscreen separately
-        if state.fullscreen then
-            c.fullscreen = true
-            -- Force fullscreen geometry using screen.geometry (not workarea)
-            gears.timer.start_new(0.05, function()
-                if not c.valid then return false end
-                local s = c.screen and c.screen.geometry or screen.primary.geometry
-                c:geometry({
-                    x = s.x,
-                    y = s.y,
-                    width = s.width,
-                    height = s.height,
-                })
-                return false
-            end)
-            return false
-        end
-
-        -- Handle maximized (but not if window is already fullscreen)
-        if state.maximized and not c.fullscreen then
-            c.maximized = true
-            -- Apply gap after maximized
-            gears.timer.start_new(0.05, function()
-                if not c.valid or c.fullscreen then return false end
-                local gap = beautiful.useless_gap or 1
-                local s = c.screen or screen.primary
-                c:geometry({
-                    x = s.workarea.x + gap,
-                    y = s.workarea.y + gap,
-                    width = s.workarea.width - gap * 2,
-                    height = s.workarea.height - gap * 2,
-                })
-                return false
-            end)
-            return false
-        end
-
-        -- Handle floating windows
-        if state.floating and state.width and state.width > 0 then
+        -- Restore based on last saved state
+        if state.floating and state.floating.width and state.floating.width > 0 then
+            -- Restore floating state
             c.floating = true
             pcall(function()
-                c.x = state.x
-                c.y = state.y
-                c.width = state.width
-                c.height = state.height
+                c.x = state.floating.x
+                c.y = state.floating.y
+                c.width = state.floating.width
+                c.height = state.floating.height
+            end)
+        else
+            -- Restore tiled state
+            c.floating = false
+            pcall(function()
+                c.x = state.tiled.x
+                c.y = state.tiled.y
+                c.width = state.tiled.width
+                c.height = state.tiled.height
             end)
         end
 
@@ -332,86 +326,60 @@ client.connect_signal("request::titlebars", function(c)
         awful.button({ }, 3, function() c:emit_signal("request::activate", "titlebar", {raise = true}); awful.mouse.client.resize(c) end)
     )
 
-    -- Helper: titlebar icon button in a square box
-    local function tbbtn(widget, size, shift_up, bg)
-        size = size or 14
-        shift_up = shift_up or 0
-        widget.resize = true
-        widget.forced_width  = size
-        widget.forced_height = size
-        return wibox.widget {
-            {
-                {
-                    widget,
-                    widget = wibox.container.place,
-                },
-                top    = 2,
-                left   = 2,
-                right  = 2,
-                bottom = 2 + shift_up,
-                widget = wibox.container.margin,
-            },
-            forced_width  = 20,
-            forced_height = 20,
-            bg = bg or beautiful.surface1,
-            border_width = 1,
-            border_color = beautiful.surface0,
-            widget = wibox.container.background,
-        }
-    end
-
-    -- Helper: toggle button — same icon, blue tint when active
-    local function tbbtn_toggled(c, prop, svg_path, action, size)
-        size = size or 11
+    -- Helper: titlebar icon button using imagebox with hover + focus support (no background)
+    local ic = gears.filesystem.get_configuration_dir() .. "icons/"
+    local function tbbtn_icon(svg_normal, svg_hover, svg_nofocus, action, size)
+        size = size or 16
         local img = wibox.widget {
-            image = gears.surface.load(svg_path),
+            image = gears.surface.load(svg_normal),
             resize = true, forced_width = size, forced_height = size,
             widget = wibox.widget.imagebox,
         }
         local box = wibox.widget {
-            {
-                { img, widget = wibox.container.place },
-                top = 2, left = 2, right = 2, bottom = 2,
-                widget = wibox.container.margin,
-            },
+            { img, widget = wibox.container.place },
             forced_width = 20, forced_height = 20,
-            bg = beautiful.surface1,
-            border_width = 1, border_color = beautiful.surface0,
             widget = wibox.container.background,
         }
+        local is_hover = false
+        local is_focused = true
         local function update()
-            if c[prop] then
-                box.bg = beautiful.blue_dark
+            if not is_focused then
+                img.image = gears.surface.load(svg_nofocus)
+            elseif is_hover then
+                img.image = gears.surface.load(svg_hover)
             else
-                box.bg = beautiful.surface1
+                img.image = gears.surface.load(svg_normal)
             end
         end
-        c:connect_signal("property::" .. prop, update)
-        update()
+        c:connect_signal("focus", function()
+            is_focused = true
+            update()
+        end)
+        c:connect_signal("unfocus", function()
+            is_focused = false
+            update()
+        end)
+        box:connect_signal("mouse::enter", function() is_hover = true; update() end)
+        box:connect_signal("mouse::leave", function() is_hover = false; update() end)
         box:buttons(gears.table.join(
             awful.button({ }, 1, function()
                 c:emit_signal("request::activate", "titlebar", {raise = true})
                 action(c)
             end)
         ))
+        update()
         return box
     end
 
     awful.titlebar(c, { size = 22 }):setup {
         { awful.titlebar.widget.iconwidget(c), buttons = buttons, layout = wibox.layout.fixed.horizontal },
         { { { align = "center", widget = awful.titlebar.widget.titlewidget(c), font = "Maple Mono NF Bold 9" }, buttons = buttons, layout = wibox.layout.flex.horizontal }, align = "center", valign = "center", widget = wibox.container.place },
-        { tbbtn(awful.titlebar.widget.minimizebutton(c), 16, 2),
-          tbbtn(awful.titlebar.widget.floatingbutton(c), 13),
-          tbbtn_toggled(c, "maximized",
-            "/usr/share/icons/Papirus-Dark/16x16/actions/window-maximize.svg",
-            function(c) c.maximized = not c.maximized; c:raise() end, 15),
-          tbbtn_toggled(c, "sticky",
-            "/usr/share/icons/Papirus-Dark/16x16/actions/window-pin.svg",
-            function(c) c.sticky = not c.sticky end),
-          tbbtn_toggled(c, "ontop",
-            "/usr/share/icons/Papirus-Dark/16x16/actions/window-shade.svg",
-            function(c) c.ontop = not c.ontop end),
-          tbbtn(awful.titlebar.widget.closebutton(c), 16, 0, beautiful.red_dark),
+        { tbbtn_icon(ic .. "minimize-normal.svg", ic .. "minimize-hover.svg", ic .. "nofocus.svg",
+            function(c) c.minimized = true end, 16),
+          tbbtn_icon(ic .. "maximize-normal.svg", ic .. "maximize-hover.svg", ic .. "nofocus.svg",
+            function(c) c.maximized = not c.maximized; c:raise() end, 16),
+          tbbtn_icon(ic .. "close-normal.svg", ic .. "close-hover.svg", ic .. "nofocus.svg",
+            function(c) c:kill() end, 16),
           layout = wibox.layout.fixed.horizontal() },
         layout = wibox.layout.align.horizontal
     }
