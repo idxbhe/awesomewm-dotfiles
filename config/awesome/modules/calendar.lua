@@ -60,6 +60,7 @@ cal_grid_widget:add(header_row)
 local header_separator = wibox.widget {
     bg = "#45475a",
     forced_height = 1,
+    forced_width = 220,
     widget = wibox.container.background,
 }
 cal_grid_widget:add(header_separator)
