@@ -8,6 +8,7 @@ local awful = m.awful
 local wibox = m.wibox
 local popup_registry = require("modules.popup_registry")
 local alarm = require("modules.alarm")
+local clipboard = require("modules.clipboard")
 
 local M = {}
 
@@ -366,7 +367,7 @@ tools_list:add(make_tool_row(
 tools_list:add(make_tool_row(
     clipboard_icon,
     "Clipboard",
-    function() end  -- TODO
+    function() clipboard.show_clipboard_popup() end
 ))
 
 -- Tools popup
