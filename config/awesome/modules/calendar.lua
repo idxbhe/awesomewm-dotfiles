@@ -56,15 +56,6 @@ for idx, day in ipairs(day_names) do
 end
 cal_grid_widget:add(header_row)
 
--- Horizontal separator below day headers
-local header_separator = wibox.widget {
-    color = "#45475a",
-    thickness = 1,
-    forced_height = 1,
-    widget = wibox.widget.separator,
-}
-cal_grid_widget:add(header_separator)
-
 -- Week rows (6 rows max)
 local day_cells = {}
 local week_rows = {}
