@@ -418,7 +418,7 @@ end
 load_history()
 
 -- Start polling timer
-check_timer = gears.timer({
+gears.timer({
     timeout = POLL_INTERVAL,
     call_now = true,
     autostart = true,

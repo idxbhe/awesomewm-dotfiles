@@ -270,6 +270,8 @@ theme.glyph = {
     btn_cancel      = "\u{f488}",  -- button-cancel
     btn_save        = "\u{f0ce}",  -- button-save
     btn_add         = "\u{f99c}",  -- button-add
+    pin             = "\u{f041}",  -- pin
+    pin_outline     = "\u{ea23}",  -- pin-outline
     -- Window manager layout icons (mapped to AwesomeWM layout names)
     wm_floating     = "\u{f260}",  -- wm-floating
     wm_tile         = "\u{fb96}",  -- wm-tile
