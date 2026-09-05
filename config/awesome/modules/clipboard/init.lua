@@ -245,7 +245,8 @@ end
 local function create_clipboard_header()
     -- Back button
     local back_icon = wibox.widget {
-        markup = string.format('<span font="%s"><-</span>', m.font_popup),
+        text = "<-",
+        font = m.font_popup,
         align = "center",
         valign = "center",
         forced_width = 24,
