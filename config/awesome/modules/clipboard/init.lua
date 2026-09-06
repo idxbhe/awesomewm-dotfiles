@@ -11,7 +11,8 @@ local M = {}
 
 -- Config
 local MAX_ITEMS = 50
-local POLL_INTERVAL = 0.5
+local MAX_ITEM_SIZE = 10000  -- Limit individual item size to 10KB
+local POLL_INTERVAL = 2
 local clipboard_file = gears.filesystem.get_cache_dir() .. "/clipboard.json"
 
 -- State
@@ -29,15 +30,18 @@ local function save_history()
     f:write("[\n")
     for i, item in ipairs(clipboard_history) do
         f:write("  {")
-        f:write(string.format('"text":%q', item.text))
+        -- Escape properly for JSON
+        local escaped = item.text:gsub("\\", "\\\\"):gsub('"', '\\"'):gsub("\n", "\\n"):gsub("\r", "\\r"):gsub("\t", "\\t")
+        f:write(string.format('"text":"%s"', escaped))
         if item.pinned then
             f:write(string.format(',"pinned":%s', tostring(item.pinned)))
         end
         f:write("}")
         if i < #clipboard_history then
-            f:write(",")
+            f:write(",\n")
+        else
+            f:write("\n")
         end
-        f:write("\n")
     end
     f:write("]\n")
     f:close()
@@ -51,16 +55,34 @@ local function load_history()
     local content = f:read("*a")
     f:close()
 
-    -- Simple JSON parser for our format
-    for item in content:gmatch("%b{}") do
-        local text = item:match('"text":%s*"([^"]*)"')
-        local pinned = item:match('"pinned":%s*(true)') == "true"
-        if text then
-            table.insert(clipboard_history, {
-                text = text,
-                pinned = pinned,
-            })
+    -- Robust JSON parsing - extract each object properly
+    local depth = 0
+    local start = 1
+    local items = {}
+    
+    for i = 1, #content do
+        local c = content:sub(i, i)
+        if c == "{" then
+            if depth == 0 then start = i end
+            depth = depth + 1
+        elseif c == "}" then
+            depth = depth - 1
+            if depth == 0 then
+                local obj = content:sub(start, i)
+                local text = obj:match('"text"%s*:%s*"((?:[^"\\]|\\.)*)"')
+                if text then
+                    -- Unescape JSON
+                    text = text:gsub('\\"', '"'):gsub('\\\\', '\\'):gsub('\\n', '\n'):gsub('\\r', '\r'):gsub('\\t', '\t')
+                    local pinned = obj:match('"pinned"%s*:%s*(true)') == "true"
+                    table.insert(items, {text = text, pinned = pinned})
+                end
+            end
         end
+    end
+    
+    -- Enforce MAX_ITEMS limit on load
+    for i = 1, math.min(#items, MAX_ITEMS) do
+        table.insert(clipboard_history, items[i])
     end
 end
 
@@ -71,6 +93,10 @@ end
 local function get_clipboard()
     awful.spawn.easy_async_with_shell("xclip -selection clipboard -o 2>/dev/null", function(output)
         local text = output:gsub("%s+$", "") -- trim trailing whitespace
+        -- Limit item size
+        if #text > MAX_ITEM_SIZE then
+            text = text:sub(1, MAX_ITEM_SIZE)
+        end
         if text ~= last_clipboard and text ~= "" then
             last_clipboard = text
 
@@ -107,6 +133,10 @@ local function set_clipboard(text)
 end
 
 local function add_item(text, pinned)
+    -- Limit item size
+    if #text > MAX_ITEM_SIZE then
+        text = text:sub(1, MAX_ITEM_SIZE)
+    end
     -- Check if exists
     for i, item in ipairs(clipboard_history) do
         if item.text == text then

@@ -91,7 +91,8 @@ local function lookup_client_icon(c)
     return nil
 end
 
--- Apply Papirus icon to a client via xseticon
+-- Apply Papirus icon to a client via xseticon (with caching)
+local icon_cache = {}
 local function apply_papirus_icon(c)
     if not c.valid then return end
 
@@ -101,14 +102,18 @@ local function apply_papirus_icon(c)
     local icon_path = lookup_client_icon(c)
     if not icon_path or not c.window then return end
 
-    c._papirus_applying = true
     local wid = tostring(c.window)
-    local png_path = "/tmp/awesome-icon-" .. wid .. ".png"
+    -- Use cached PNG if available
+    local png_path = icon_cache[icon_path]
+    if not png_path then
+        png_path = "/tmp/awesome-icon-" .. wid .. ".png"
+        icon_cache[icon_path] = png_path
+    end
 
+    c._papirus_applying = true
     awful.spawn.easy_async_with_shell(
         "rsvg-convert -w 48 -h 48 '" .. icon_path .. "' -o '" .. png_path .. "' 2>/dev/null && " ..
-        "xseticon -id " .. wid .. " '" .. png_path .. "' 2>/dev/null && " ..
-        "rm -f '" .. png_path .. "'",
+        "xseticon -id " .. wid .. " '" .. png_path .. "' 2>/dev/null",
         function()
             if c.valid then
                 c._papirus_applying = false
@@ -326,12 +331,24 @@ client.connect_signal("request::titlebars", function(c)
         awful.button({ }, 3, function() c:emit_signal("request::activate", "titlebar", {raise = true}); awful.mouse.client.resize(c) end)
     )
 
-    -- Helper: titlebar icon button using imagebox with hover + focus support (no background)
+    -- Helper: titlebar icon button using cached imagebox with hover + focus support (no background)
     local ic = gears.filesystem.get_configuration_dir() .. "icons/"
+    
+    -- Global icon cache (module-level) to share surfaces across all clients
+    if not _G._titlebar_icon_cache then
+        _G._titlebar_icon_cache = {}
+    end
+    local function get_surface(path)
+        if not _G._titlebar_icon_cache[path] then
+            _G._titlebar_icon_cache[path] = gears.surface.load(path)
+        end
+        return _G._titlebar_icon_cache[path]
+    end
+    
     local function tbbtn_icon(svg_normal, svg_hover, svg_nofocus, action, size)
         size = size or 16
         local img = wibox.widget {
-            image = gears.surface.load(svg_normal),
+            image = get_surface(svg_normal),
             resize = true, forced_width = size, forced_height = size,
             widget = wibox.widget.imagebox,
         }
@@ -344,11 +361,11 @@ client.connect_signal("request::titlebars", function(c)
         local is_focused = true
         local function update()
             if not is_focused then
-                img.image = gears.surface.load(svg_nofocus)
+                img.image = get_surface(svg_nofocus)
             elseif is_hover then
-                img.image = gears.surface.load(svg_hover)
+                img.image = get_surface(svg_hover)
             else
-                img.image = gears.surface.load(svg_normal)
+                img.image = get_surface(svg_normal)
             end
         end
         c:connect_signal("focus", function()

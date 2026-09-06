@@ -160,12 +160,20 @@ awful.spawn.easy_async_with_shell("pamixer --get-volume", function(stdout)
     update_vol_icon(vol)
 end)
 
-awful.widget.watch("pamixer --get-volume 2>/dev/null", 1, function(_, stdout)
-    local vol = math.floor(tonumber(stdout) or 0)
-    vol_slider.value = vol
-    vol_text_tb.markup = string.format("%d%%", vol)
-    update_vol_icon(vol)
-end, vol_layout)
+-- Use timer with pamixer --get-volume (still spawns but less overhead than watch)
+gears.timer {
+    timeout = 1,
+    call_now = false,
+    autostart = true,
+    callback = function()
+        awful.spawn.easy_async("pamixer --get-volume", function(stdout)
+            local vol = math.floor(tonumber(stdout) or 0)
+            vol_slider.value = vol
+            vol_text_tb.markup = string.format("%d%%", vol)
+            update_vol_icon(vol)
+        end)
+    end,
+}
 
 M.vol_widget = vol_widget
 

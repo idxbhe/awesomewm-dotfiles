@@ -303,11 +303,11 @@ local function schedule_alarms()
                                 end
                             end
 
-                            -- Schedule next check
+                            -- Schedule next check (single-shot timers auto-cleanup, don't store in alarm_timers)
                             create_check_timer()
                         end,
                     })
-                    table.insert(alarm_timers, t)
+                    -- Don't store single-shot timers in alarm_timers - they auto-cleanup after firing
                 end
 
                 create_check_timer()
@@ -1709,17 +1709,22 @@ function M.show_alarm_list()
     popup_registry.show_child_popup(popup)
 
     -- Auto-hide on mouse leave
-    popup:connect_signal("mouse::leave", function()
-        if not popup_registry.should_auto_hide() then return end
-        gears.timer.start_new(0.5, function()
+    local alarm_list_hide_timer = gears.timer {
+        timeout = 0.5,
+        single_shot = true,
+        callback = function()
             local coords = mouse.coords()
             local geo = popup:geometry()
             if coords.x < geo.x or coords.x > geo.x + geo.width or
                coords.y < geo.y or coords.y > geo.y + geo.height then
                 popup_registry.hide_popup(popup)
             end
-            return false
-        end)
+        end,
+    }
+
+    popup:connect_signal("mouse::leave", function()
+        if not popup_registry.should_auto_hide() then return end
+        alarm_list_hide_timer:again()
     end)
 
     -- Rebuild alarm list

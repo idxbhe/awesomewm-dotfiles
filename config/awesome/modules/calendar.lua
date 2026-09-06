@@ -289,31 +289,43 @@ function M.setup_clock_tooltip(clock_widget)
         clock_tooltip_popup.y = s.y + 30
     end)
 
-    clock_widget:connect_signal("mouse::leave", function()
-        gears.timer.start_new(0.1, function()
+    -- Reuse a single timer for hide check instead of creating new ones
+    local tooltip_hide_timer = gears.timer {
+        timeout = 0.1,
+        single_shot = true,
+        callback = function()
             local mouse_x, mouse_y = mouse.coords().x, mouse.coords().y
             local popup_geo = clock_tooltip_popup:geometry()
             if mouse_x < popup_geo.x or mouse_x > popup_geo.x + popup_geo.width or
                mouse_y < popup_geo.y or mouse_y > popup_geo.y + popup_geo.height then
                 popup_registry.hide_tooltip(clock_tooltip_popup)
             end
-            return false
-        end)
+        end,
+    }
+
+    clock_widget:connect_signal("mouse::leave", function()
+        tooltip_hide_timer:again()
     end)
 end
 
 function M.setup_autoclose()
-    calendar_popup:connect_signal("mouse::leave", function()
-        if not popup_registry.should_auto_hide() then return end
-        gears.timer.start_new(0.3, function()
+    -- Reuse a single timer for hide check
+    local autoclose_timer = gears.timer {
+        timeout = 0.3,
+        single_shot = true,
+        callback = function()
             local mouse_x, mouse_y = mouse.coords().x, mouse.coords().y
             local popup_geo = calendar_popup:geometry()
             if mouse_x < popup_geo.x or mouse_x > popup_geo.x + popup_geo.width or
                mouse_y < popup_geo.y or mouse_y > popup_geo.y + popup_geo.height then
                 popup_registry.hide_popup(calendar_popup)
             end
-            return false
-        end)
+        end,
+    }
+
+    calendar_popup:connect_signal("mouse::leave", function()
+        if not popup_registry.should_auto_hide() then return end
+        autoclose_timer:again()
     end)
 end
 

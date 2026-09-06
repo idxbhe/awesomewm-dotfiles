@@ -72,28 +72,59 @@ M.pill_icon_text = pill_icon_text
 M.cpu_widget, M.cpu_icon_tb, M.cpu_text_tb, M.cpu_layout = pill_icon_text(
     m.glyph.cpu, "%d%%", m.pill_bg, m.pill_fg
 )
-awful.widget.watch(
-    "bash -c \"top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d'%' -f1\"",
-    2,
-    function(_, stdout)
-        local cpu = math.floor(tonumber(stdout) or 0)
-        M.cpu_text_tb.markup = string.format("%d%%", cpu)
+local function read_cpu()
+    local f = io.open("/proc/stat", "r")
+    if not f then return 0 end
+    local line = f:read("*l")
+    f:close()
+    local user, nice, system, idle = line:match("cpu%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)")
+    if not user then return 0 end
+    user, nice, system, idle = tonumber(user), tonumber(nice), tonumber(system), tonumber(idle)
+    local total = user + nice + system + idle
+    if not M._last_cpu then
+        M._last_cpu = {total = total, idle = idle}
+        return 0
     end
-)
+    local diff_total = total - M._last_cpu.total
+    local diff_idle = idle - M._last_cpu.idle
+    M._last_cpu = {total = total, idle = idle}
+    if diff_total == 0 then return 0 end
+    return math.floor((1 - diff_idle / diff_total) * 100)
+end
+gears.timer {
+    timeout = 2,
+    call_now = true,
+    autostart = true,
+    callback = function()
+        M.cpu_text_tb.markup = string.format("%d%%", read_cpu())
+    end,
+}
 -- }}}
 
 -- {{{ RAM widget
 M.ram_widget, M.ram_icon_tb, M.ram_text_tb, M.ram_layout = pill_icon_text(
     m.glyph.ram, "%d%%", m.pill_bg, m.pill_fg
 )
-awful.widget.watch(
-    "bash -c \"free | awk '/Mem:/ {printf \\\"%.0f\\\", $3/$2 * 100}'\"",
-    2,
-    function(_, stdout)
-        local ram = math.floor(tonumber(stdout) or 0)
-        M.ram_text_tb.markup = string.format("%d%%", ram)
-    end
-)
+gears.timer {
+    timeout = 2,
+    call_now = true,
+    autostart = true,
+    callback = function()
+        local f = io.open("/proc/meminfo", "r")
+        if not f then return end
+        local mem_total, mem_available = 0, 0
+        for line in f:lines() do
+            local k, v = line:match("(%w+):%s+(%d+)")
+            if k == "MemTotal" then mem_total = tonumber(v) end
+            if k == "MemAvailable" then mem_available = tonumber(v) end
+        end
+        f:close()
+        if mem_total > 0 then
+            local used_pct = math.floor((1 - mem_available / mem_total) * 100)
+            M.ram_text_tb.markup = string.format("%d%%", used_pct)
+        end
+    end,
+}
 -- }}}
 
 -- {{{ Network widget
@@ -101,20 +132,30 @@ M.net_widget, M.net_icon_tb, M.net_text_tb, M.net_layout = pill_icon_text(
     m.glyph.net_down, "%s", m.pill_bg, m.pill_fg
 )
 local last_rx, last_tx = 0, 0
-awful.widget.watch(
-    "bash -c \"cat /proc/net/dev | awk '/wlp|enp|eth/ {rx+=$2; tx+=$10} END {print rx, tx}'\"",
-    1,
-    function(_, stdout)
-        local rx, tx = stdout:match("(%d+)%s+(%d+)")
-        rx, tx = tonumber(rx) or 0, tonumber(tx) or 0
+gears.timer {
+    timeout = 1,
+    call_now = true,
+    autostart = true,
+    callback = function()
+        local f = io.open("/proc/net/dev", "r")
+        if not f then return end
+        local rx, tx = 0, 0
+        for line in f:lines() do
+            local iface, r, t = line:match("^%s*([%w%d]+):%s+(%d+)%s+%d+%s+%d+%s+%d+%s+%d+%s+%d+%s+%d+%s+%d+%s+(%d+)")
+            if iface and (iface:match("^wlp") or iface:match("^enp") or iface:match("^eth")) then
+                rx = rx + tonumber(r)
+                tx = tx + tonumber(t)
+            end
+        end
+        f:close()
         if last_rx > 0 and last_tx > 0 then
             local down = (rx - last_rx) / 1024
             local down_str = down > 1024 and string.format("%.1fM", down/1024) or string.format("%.0fK", down)
             M.net_text_tb.markup = string.format("%s", down_str)
         end
         last_rx, last_tx = rx, tx
-    end
-)
+    end,
+}
 -- }}}
 
 -- {{{ Clock widget

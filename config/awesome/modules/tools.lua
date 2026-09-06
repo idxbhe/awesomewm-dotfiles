@@ -393,6 +393,19 @@ M.tools_popup = awful.popup {
 }
 
 -- Auto-hide on mouse leave
+local tools_popup_hide_timer = gears.timer {
+    timeout = 0.3,
+    single_shot = true,
+    callback = function()
+        local coords = mouse.coords()
+        local geo = M.tools_popup:geometry()
+        if coords.x < geo.x or coords.x > geo.x + geo.width or
+           coords.y < geo.y or coords.y > geo.y + geo.height then
+            popup_registry.hide_popup(M.tools_popup)
+        end
+    end,
+}
+
 M.tools_popup:connect_signal("mouse::leave", function()
     if not popup_registry.should_auto_hide() then return end
 
@@ -401,15 +414,7 @@ M.tools_popup:connect_signal("mouse::leave", function()
         return
     end
 
-    gears.timer.start_new(0.3, function()
-        local coords = mouse.coords()
-        local geo = M.tools_popup:geometry()
-        if coords.x < geo.x or coords.x > geo.x + geo.width or
-           coords.y < geo.y or coords.y > geo.y + geo.height then
-            popup_registry.hide_popup(M.tools_popup)
-        end
-        return false
-    end)
+    tools_popup_hide_timer:again()
 end)
 
 -- Tools widget (wrench icon)
