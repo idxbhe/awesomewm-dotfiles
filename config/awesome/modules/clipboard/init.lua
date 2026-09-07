@@ -330,7 +330,7 @@ local function create_clipboard_header()
         widget = wibox.container.background,
     }
 
-    clear_btn:connect_signal("mouse::enter", function() clear_btn.bg = m.red_dark or "#a33b4e" end)
+    clear_btn:connect_signal("mouse::enter", function() clear_btn.bg = m.surface0 end)
     clear_btn:connect_signal("mouse::leave", function() clear_btn.bg = nil end)
 
     clear_btn:buttons(gears.table.join(

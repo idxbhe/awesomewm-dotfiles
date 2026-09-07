@@ -202,8 +202,8 @@ function M.apply_to_beautiful()
   -- Surface colors (for widget backgrounds)
   theme.surface0 = t.bg_subtle
   theme.surface1 = t.border_subtle
-  theme.blue = t.accent
-  theme.blue_dark = t.accent
+  theme.blue = t.blue
+  theme.blue_dark = t.blue_dark
   theme.red_dark = t.error
   theme.green_dark = t.success
 

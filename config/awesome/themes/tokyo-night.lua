@@ -149,6 +149,10 @@ local theme = {
   alpha_10 = "1a",
   alpha_05 = "0d",
 
+  -- Semantic accent aliases (for backward compat with beautiful)
+  blue        = t.blue,
+  blue_dark   = t.bg_dark,
+
   -- Glyphs (custom "icons" font codepoints)
   glyph = {
     cpu             = "\u{f810}",

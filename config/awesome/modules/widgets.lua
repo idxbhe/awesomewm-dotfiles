@@ -251,8 +251,8 @@ function M.make_taglist(s)
             shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 10) end,
             bg_empty = "transparent",
             bg_occupied = beautiful.surface0,
-            bg_focus = "#3b5998",
-            fg_focus = beautiful.text,
+            bg_focus = beautiful.blue,  -- use accent for focused tag circle
+            fg_focus = beautiful.blue_dark,  -- accent_fg (dark text on accent)
             fg_occupied = beautiful.subtext1,
             fg_empty = "transparent",
             default = {

@@ -148,8 +148,8 @@ local function render_calendar()
         local fg, bg
         
         if is_today then
-            fg = "#ffffff"
-            bg = "#1e3a8a"
+            fg = m.blue_dark  -- accent_fg (dark text on accent)
+            bg = m.blue       -- accent background
         elseif col_idx == 7 then
             fg = "#e06c8a"
             bg = "#1e1e2e"

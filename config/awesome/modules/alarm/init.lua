@@ -1509,7 +1509,7 @@ local function create_alarm_row(alarm)
         widget = wibox.container.background,
     }
 
-    delete_btn:connect_signal("mouse::enter", function() delete_btn.bg = m.overlay0 or "#45475a" end)
+    delete_btn:connect_signal("mouse::enter", function() delete_btn.bg = m.surface0 end)
     delete_btn:connect_signal("mouse::leave", function() delete_btn.bg = nil end)
 
     delete_btn:buttons(gears.table.join(
@@ -1536,7 +1536,7 @@ local function create_alarm_row(alarm)
         widget = wibox.container.background,
     }
 
-    edit_btn:connect_signal("mouse::enter", function() edit_btn.bg = m.overlay0 or "#45475a" end)
+    edit_btn:connect_signal("mouse::enter", function() edit_btn.bg = m.surface0 end)
     edit_btn:connect_signal("mouse::leave", function() edit_btn.bg = nil end)
 
     edit_btn:buttons(gears.table.join(
@@ -1608,7 +1608,7 @@ local function create_list_popup()
         widget = wibox.container.background,
     }
 
-    add_btn:connect_signal("mouse::enter", function() add_btn.bg = m.blue_dark end)
+    add_btn:connect_signal("mouse::enter", function() add_btn.bg = m.surface0 or "#313244" end)
     add_btn:connect_signal("mouse::leave", function() add_btn.bg = "#00000000" end)
 
     add_btn:buttons(gears.table.join(
