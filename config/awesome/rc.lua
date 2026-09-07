@@ -19,6 +19,8 @@ local calendar = require("modules.calendar")
 local tools = require("modules.tools")
 local power = require("modules.power")
 local signals = require("modules.signals")
+local theme_switcher = require("modules.theme_switcher")
+theme_switcher.init()
 
 -- {{{ Error handling
 if awesome.startup_errors then

@@ -13,9 +13,9 @@ local menubar = require("menubar")
 local hotkeys_popup = require("awful.hotkeys_popup")
 require("awful.hotkeys_popup.keys")
 
--- Load theme
-beautiful.init("/home/bhe/dotfiles/config/awesome/theme.lua")
-assert(beautiful.glyph, "Failed to load theme glyphs from /home/bhe/dotfiles/config/awesome/theme.lua")
+-- Load theme manager (initializes theme system)
+local theme_manager = require("themes.init")
+theme_manager.init()
 
 -- Export module table
 local M = {
@@ -28,7 +28,10 @@ local M = {
     menubar = menubar,
     hotkeys_popup = hotkeys_popup,
 
-    -- Theme values
+    -- Theme manager
+    theme = theme_manager,
+
+    -- Theme values (updated on theme::changed)
     glyph = beautiful.glyph,
     pill_bg = beautiful.pill_bg,
     pill_fg = beautiful.pill_fg,
@@ -59,6 +62,28 @@ local M = {
     editor = os.getenv("EDITOR") or "nano",
     modkey = "Mod4",
 }
+
+-- Update theme values when theme changes
+awesome.connect_signal("theme::changed", function()
+    M.glyph = beautiful.glyph
+    M.pill_bg = beautiful.pill_bg
+    M.pill_fg = beautiful.pill_fg
+    M.pill_padding = beautiful.pill_padding
+    M.pill_spacing = beautiful.pill_spacing
+    M.pill_radius = beautiful.pill_radius
+    M.border_radius = beautiful.border_radius
+    M.useless_gap = beautiful.useless_gap
+    M.wibar_height = beautiful.wibar_height
+    M.wibar_bg = beautiful.wibar_bg
+    M.tooltip_bg = beautiful.tooltip_bg
+    M.tooltip_fg = beautiful.tooltip_fg
+    M.overlay0 = beautiful.overlay0
+    M.surface0 = beautiful.surface0
+    M.blue = beautiful.blue
+    M.blue_dark = beautiful.blue_dark
+    M.green_dark = beautiful.green_dark
+    M.red_dark = beautiful.red_dark
+end)
 
 -- Icon helper function (uses custom "icons" font)
 M.icon = function(t)
