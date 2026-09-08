@@ -200,15 +200,25 @@ bri_slider:connect_signal("property::value", function(self)
 end)
 
 -- WiFi section
+local wifi_refresh = wibox.widget {
+    text = "",
+    font = m.font,
+    visible = false,
+    align = "center",
+    valign = "center",
+    forced_width = 20,
+    widget = wibox.widget.textbox,
+}
+
 local wifi_btn, wifi_get_state, wifi_set_state = make_toggle_button(
-    m.glyph.wifi_on, m.glyph.wifi_off, false, nil
+    m.glyph.toggle_on, m.glyph.toggle_off, false, nil
 )
 local wifi_row = make_row(m.glyph.wifi_off, "Wi-Fi", m.font_popup)
 wifi_row.right_slot:add(wifi_refresh)
 wifi_row.right_slot:add(wifi_btn)
 
 -- Now set up the callback after wifi_row exists
-wifi_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.wifi_off)
+wifi_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
 wifi_btn._enabled = false
 wifi_btn:connect_signal("mouse::enter", function(self)
     if self._enabled then
@@ -230,13 +240,13 @@ wifi_btn:buttons(gears.table.join(
             wifi_row.icon_widget:set_text(m.glyph.wifi_on)
             set_wifi_visible(true)
             awful.spawn.easy_async("nmcli device wifi rescan", function() refresh_wifi() end)
-            wifi_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.wifi_on)
+            wifi_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
         else
             awful.spawn("nmcli radio wifi off")
             wifi_row.label_widget.markup = "<span foreground='#a6adc8'>Wi-Fi</span>"
             wifi_row.icon_widget:set_text(m.glyph.wifi_off)
             set_wifi_visible(false)
-            wifi_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.wifi_off)
+            wifi_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
         end
     end)
 ))
@@ -417,13 +427,13 @@ wifi_refresh:buttons(gears.table.join(
 
 -- Bluetooth section
 local bt_btn, bt_get_state, bt_set_state = make_toggle_button(
-    m.glyph.bt_on, m.glyph.bt_off, false, nil
+    m.glyph.toggle_on, m.glyph.toggle_off, false, nil
 )
 local bt_row = make_row(m.glyph.bt_off, "Bluetooth", m.font_popup)
 bt_row.right_slot:add(bt_btn)
 
 -- Set up Bluetooth callback after row exists
-bt_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.bt_off)
+bt_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
 bt_btn._enabled = false
 bt_btn:connect_signal("mouse::enter", function(self)
     if self._enabled then
@@ -443,25 +453,25 @@ bt_btn:buttons(gears.table.join(
             awful.spawn("rfkill unblock bluetooth")
             bt_row.label_widget.markup = "<b>Bluetooth</b>"
             bt_row.icon_widget:set_text(m.glyph.bt_on)
-            bt_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.bt_on)
+            bt_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
         else
             awful.spawn("rfkill block bluetooth")
             bt_row.label_widget.markup = "<span foreground='#a6adc8'>Bluetooth</span>"
             bt_row.icon_widget:set_text(m.glyph.bt_off)
-            bt_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.bt_off)
+            bt_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
         end
     end)
 ))
 
 -- Airplane mode toggle
 local ap_btn, ap_get_state, ap_set_state = make_toggle_button(
-    m.glyph.airplane_on, m.glyph.airplane_off, false, nil
+    m.glyph.toggle_on, m.glyph.toggle_off, false, nil
 )
 local ap_row = make_row(m.glyph.airplane_off, "Airplane Mode", m.font_popup)
 ap_row.right_slot:add(ap_btn)
 
 -- Set up Airplane callback after row exists
-ap_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.airplane_off)
+ap_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
 ap_btn._enabled = false
 ap_btn:connect_signal("mouse::enter", function(self)
     if self._enabled then
@@ -479,20 +489,20 @@ ap_btn:buttons(gears.table.join(
         ap_btn._enabled = new_state
         if new_state then
             awful.spawn("rfkill block all")
-            ap_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.airplane_on)
+            ap_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
             ap_row.label_widget.markup = "<span foreground='#a6adc8'>Airplane Mode</span>"
             ap_row.icon_widget:set_text(m.glyph.airplane_on)
             wifi_set_state(false)
             bt_btn._enabled = false
-            bt_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.bt_off)
+            bt_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
         else
             awful.spawn("rfkill unblock all")
-            ap_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.airplane_off)
+            ap_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
             ap_row.label_widget.markup = "<b>Airplane Mode</b>"
             ap_row.icon_widget:set_text(m.glyph.airplane_off)
             wifi_set_state(true)
             bt_btn._enabled = true
-            bt_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.bt_on)
+            bt_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
             awful.spawn.easy_async("nmcli device wifi rescan", function() refresh_wifi() end)
         end
     end)
