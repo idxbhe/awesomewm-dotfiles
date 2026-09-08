@@ -1467,7 +1467,7 @@ local function create_alarm_row(alarm)
 
     -- Toggle icon
     local toggle_icon = wibox.widget {
-        markup = alarm.enabled and string.format('<span font="icons 17" color="%s">%s</span>', m.blue_dark, m.glyph.toggle_on)
+        markup = alarm.enabled and string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
                                or string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off),
         align = "center",
         valign = "center",
@@ -1476,14 +1476,27 @@ local function create_alarm_row(alarm)
 
     local toggle_btn = wibox.widget {
         toggle_icon,
+        bg = nil,  -- always transparent by default
         shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
         forced_width = 28,
         forced_height = 28,
         widget = wibox.container.background,
     }
 
-    toggle_btn:connect_signal("mouse::enter", function() toggle_btn.bg = m.surface0 end)
-    toggle_btn:connect_signal("mouse::leave", function() toggle_btn.bg = nil end)
+    -- Store enabled state for hover/leave handlers
+    toggle_btn._enabled = alarm.enabled
+
+    toggle_btn:connect_signal("mouse::enter", function(self)
+        if self._enabled then
+            self.bg = m.blue  -- accent highlight on hover when enabled
+        else
+            self.bg = m.surface0
+        end
+    end)
+
+    toggle_btn:connect_signal("mouse::leave", function(self)
+        self.bg = nil  -- always transparent when not hovering
+    end)
 
     toggle_btn:buttons(gears.table.join(
         awful.button({}, 1, function()
