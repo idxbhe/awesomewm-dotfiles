@@ -141,7 +141,7 @@ local function make_toggle_button(icon_on, icon_off, initial_state, on_toggle)
 
     btn:connect_signal("mouse::enter", function(self)
         if self._enabled then
-            self.bg = m.blue
+            self.bg = m.surface0
         else
             self.bg = m.surface0
         end
@@ -221,11 +221,7 @@ wifi_row.right_slot:add(wifi_btn)
 wifi_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
 wifi_btn._enabled = false
 wifi_btn:connect_signal("mouse::enter", function(self)
-    if self._enabled then
-        self.bg = m.blue
-    else
-        self.bg = m.surface0
-    end
+    self.bg = m.surface0
 end)
 wifi_btn:connect_signal("mouse::leave", function(self)
     self.bg = nil
@@ -263,6 +259,7 @@ wifi_list_pad.visible = false
 local wifi_sep = make_sep()
 wifi_sep.visible = false
 
+-- set_wifi_visible function (must be after wifi_sep, wifi_list_pad, wifi_refresh are defined)
 local function set_wifi_visible(on)
     wifi_sep.visible = on
     wifi_list_pad.visible = on
@@ -436,11 +433,7 @@ bt_row.right_slot:add(bt_btn)
 bt_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
 bt_btn._enabled = false
 bt_btn:connect_signal("mouse::enter", function(self)
-    if self._enabled then
-        self.bg = m.blue
-    else
-        self.bg = m.surface0
-    end
+    self.bg = m.surface0
 end)
 bt_btn:connect_signal("mouse::leave", function(self)
     self.bg = nil
@@ -474,11 +467,7 @@ ap_row.right_slot:add(ap_btn)
 ap_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
 ap_btn._enabled = false
 ap_btn:connect_signal("mouse::enter", function(self)
-    if self._enabled then
-        self.bg = m.blue
-    else
-        self.bg = m.surface0
-    end
+    self.bg = m.surface0
 end)
 ap_btn:connect_signal("mouse::leave", function(self)
     self.bg = nil

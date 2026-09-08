@@ -1487,11 +1487,7 @@ local function create_alarm_row(alarm)
     toggle_btn._enabled = alarm.enabled
 
     toggle_btn:connect_signal("mouse::enter", function(self)
-        if self._enabled then
-            self.bg = m.blue  -- accent highlight on hover when enabled
-        else
-            self.bg = m.surface0
-        end
+        self.bg = m.surface0
     end)
 
     toggle_btn:connect_signal("mouse::leave", function(self)
