@@ -783,14 +783,14 @@ add_to_tab(content_display, {
 -- Themes tab content (theme switcher with arrows + accent picker)
 local theme_name_display = wibox.widget {
     {
-        markup = "<b>Catppuccin Mocha</b>",
+        markup = "<b>Mocha</b>",
         font = m.font_popup,
         align = "center",
         valign = "center",
         widget = wibox.widget.textbox,
     },
-    forced_width = 180,
-    forced_height = 28,
+    forced_width = 70,
+    forced_height = 22,
     widget = wibox.container.background,
 }
 
@@ -815,7 +815,7 @@ local theme_right_arrow = wibox.widget {
 }
 
 -- Theme cycling
-local theme_order = {"Catppuccin Mocha", "Tokyo Night"}
+local theme_order = {"Mocha", "Tokyo"}
 local theme_keys = {"catppuccin-mocha", "tokyo-night"}
 local current_theme_idx = 1
 
@@ -850,8 +850,8 @@ local accent_name_display = wibox.widget {
         valign = "center",
         widget = wibox.widget.textbox,
     },
-    forced_width = 180,
-    forced_height = 28,
+    forced_width = 70,
+    forced_height = 22,
     widget = wibox.container.background,
 }
 
@@ -919,9 +919,9 @@ add_to_tab(content_themes, {
             spacing = 4,
             layout = wibox.layout.fixed.horizontal,
         },
-        expand = "none",
+        expand = "outside",
         layout = wibox.layout.align.horizontal,
-        forced_height = 28,
+        forced_height = 22,
     },
     {
         forced_height = 6,
@@ -943,9 +943,9 @@ add_to_tab(content_themes, {
             spacing = 4,
             layout = wibox.layout.fixed.horizontal,
         },
-        expand = "none",
+        expand = "outside",
         layout = wibox.layout.align.horizontal,
-        forced_height = 28,
+        forced_height = 22,
     },
     layout = wibox.layout.fixed.vertical,
 })
