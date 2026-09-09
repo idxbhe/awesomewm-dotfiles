@@ -640,13 +640,11 @@ end
 local function toggle_titlebar(on)
     _G._titlebar_hidden = not on
     for s in screen do
-        for _, t in ipairs(s.tags) do
-            for _, c in ipairs(t:clients()) do
-                if c.type == "normal" or c.type == "dialog" then
-                    local tb = awful.titlebar(c, { size = 22 })
-                    if tb then
-                        tb.visible = on
-                    end
+        for _, c in ipairs(s:clients()) do
+            if c.type == "normal" or c.type == "dialog" then
+                local tb = awful.titlebar(c)
+                if tb then
+                    tb.visible = on
                 end
             end
         end
