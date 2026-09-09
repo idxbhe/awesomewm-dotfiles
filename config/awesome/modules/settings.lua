@@ -497,17 +497,11 @@ ap_btn:buttons(gears.table.join(
     end)
 ))
 
--- Helper: create tab content container (boxed like alarm popup)
+-- Helper: create tab content container
 local function make_tab_content()
-    local content = wibox.widget {
+    return wibox.widget {
         layout = wibox.layout.fixed.vertical,
         spacing = 4,
-    }
-    return wibox.widget {
-        content,
-        bg = m.surface0 or "#313244",
-        shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
-        widget = wibox.container.background,
     }
 end
 
@@ -519,8 +513,7 @@ local function add_to_tab(tab, content)
     else
         widget = content
     end
-    -- Add to inner widget of container.background
-    tab.widget:add(widget)
+    tab:add(widget)
 end
 
 -- ============================================================================
@@ -562,13 +555,20 @@ local arrow_right = wibox.widget {
     widget = wibox.widget.textbox,
 }
 
--- Page title
+-- Page title (boxed like alarm tone selector)
 local page_title = wibox.widget {
-    markup = "<b>" .. page_names[1] .. "</b>",
-    font = m.font_popup,
-    align = "center",
-    valign = "center",
-    widget = wibox.widget.textbox,
+    {
+        markup = "<b>" .. page_names[1] .. "</b>",
+        font = m.font_popup,
+        align = "center",
+        valign = "center",
+        widget = wibox.widget.textbox,
+    },
+    bg = m.surface0 or "#313244",
+    shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+    forced_width = 80,
+    forced_height = 28,
+    widget = wibox.container.background,
 }
 
 -- Navigate to page
@@ -578,7 +578,7 @@ local function go_to_page(idx)
     for i, page in ipairs(pages) do
         page.visible = (i == idx)
     end
-    page_title.markup = "<b>" .. page_names[idx] .. "</b>"
+    page_title.widget.markup = "<b>" .. page_names[idx] .. "</b>"
 end
 
 local function next_page() go_to_page(current_page + 1) end
@@ -672,16 +672,12 @@ add_to_tab(content_themes, {
     layout = wibox.layout.fixed.vertical,
 })
 
--- Content stack (wrapped in fixed-width box)
+-- Content stack
 local content_stack = wibox.widget {
-    {
-        content_network,
-        content_display,
-        content_themes,
-        layout = wibox.layout.stack,
-    },
-    forced_width = 252, -- 280 - 28 (margins 12*2 + nav bar padding)
-    widget = wibox.container.constraint,
+    content_network,
+    content_display,
+    content_themes,
+    layout = wibox.layout.stack,
 }
 
 -- Settings popup
