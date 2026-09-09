@@ -208,6 +208,13 @@ local theme = {
     max             = "\u{1002d}",
     chevron_left    = "\u{f104}",
     chevron_right   = "\u{f105}",
+    -- New settings icons
+    settings_display_animation = "\u{f422}",
+    settings_display_shadow = "\u{f28e}",
+    settings_display_blur = "\u{f9a9}",
+    settings_display_transparency = "\u{fe61}",
+    settings_themes_theme = "\u{f5fe}",
+    settings_themes_accent = "\u{fab3}",
   },
 
   -- Titlebar button icons (custom SVGs)

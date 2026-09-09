@@ -758,22 +758,22 @@ add_to_tab(content_display, {
     make_sep(),
     -- Picom settings
     (function()
-        local row = make_row(m.glyph.animation or "", "Animation", m.font_popup)
+        local row = make_row(m.glyph.settings_display_animation or m.glyph.animation or "", "Animation", m.font_popup)
         row.right_slot:add(picom_animation_btn)
         return row
     end)(),
     (function()
-        local row = make_row(m.glyph.transparent or "", "Transparent", m.font_popup)
+        local row = make_row(m.glyph.settings_display_transparency or m.glyph.transparent or "", "Transparent", m.font_popup)
         row.right_slot:add(picom_transparent_btn)
         return row
     end)(),
     (function()
-        local row = make_row(m.glyph.shadow or "", "Shadow", m.font_popup)
+        local row = make_row(m.glyph.settings_display_shadow or m.glyph.shadow or "", "Shadow", m.font_popup)
         row.right_slot:add(picom_shadow_btn)
         return row
     end)(),
     (function()
-        local row = make_row(m.glyph.blur or "", "Blur", m.font_popup)
+        local row = make_row(m.glyph.settings_display_blur or m.glyph.blur or "", "Blur", m.font_popup)
         row.right_slot:add(picom_blur_btn)
         return row
     end)(),
@@ -789,7 +789,7 @@ local theme_name_display = wibox.widget {
         valign = "center",
         widget = wibox.widget.textbox,
     },
-    forced_width = 70,
+    forced_width = 50,
     forced_height = 22,
     widget = wibox.container.background,
 }
@@ -850,7 +850,7 @@ local accent_name_display = wibox.widget {
         valign = "center",
         widget = wibox.widget.textbox,
     },
-    forced_width = 70,
+    forced_width = 50,
     forced_height = 22,
     widget = wibox.container.background,
 }
@@ -903,52 +903,30 @@ accent_right_arrow:connect_signal("mouse::leave", function(self) self.bg = nil e
 accent_right_arrow:buttons(gears.table.join(awful.button({}, 1, cycle_accent_right)))
 
 add_to_tab(content_themes, {
-    -- Theme row: label + selector side by side
-    {
-        {
-            markup = "<b>Theme</b>",
-            font = m.font_popup,
-            align = "left",
-            valign = "center",
-            forced_width = 80,
-            widget = wibox.widget.textbox,
-        },
-        {
-            theme_left_arrow,
-            theme_name_display,
-            theme_right_arrow,
-            spacing = 4,
-            layout = wibox.layout.fixed.horizontal,
-        },
-        expand = "none",
-        layout = wibox.layout.align.horizontal,
-        forced_height = 22,
-    },
+    -- Theme row
+    (function()
+        local row = make_row(m.glyph.settings_themes_theme or m.glyph.settings or "", "Theme", m.font_popup)
+        row.label_widget.markup = "<b>Theme</b>"
+        row.right_slot.spacing = 2
+        row.right_slot:add(theme_left_arrow)
+        row.right_slot:add(theme_name_display)
+        row.right_slot:add(theme_right_arrow)
+        return row
+    end)(),
     {
         forced_height = 6,
         widget = wibox.container.background,
     },
-    -- Accent row: label + selector side by side
-    {
-        {
-            markup = "<b>Accent Color</b>",
-            font = m.font_popup,
-            align = "left",
-            valign = "center",
-            forced_width = 80,
-            widget = wibox.widget.textbox,
-        },
-        {
-            accent_left_arrow,
-            accent_name_display,
-            accent_right_arrow,
-            spacing = 4,
-            layout = wibox.layout.fixed.horizontal,
-        },
-        expand = "none",
-        layout = wibox.layout.align.horizontal,
-        forced_height = 22,
-    },
+    -- Accent row
+    (function()
+        local row = make_row(m.glyph.settings_themes_accent or m.glyph.settings or "", "Accent", m.font_popup)
+        row.label_widget.markup = "<b>Accent</b>"
+        row.right_slot.spacing = 2
+        row.right_slot:add(accent_left_arrow)
+        row.right_slot:add(accent_name_display)
+        row.right_slot:add(accent_right_arrow)
+        return row
+    end)(),
     layout = wibox.layout.fixed.vertical,
 })
 
