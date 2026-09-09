@@ -218,6 +218,7 @@ local theme = {
     settings_display_transparency = "\u{fe61}",
     settings_themes_theme = "\u{f5fe}",
     settings_themes_accent = "\u{fab3}",
+    settings_display_titlebar = "\u{fc87}",
   },
 
   -- Titlebar button icons (custom SVGs)
