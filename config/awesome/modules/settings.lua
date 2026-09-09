@@ -686,8 +686,8 @@ local set_popup = awful.popup {
         margins = 12,
         widget = wibox.container.margin,
     },
-    minimum_width = 440,
-    maximum_width = 440,
+    minimum_width = 280,
+    maximum_width = 280,
     minimum_height = 320,
     bg = "#1e1e2eee",
     border_width = 1,
@@ -740,7 +740,7 @@ set_widget:buttons(gears.table.join(
         else
             popup_registry.show_popup(set_popup)
             local s = awful.screen.focused().geometry
-            set_popup.x = s.x + s.width - 440
+            set_popup.x = s.x + s.width - 340
             set_popup.y = s.y + 30
             awful.spawn.easy_async_with_shell("nmcli radio wifi", function(stdout)
                 if stdout:match("enabled") then
