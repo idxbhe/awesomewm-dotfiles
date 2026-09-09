@@ -497,7 +497,137 @@ ap_btn:buttons(gears.table.join(
     end)
 ))
 
--- Helper: create tab content container
+-- Picom settings toggle buttons
+local picom_animation_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, true, nil)
+local picom_transparent_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, false, nil)
+local picom_shadow_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, true, nil)
+local picom_blur_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, true, nil)
+
+-- Picom config path
+local picom_conf_path = os.getenv("HOME") .. "/.config/picom/picom.conf"
+
+-- Helper: read picom config value
+local function read_picom_value(key)
+    local f = io.open(picom_conf_path, "r")
+    if not f then return nil end
+    local content = f:read("*a")
+    f:close()
+    local val = content:match(key .. "%s*=%s*(.-)%s*;")
+    return val
+end
+
+-- Helper: write picom config value
+local function write_picom_value(key, value)
+    local f = io.open(picom_conf_path, "r")
+    if not f then return end
+    local content = f:read("*a")
+    f:close()
+    local new_line = key .. " = " .. value .. ";"
+    if content:match(key .. "%s*=") then
+        content = content:gsub(key .. "%s*=.-;", new_line)
+    else
+        content = content .. "\n" .. new_line
+    end
+    f = io.open(picom_conf_path, "w")
+    if f then f:write(content); f:close() end
+    awful.spawn("killall picom 2>/dev/null; sleep 0.2; picom --config " .. picom_conf_path .. " --daemon 2>/dev/null")
+end
+
+-- Initialize picom toggle states from config
+local function init_picom_toggles()
+    local fading = read_picom_value("fading")
+    if fading then
+        local state = fading:match("true")
+        picom_animation_btn._enabled = state
+        picom_animation_btn.icon.markup = state and string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
+                              or string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+    end
+    local shadow = read_picom_value("shadow")
+    if shadow then
+        local state = shadow:match("true")
+        picom_shadow_btn._enabled = state
+        picom_shadow_btn.icon.markup = state and string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
+                              or string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+    end
+    local blur_method = read_picom_value("blur-method")
+    if blur_method then
+        local state = blur_method ~= "none"
+        picom_blur_btn._enabled = state
+        picom_blur_btn.icon.markup = state and string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
+                              or string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+    end
+    local inactive_opacity = read_picom_value("inactive-opacity")
+    if inactive_opacity then
+        local state = tonumber(inactive_opacity) ~= 1.0
+        picom_transparent_btn._enabled = state
+        picom_transparent_btn.icon.markup = state and string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
+                              or string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+    end
+end
+
+-- Set up picom toggle callbacks
+picom_animation_btn:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+picom_animation_btn:connect_signal("mouse::leave", function(self) self.bg = nil end)
+picom_animation_btn:buttons(gears.table.join(
+    awful.button({}, 1, function()
+        local new_state = not picom_animation_btn._enabled
+        picom_animation_btn._enabled = new_state
+        write_picom_value("fading", new_state and "true" or "false")
+        if new_state then
+            picom_animation_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
+        else
+            picom_animation_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+        end
+    end)
+))
+
+picom_transparent_btn:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+picom_transparent_btn:connect_signal("mouse::leave", function(self) self.bg = nil end)
+picom_transparent_btn:buttons(gears.table.join(
+    awful.button({}, 1, function()
+        local new_state = not picom_transparent_btn._enabled
+        picom_transparent_btn._enabled = new_state
+        write_picom_value("inactive-opacity", new_state and "0.9" or "1.0")
+        if new_state then
+            picom_transparent_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
+        else
+            picom_transparent_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+        end
+    end)
+))
+
+picom_shadow_btn:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+picom_shadow_btn:connect_signal("mouse::leave", function(self) self.bg = nil end)
+picom_shadow_btn:buttons(gears.table.join(
+    awful.button({}, 1, function()
+        local new_state = not picom_shadow_btn._enabled
+        picom_shadow_btn._enabled = new_state
+        write_picom_value("shadow", new_state and "true" or "false")
+        if new_state then
+            picom_shadow_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
+        else
+            picom_shadow_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+        end
+    end)
+))
+
+picom_blur_btn:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+picom_blur_btn:connect_signal("mouse::leave", function(self) self.bg = nil end)
+picom_blur_btn:buttons(gears.table.join(
+    awful.button({}, 1, function()
+        local new_state = not picom_blur_btn._enabled
+        picom_blur_btn._enabled = new_state
+        write_picom_value("blur-method", new_state and "gaussian" or "none")
+        if new_state then
+            picom_blur_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
+        else
+            picom_blur_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+        end
+    end)
+))
+
+-- Initialize picom toggles on load
+init_picom_toggles()
 local function make_tab_content()
     return wibox.widget {
         layout = wibox.layout.fixed.vertical,
@@ -566,7 +696,7 @@ local page_title = wibox.widget {
     },
     bg = m.surface0 or "#313244",
     shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
-    forced_width = 80,
+    forced_width = 120,
     forced_height = 28,
     widget = wibox.container.background,
 }
@@ -626,7 +756,7 @@ add_to_tab(content_network, {
     layout = wibox.layout.fixed.vertical,
 })
 
--- Display tab content (currently just brightness, can expand later)
+-- Display tab content (picom settings)
 add_to_tab(content_display, {
     { -- Brightness row
         make_icon_tb(m.glyph.brightness),
@@ -636,6 +766,29 @@ add_to_tab(content_display, {
         forced_height = row_h,
         layout = wibox.layout.fixed.horizontal,
     },
+    { forced_height = 6, widget = wibox.container.background },
+    make_sep(),
+    -- Picom settings
+    (function()
+        local row = make_row(m.glyph.animation or "", "Animation", m.font_popup)
+        row.right_slot:add(picom_animation_btn)
+        return row
+    end)(),
+    (function()
+        local row = make_row(m.glyph.transparent or "", "Transparent", m.font_popup)
+        row.right_slot:add(picom_transparent_btn)
+        return row
+    end)(),
+    (function()
+        local row = make_row(m.glyph.shadow or "", "Shadow", m.font_popup)
+        row.right_slot:add(picom_shadow_btn)
+        return row
+    end)(),
+    (function()
+        local row = make_row(m.glyph.blur or "", "Blur", m.font_popup)
+        row.right_slot:add(picom_blur_btn)
+        return row
+    end)(),
     layout = wibox.layout.fixed.vertical,
 })
 
