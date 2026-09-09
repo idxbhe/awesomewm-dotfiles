@@ -497,24 +497,30 @@ ap_btn:buttons(gears.table.join(
     end)
 ))
 
--- Helper: create tab content container
+-- Helper: create tab content container (boxed like alarm popup)
 local function make_tab_content()
-    return wibox.widget {
+    local content = wibox.widget {
         layout = wibox.layout.fixed.vertical,
         spacing = 4,
+    }
+    return wibox.widget {
+        content,
+        bg = m.surface0 or "#313244",
+        shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+        widget = wibox.container.background,
     }
 end
 
 -- Helper: add widget to tab content
 local function add_to_tab(tab, content)
-    -- Wrap content in a widget if it's a table (layout spec)
     local widget
     if type(content) == "table" and content.layout then
         widget = wibox.widget(content)
     else
         widget = content
     end
-    tab:add(widget)
+    -- Add to inner widget of container.background
+    tab.widget:add(widget)
 end
 
 -- ============================================================================
