@@ -680,7 +680,7 @@ local tab_bar = wibox.widget {
         tab_display,
         tab_themes,
         spacing = 4,
-        forced_width = 372, -- 3 tabs × 120 + 2 × 6
+        forced_width = 408, -- 3 tabs × 120 + 2 × 24
         layout = wibox.layout.flex.horizontal,
     },
     widget = wibox.container.place,
@@ -706,8 +706,8 @@ local set_popup = awful.popup {
         margins = 12,
         widget = wibox.container.margin,
     },
-    minimum_width = 400,
-    maximum_width = 400,
+    minimum_width = 440,
+    maximum_width = 440,
     minimum_height = 320,
     bg = "#1e1e2eee",
     border_width = 1,
