@@ -523,11 +523,8 @@ end
 
 -- Tab contents (pages)
 local content_network = make_tab_content()
-content_network.forced_width = 280
 local content_display = make_tab_content()
-content_display.forced_width = 280
 local content_themes = make_tab_content()
-content_themes.forced_width = 280
 
 -- Page contents (each page is a vertical layout)
 local page_network = content_network
@@ -669,12 +666,16 @@ add_to_tab(content_themes, {
     layout = wibox.layout.fixed.vertical,
 })
 
--- Content stack
+-- Content stack (wrapped in fixed-width box)
 local content_stack = wibox.widget {
-    content_network,
-    content_display,
-    content_themes,
-    layout = wibox.layout.stack,
+    {
+        content_network,
+        content_display,
+        content_themes,
+        layout = wibox.layout.stack,
+    },
+    forced_width = 252, -- 280 - 28 (margins 12*2 + nav bar padding)
+    widget = wibox.container.constraint,
 }
 
 -- Settings popup
