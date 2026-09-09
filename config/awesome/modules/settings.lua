@@ -910,6 +910,7 @@ add_to_tab(content_themes, {
             font = m.font_popup,
             align = "left",
             valign = "center",
+            forced_width = 80,
             widget = wibox.widget.textbox,
         },
         {
@@ -919,7 +920,7 @@ add_to_tab(content_themes, {
             spacing = 4,
             layout = wibox.layout.fixed.horizontal,
         },
-        expand = "outside",
+        expand = "none",
         layout = wibox.layout.align.horizontal,
         forced_height = 22,
     },
@@ -934,6 +935,7 @@ add_to_tab(content_themes, {
             font = m.font_popup,
             align = "left",
             valign = "center",
+            forced_width = 80,
             widget = wibox.widget.textbox,
         },
         {
@@ -943,7 +945,7 @@ add_to_tab(content_themes, {
             spacing = 4,
             layout = wibox.layout.fixed.horizontal,
         },
-        expand = "outside",
+        expand = "none",
         layout = wibox.layout.align.horizontal,
         forced_height = 22,
     },
