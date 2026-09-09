@@ -694,7 +694,7 @@ local page_title = wibox.widget {
         valign = "center",
         widget = wibox.widget.textbox,
     },
-    forced_width = 120,
+    forced_width = 200,
     forced_height = 28,
     widget = wibox.container.background,
 }
@@ -903,45 +903,49 @@ accent_right_arrow:connect_signal("mouse::leave", function(self) self.bg = nil e
 accent_right_arrow:buttons(gears.table.join(awful.button({}, 1, cycle_accent_right)))
 
 add_to_tab(content_themes, {
-    -- Theme selector
+    -- Theme row: label + selector side by side
     {
-        markup = "<b>Theme</b>",
-        font = m.font_popup,
-        align = "left",
-        widget = wibox.widget.textbox,
+        {
+            markup = "<b>Theme</b>",
+            font = m.font_popup,
+            align = "left",
+            valign = "center",
+            widget = wibox.widget.textbox,
+        },
+        {
+            theme_left_arrow,
+            theme_name_display,
+            theme_right_arrow,
+            spacing = 4,
+            layout = wibox.layout.fixed.horizontal,
+        },
+        expand = "none",
+        layout = wibox.layout.align.horizontal,
+        forced_height = 28,
     },
     {
         forced_height = 6,
         widget = wibox.container.background,
     },
+    -- Accent row: label + selector side by side
     {
-        theme_left_arrow,
-        theme_name_display,
-        theme_right_arrow,
-        spacing = 4,
-        layout = wibox.layout.fixed.horizontal,
-    },
-    {
-        forced_height = 12,
-        widget = wibox.container.background,
-    },
-    -- Accent selector
-    {
-        markup = "<b>Accent Color</b>",
-        font = m.font_popup,
-        align = "left",
-        widget = wibox.widget.textbox,
-    },
-    {
-        forced_height = 6,
-        widget = wibox.container.background,
-    },
-    {
-        accent_left_arrow,
-        accent_name_display,
-        accent_right_arrow,
-        spacing = 4,
-        layout = wibox.layout.fixed.horizontal,
+        {
+            markup = "<b>Accent Color</b>",
+            font = m.font_popup,
+            align = "left",
+            valign = "center",
+            widget = wibox.widget.textbox,
+        },
+        {
+            accent_left_arrow,
+            accent_name_display,
+            accent_right_arrow,
+            spacing = 4,
+            layout = wibox.layout.fixed.horizontal,
+        },
+        expand = "none",
+        layout = wibox.layout.align.horizontal,
+        forced_height = 28,
     },
     layout = wibox.layout.fixed.vertical,
 })
