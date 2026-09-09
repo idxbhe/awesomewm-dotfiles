@@ -508,6 +508,7 @@ local function make_tab_button(label, is_active)
             font = m.font_popup,
             align = "center",
             valign = "center",
+            forced_width = 120,
             widget = wibox.widget.textbox,
         },
         bg = bg,
@@ -536,7 +537,14 @@ local function make_tab_content()
 end
 
 -- Helper: add widget to tab content
-local function add_to_tab(tab, widget)
+local function add_to_tab(tab, content)
+    -- Wrap content in a widget if it's a table (layout spec)
+    local widget
+    if type(content) == "table" and content.layout then
+        widget = wibox.widget(content)
+    else
+        widget = content
+    end
     tab:add(widget)
 end
 
@@ -667,11 +675,15 @@ tab_themes:buttons(gears.table.join(
 
 -- Tab bar
 local tab_bar = wibox.widget {
-    tab_network,
-    tab_display,
-    tab_themes,
-    spacing = 4,
-    layout = wibox.layout.fixed.horizontal,
+    {
+        tab_network,
+        tab_display,
+        tab_themes,
+        spacing = 4,
+        forced_width = 372, -- 3 tabs × 120 + 2 × 6
+        layout = wibox.layout.flex.horizontal,
+    },
+    widget = wibox.container.place,
 }
 
 -- Content stack
@@ -694,8 +706,9 @@ local set_popup = awful.popup {
         margins = 12,
         widget = wibox.container.margin,
     },
-    minimum_width = 280,
-    maximum_width = 280,
+    minimum_width = 400,
+    maximum_width = 400,
+    minimum_height = 320,
     bg = "#1e1e2eee",
     border_width = 1,
     border_color = "#313244",
