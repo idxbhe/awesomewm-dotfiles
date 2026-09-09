@@ -326,6 +326,9 @@ end)
 -- }}}
 
 client.connect_signal("request::titlebars", function(c)
+    -- If titlebars are globally hidden, create but hide immediately
+    local hide_tb = _G._titlebar_hidden
+    
     local buttons = gears.table.join(
         awful.button({ }, 1, function() c:emit_signal("request::activate", "titlebar", {raise = true}); awful.mouse.client.move(c) end),
         awful.button({ }, 3, function() c:emit_signal("request::activate", "titlebar", {raise = true}); awful.mouse.client.resize(c) end)
@@ -400,6 +403,11 @@ client.connect_signal("request::titlebars", function(c)
           layout = wibox.layout.fixed.horizontal() },
         layout = wibox.layout.align.horizontal
     }
+    
+    -- Hide titlebar if globally disabled
+    if hide_tb and c.titlebar then
+        c.titlebar.visible = false
+    end
 end)
 
 -- Ensure titlebars are always shown for normal and dialog windows
