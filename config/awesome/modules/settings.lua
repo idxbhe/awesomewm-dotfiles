@@ -792,35 +792,172 @@ add_to_tab(content_display, {
     layout = wibox.layout.fixed.vertical,
 })
 
--- Themes tab content
-add_to_tab(content_themes, {
-    -- Theme selector will be added via theme_switcher integration
+-- Themes tab content (theme switcher with arrows + accent picker)
+local theme_name_display = wibox.widget {
     {
-        markup = "<b>Theme & Accent</b>",
+        markup = "<b>Catppuccin Mocha</b>",
+        font = m.font_popup,
+        align = "center",
+        valign = "center",
+        widget = wibox.widget.textbox,
+    },
+    bg = m.surface0 or "#313244",
+    shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+    forced_width = 180,
+    forced_height = 28,
+    widget = wibox.container.background,
+}
+
+local theme_left_arrow = wibox.widget {
+    markup = m.glyph.chevron_left or "‹",
+    font = m.font_icon,
+    align = "center",
+    valign = "center",
+    forced_width = 28,
+    forced_height = 28,
+    widget = wibox.widget.textbox,
+}
+
+local theme_right_arrow = wibox.widget {
+    markup = m.glyph.chevron_right or "›",
+    font = m.font_icon,
+    align = "center",
+    valign = "center",
+    forced_width = 28,
+    forced_height = 28,
+    widget = wibox.widget.textbox,
+}
+
+-- Theme cycling
+local theme_order = {"Catppuccin Mocha", "Tokyo Night"}
+local theme_keys = {"catppuccin-mocha", "tokyo-night"}
+local current_theme_idx = 1
+
+local function cycle_theme_left()
+    current_theme_idx = (current_theme_idx - 2) % #theme_order + 1
+    local key = theme_keys[current_theme_idx]
+    m.theme.load_theme(key)
+    theme_name_display.widget.markup = "<b>" .. theme_order[current_theme_idx] .. "</b>"
+end
+
+local function cycle_theme_right()
+    current_theme_idx = current_theme_idx % #theme_order + 1
+    local key = theme_keys[current_theme_idx]
+    m.theme.load_theme(key)
+    theme_name_display.widget.markup = "<b>" .. theme_order[current_theme_idx] .. "</b>"
+end
+
+theme_left_arrow:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+theme_left_arrow:connect_signal("mouse::leave", function(self) self.bg = nil end)
+theme_left_arrow:buttons(gears.table.join(awful.button({}, 1, cycle_theme_left)))
+
+theme_right_arrow:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+theme_right_arrow:connect_signal("mouse::leave", function(self) self.bg = nil end)
+theme_right_arrow:buttons(gears.table.join(awful.button({}, 1, cycle_theme_right)))
+
+-- Accent color display
+local accent_name_display = wibox.widget {
+    {
+        markup = "<b>Blue</b>",
+        font = m.font_popup,
+        align = "center",
+        valign = "center",
+        widget = wibox.widget.textbox,
+    },
+    bg = m.surface0 or "#313244",
+    shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+    forced_width = 180,
+    forced_height = 28,
+    widget = wibox.container.background,
+}
+
+local accent_left_arrow = wibox.widget {
+    markup = m.glyph.chevron_left or "‹",
+    font = m.font_icon,
+    align = "center",
+    valign = "center",
+    forced_width = 28,
+    forced_height = 28,
+    widget = wibox.widget.textbox,
+}
+
+local accent_right_arrow = wibox.widget {
+    markup = m.glyph.chevron_right or "›",
+    font = m.font_icon,
+    align = "center",
+    valign = "center",
+    forced_width = 28,
+    forced_height = 28,
+    widget = wibox.widget.textbox,
+}
+
+-- Accent cycling
+local accent_order = {"blue", "purple", "pink", "red", "peach", "yellow", "green", "teal", "mauve", "rosewater", "flamingo"}
+local accent_names = {"Blue", "Purple", "Pink", "Red", "Peach", "Yellow", "Green", "Teal", "Mauve", "Rosewater", "Flamingo"}
+local current_accent_idx = 1
+
+local function cycle_accent_left()
+    current_accent_idx = (current_accent_idx - 2) % #accent_order + 1
+    local key = accent_order[current_accent_idx]
+    m.theme.load_theme(m.theme.current_theme, key)
+    accent_name_display.widget.markup = "<b>" .. accent_names[current_accent_idx] .. "</b>"
+end
+
+local function cycle_accent_right()
+    current_accent_idx = current_accent_idx % #accent_order + 1
+    local key = accent_order[current_accent_idx]
+    m.theme.load_theme(m.theme.current_theme, key)
+    accent_name_display.widget.markup = "<b>" .. accent_names[current_accent_idx] .. "</b>"
+end
+
+accent_left_arrow:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+accent_left_arrow:connect_signal("mouse::leave", function(self) self.bg = nil end)
+accent_left_arrow:buttons(gears.table.join(awful.button({}, 1, cycle_accent_left)))
+
+accent_right_arrow:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+accent_right_arrow:connect_signal("mouse::leave", function(self) self.bg = nil end)
+accent_right_arrow:buttons(gears.table.join(awful.button({}, 1, cycle_accent_right)))
+
+add_to_tab(content_themes, {
+    -- Theme selector
+    {
+        markup = "<b>Theme</b>",
         font = m.font_popup,
         align = "left",
         widget = wibox.widget.textbox,
     },
     {
-        forced_height = 8,
+        forced_height = 6,
         widget = wibox.container.background,
     },
     {
-        -- Theme switcher button
-        {
-            markup = "Catppuccin Mocha",
-            font = m.font_popup,
-            align = "left",
-            widget = wibox.widget.textbox,
-        },
-        {
-            markup = "Tokyo Night",
-            font = m.font_popup,
-            align = "left",
-            widget = wibox.widget.textbox,
-        },
-        layout = wibox.layout.fixed.vertical,
-        spacing = 8,
+        theme_left_arrow,
+        theme_name_display,
+        theme_right_arrow,
+        spacing = 4,
+        layout = wibox.layout.fixed.horizontal,
+    },
+    {
+        forced_height = 12,
+        widget = wibox.container.background,
+    },
+    -- Accent selector
+    {
+        markup = "<b>Accent Color</b>",
+        font = m.font_popup,
+        align = "left",
+        widget = wibox.widget.textbox,
+    },
+    {
+        forced_height = 6,
+        widget = wibox.container.background,
+    },
+    {
+        accent_left_arrow,
+        accent_name_display,
+        accent_right_arrow,
+        spacing = 4,
+        layout = wibox.layout.fixed.horizontal,
     },
     layout = wibox.layout.fixed.vertical,
 })
