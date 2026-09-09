@@ -497,31 +497,198 @@ ap_btn:buttons(gears.table.join(
     end)
 ))
 
--- Remove old button handlers
+-- Helper: create tab button
+local function make_tab_button(label, is_active)
+    local bg = is_active and m.surface0 or "transparent"
+    local fg = is_active and m.blue or m.fg
+
+    local btn = wibox.widget {
+        {
+            markup = label,
+            font = m.font_popup,
+            align = "center",
+            valign = "center",
+            widget = wibox.widget.textbox,
+        },
+        bg = bg,
+        fg = fg,
+        forced_height = 28,
+        shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+        widget = wibox.container.background,
+    }
+
+    btn:connect_signal("mouse::enter", function(self)
+        if not self._active then self.bg = m.surface0 end
+    end)
+    btn:connect_signal("mouse::leave", function(self)
+        if not self._active then self.bg = "transparent" end
+    end)
+
+    return btn
+end
+
+-- Helper: create tab content container
+local function make_tab_content()
+    return wibox.widget {
+        layout = wibox.layout.fixed.vertical,
+        spacing = 4,
+    }
+end
+
+-- Helper: add widget to tab content
+local function add_to_tab(tab, widget)
+    tab:add(widget)
+end
+
+-- ============================================================================
+-- Settings Popup with Tabs
+-- ============================================================================
+
+-- Tab buttons
+local tab_network = make_tab_button("Network", true)
+local tab_display = make_tab_button("Display", false)
+local tab_themes = make_tab_button("Themes", false)
+
+tab_network._active = true
+
+-- Tab contents
+local content_network = make_tab_content()
+local content_display = make_tab_content()
+local content_themes = make_tab_content()
+
+-- Network tab content
+add_to_tab(content_network, {
+    { -- Brightness row
+        make_icon_tb(m.glyph.brightness),
+        bri_slider,
+        bri_text,
+        spacing = 8,
+        forced_height = row_h,
+        layout = wibox.layout.fixed.horizontal,
+    },
+    { forced_height = 6, widget = wibox.container.background },
+    make_sep(),
+    wifi_row,
+    wifi_sep,
+    wifi_list_pad,
+    bt_row,
+    { forced_height = 6, widget = wibox.container.background },
+    ap_row,
+    layout = wibox.layout.fixed.vertical,
+})
+
+-- Display tab content (currently just brightness, can expand later)
+add_to_tab(content_display, {
+    { -- Brightness row
+        make_icon_tb(m.glyph.brightness),
+        bri_slider,
+        bri_text,
+        spacing = 8,
+        forced_height = row_h,
+        layout = wibox.layout.fixed.horizontal,
+    },
+    layout = wibox.layout.fixed.vertical,
+})
+
+-- Themes tab content
+add_to_tab(content_themes, {
+    -- Theme selector will be added via theme_switcher integration
+    {
+        markup = "<b>Theme & Accent</b>",
+        font = m.font_popup,
+        align = "left",
+        widget = wibox.widget.textbox,
+    },
+    {
+        forced_height = 8,
+        widget = wibox.container.background,
+    },
+    {
+        -- Theme switcher button
+        {
+            markup = "Catppuccin Mocha",
+            font = m.font_popup,
+            align = "left",
+            widget = wibox.widget.textbox,
+        },
+        {
+            markup = "Tokyo Night",
+            font = m.font_popup,
+            align = "left",
+            widget = wibox.widget.textbox,
+        },
+        layout = wibox.layout.fixed.vertical,
+        spacing = 8,
+    },
+    layout = wibox.layout.fixed.vertical,
+})
+
+-- Function to switch tabs
+local function switch_tab(tab_name)
+    -- Reset all tabs
+    for _, tab in ipairs({tab_network, tab_display, tab_themes}) do
+        tab._active = false
+        tab.bg = "transparent"
+        tab.fg = m.fg
+    end
+    content_network.visible = false
+    content_display.visible = false
+    content_themes.visible = false
+
+    -- Activate selected tab
+    if tab_name == "network" then
+        tab_network._active = true
+        tab_network.bg = m.surface0
+        tab_network.fg = m.blue
+        content_network.visible = true
+    elseif tab_name == "display" then
+        tab_display._active = true
+        tab_display.bg = m.surface0
+        tab_display.fg = m.blue
+        content_display.visible = true
+    elseif tab_name == "themes" then
+        tab_themes._active = true
+        tab_themes.bg = m.surface0
+        tab_themes.fg = m.blue
+        content_themes.visible = true
+    end
+end
+
+-- Connect tab buttons
+tab_network:buttons(gears.table.join(
+    awful.button({}, 1, function() switch_tab("network") end)
+))
+tab_display:buttons(gears.table.join(
+    awful.button({}, 1, function() switch_tab("display") end)
+))
+tab_themes:buttons(gears.table.join(
+    awful.button({}, 1, function() switch_tab("themes") end)
+))
+
+-- Tab bar
+local tab_bar = wibox.widget {
+    tab_network,
+    tab_display,
+    tab_themes,
+    spacing = 4,
+    layout = wibox.layout.fixed.horizontal,
+}
+
+-- Content stack
+local content_stack = wibox.widget {
+    content_network,
+    content_display,
+    content_themes,
+    layout = wibox.layout.stack,
+}
 
 -- Settings popup
 local set_popup = awful.popup {
     widget = wibox.widget {
         {
-            { -- Brightness row
-                make_icon_tb(m.glyph.brightness),
-                bri_slider,
-                bri_text,
-                spacing = 8,
-                forced_height = row_h,
-                layout = wibox.layout.fixed.horizontal,
-            },
-            { -- spacing after brightness
-                forced_height = 6,
-                widget = wibox.container.background,
-            },
-            make_sep(),
-            wifi_row,
-            wifi_sep,
-            wifi_list_pad,
-            bt_row,
-            { forced_height = 6, widget = wibox.container.background },
-            ap_row,
+            tab_bar,
+            { forced_height = 8, widget = wibox.container.background },
+            content_stack,
             layout = wibox.layout.fixed.vertical,
         },
         margins = 12,
