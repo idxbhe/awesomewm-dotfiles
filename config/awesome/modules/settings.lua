@@ -523,8 +523,11 @@ end
 
 -- Tab contents (pages)
 local content_network = make_tab_content()
+content_network.forced_width = 280
 local content_display = make_tab_content()
+content_display.forced_width = 280
 local content_themes = make_tab_content()
+content_themes.forced_width = 280
 
 -- Page contents (each page is a vertical layout)
 local page_network = content_network
