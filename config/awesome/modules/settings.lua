@@ -738,6 +738,7 @@ set_widget:buttons(gears.table.join(
             set_wifi_visible(false)
         else
             popup_registry.show_popup(set_popup)
+            go_to_page(1) -- ensure only first page visible on open
             local s = awful.screen.focused().geometry
             set_popup.x = s.x + s.width - 340
             set_popup.y = s.y + 30
