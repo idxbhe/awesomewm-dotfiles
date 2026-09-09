@@ -735,16 +735,6 @@ local nav_bar = wibox.widget {
 
 -- Network tab content
 add_to_tab(content_network, {
-    { -- Brightness row
-        make_icon_tb(m.glyph.brightness),
-        bri_slider,
-        bri_text,
-        spacing = 8,
-        forced_height = row_h,
-        layout = wibox.layout.fixed.horizontal,
-    },
-    { forced_height = 6, widget = wibox.container.background },
-    make_sep(),
     wifi_row,
     wifi_sep,
     wifi_list_pad,
