@@ -497,37 +497,6 @@ ap_btn:buttons(gears.table.join(
     end)
 ))
 
--- Helper: create tab button
-local function make_tab_button(label, is_active)
-    local bg = is_active and m.surface0 or "transparent"
-    local fg = is_active and m.blue or m.fg
-
-    local btn = wibox.widget {
-        {
-            markup = label,
-            font = m.font_popup,
-            align = "center",
-            valign = "center",
-            forced_width = 120,
-            widget = wibox.widget.textbox,
-        },
-        bg = bg,
-        fg = fg,
-        forced_height = 28,
-        shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
-        widget = wibox.container.background,
-    }
-
-    btn:connect_signal("mouse::enter", function(self)
-        if not self._active then self.bg = m.surface0 end
-    end)
-    btn:connect_signal("mouse::leave", function(self)
-        if not self._active then self.bg = "transparent" end
-    end)
-
-    return btn
-end
-
 -- Helper: create tab content container
 local function make_tab_content()
     return wibox.widget {
@@ -549,20 +518,86 @@ local function add_to_tab(tab, content)
 end
 
 -- ============================================================================
--- Settings Popup with Tabs
+-- Settings Popup with Arrow Navigation
 -- ============================================================================
 
--- Tab buttons
-local tab_network = make_tab_button("Network", true)
-local tab_display = make_tab_button("Display", false)
-local tab_themes = make_tab_button("Themes", false)
-
-tab_network._active = true
-
--- Tab contents
+-- Tab contents (pages)
 local content_network = make_tab_content()
 local content_display = make_tab_content()
 local content_themes = make_tab_content()
+
+-- Page contents (each page is a vertical layout)
+local page_network = content_network
+local page_display = content_display
+local page_themes = content_themes
+
+local pages = {page_network, page_display, page_themes}
+local page_names = {"Network", "Display", "Themes"}
+local current_page = 1
+
+-- Arrow buttons
+local arrow_left = wibox.widget {
+    markup = m.glyph.chevron_left or "‹",
+    font = m.font_icon,
+    align = "center",
+    valign = "center",
+    forced_width = 28,
+    forced_height = 28,
+    widget = wibox.widget.textbox,
+}
+
+local arrow_right = wibox.widget {
+    markup = m.glyph.chevron_right or "›",
+    font = m.font_icon,
+    align = "center",
+    valign = "center",
+    forced_width = 28,
+    forced_height = 28,
+    widget = wibox.widget.textbox,
+}
+
+-- Page title
+local page_title = wibox.widget {
+    markup = "<b>" .. page_names[1] .. "</b>",
+    font = m.font_popup,
+    align = "center",
+    valign = "center",
+    widget = wibox.widget.textbox,
+}
+
+-- Navigate to page
+local function go_to_page(idx)
+    if idx < 1 or idx > #pages then return end
+    current_page = idx
+    for i, page in ipairs(pages) do
+        page.visible = (i == idx)
+    end
+    page_title.markup = "<b>" .. page_names[idx] .. "</b>"
+end
+
+local function next_page() go_to_page(current_page + 1) end
+local function prev_page() go_to_page(current_page - 1) end
+
+-- Arrow button signals
+arrow_left:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+arrow_left:connect_signal("mouse::leave", function(self) self.bg = nil end)
+arrow_left:buttons(gears.table.join(awful.button({}, 1, prev_page)))
+
+arrow_right:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+arrow_right:connect_signal("mouse::leave", function(self) self.bg = nil end)
+arrow_right:buttons(gears.table.join(awful.button({}, 1, next_page)))
+
+-- Navigation bar
+local nav_bar = wibox.widget {
+    {
+        arrow_left,
+        page_title,
+        arrow_right,
+        spacing = 8,
+        layout = wibox.layout.fixed.horizontal,
+    },
+    widget = wibox.container.place,
+}
 
 -- Network tab content
 add_to_tab(content_network, {
@@ -631,61 +666,6 @@ add_to_tab(content_themes, {
     layout = wibox.layout.fixed.vertical,
 })
 
--- Function to switch tabs
-local function switch_tab(tab_name)
-    -- Reset all tabs
-    for _, tab in ipairs({tab_network, tab_display, tab_themes}) do
-        tab._active = false
-        tab.bg = "transparent"
-        tab.fg = m.fg
-    end
-    content_network.visible = false
-    content_display.visible = false
-    content_themes.visible = false
-
-    -- Activate selected tab
-    if tab_name == "network" then
-        tab_network._active = true
-        tab_network.bg = m.surface0
-        tab_network.fg = m.blue
-        content_network.visible = true
-    elseif tab_name == "display" then
-        tab_display._active = true
-        tab_display.bg = m.surface0
-        tab_display.fg = m.blue
-        content_display.visible = true
-    elseif tab_name == "themes" then
-        tab_themes._active = true
-        tab_themes.bg = m.surface0
-        tab_themes.fg = m.blue
-        content_themes.visible = true
-    end
-end
-
--- Connect tab buttons
-tab_network:buttons(gears.table.join(
-    awful.button({}, 1, function() switch_tab("network") end)
-))
-tab_display:buttons(gears.table.join(
-    awful.button({}, 1, function() switch_tab("display") end)
-))
-tab_themes:buttons(gears.table.join(
-    awful.button({}, 1, function() switch_tab("themes") end)
-))
-
--- Tab bar
-local tab_bar = wibox.widget {
-    {
-        tab_network,
-        tab_display,
-        tab_themes,
-        spacing = 4,
-        forced_width = 408, -- 3 tabs × 120 + 2 × 24
-        layout = wibox.layout.flex.horizontal,
-    },
-    widget = wibox.container.place,
-}
-
 -- Content stack
 local content_stack = wibox.widget {
     content_network,
@@ -698,7 +678,7 @@ local content_stack = wibox.widget {
 local set_popup = awful.popup {
     widget = wibox.widget {
         {
-            tab_bar,
+            nav_bar,
             { forced_height = 8, widget = wibox.container.background },
             content_stack,
             layout = wibox.layout.fixed.vertical,
@@ -760,7 +740,7 @@ set_widget:buttons(gears.table.join(
         else
             popup_registry.show_popup(set_popup)
             local s = awful.screen.focused().geometry
-            set_popup.x = s.x + s.width - 340
+            set_popup.x = s.x + s.width - 440
             set_popup.y = s.y + 30
             awful.spawn.easy_async_with_shell("nmcli radio wifi", function(stdout)
                 if stdout:match("enabled") then

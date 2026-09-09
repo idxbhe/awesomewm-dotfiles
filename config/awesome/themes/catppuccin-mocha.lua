@@ -206,6 +206,8 @@ local theme = {
     tile            = "\u{fb96}",
     tilebottom      = "\u{fa2e}",
     max             = "\u{1002d}",
+    chevron_left    = "\u{f104}",
+    chevron_right   = "\u{f105}",
   },
 
   -- Titlebar button icons (custom SVGs)

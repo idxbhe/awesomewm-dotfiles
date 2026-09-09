@@ -1,0 +1,366 @@
+@import url("Colors.css");
+
+/* ============================================
+   Mocha Fox — Minimalist Catppuccin Theme
+   Vertical sidebar · Thin launcher · Peek bookmarks
+   ============================================ */
+
+/* --- Base --- */
+:root {
+    --uc-border-radius: 6px;
+    --uc-border-radius-sm: 4px;
+    --uc-tab-font: "Maple Mono NF", monospace;
+    --uc-tab-font-size: 9.5pt;
+    --uc-tab-font-weight: 700;
+    --uc-urlbar-font: "Maple Mono NF", monospace;
+    --uc-urlbar-font-size: 10pt;
+    --uc-urlbar-font-weight: 700;
+}
+
+/* --- Sidebar thin launcher --- */
+/* Nova ignores #sidebar-box { width } — uses CSS variables instead */
+#sidebar-box {
+    background: var(--uc-bg) !important;
+    border-right: none !important;
+}
+
+/* Force thin width via variables — these are what Nova reads */
+:root {
+    --sidebar-launcher-width: 48px !important;
+    --sidebar-width: 260px !important;
+}
+
+/* Force vertical tabs container to respect thin width */
+#vertical-tabs {
+    background: var(--uc-bg) !important;
+    padding: 4px 0 !important;
+    min-width: var(--sidebar-launcher-width) !important;
+    max-width: var(--sidebar-launcher-width) !important;
+}
+
+/* Prevent tab content from overflowing thin sidebar */
+#vertical-tabs .tabbrowser-tab {
+    background: transparent !important;
+    margin: 2px 4px !important;
+    border-radius: var(--uc-border-radius-sm) !important;
+    padding: 6px 8px !important;
+    min-height: 36px !important;
+    max-width: calc(var(--sidebar-launcher-width) - 8px) !important;
+    overflow: hidden !important;
+    transition: background 120ms ease;
+}
+#sidebar-header {
+    background: var(--uc-bg) !important;
+    border-bottom: 1px solid var(--uc-border) !important;
+    padding: 4px 8px !important;
+    font-family: var(--uc-tab-font) !important;
+    font-size: var(--uc-tab-font-size) !important;
+    font-weight: var(--uc-tab-font-weight) !important;
+    color: var(--uc-fg-dim) !important;
+}
+
+/* --- Vertical tabs — thin icon strip --- */
+#vertical-tabs .tabbrowser-tab:hover {
+    background: var(--uc-bg-hover) !important;
+}
+
+#vertical-tabs .tabbrowser-tab[selected] {
+    background: var(--uc-bg-active) !important;
+}
+
+/* Flatten native tab backgrounds — prevents double highlight */
+#vertical-tabs .tabbrowser-tab .tab-background {
+    background: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    border-radius: var(--uc-border-radius-sm) !important;
+}
+
+#vertical-tabs .tabbrowser-tab[selected] .tab-background {
+    background: var(--uc-bg-active) !important;
+}
+
+#vertical-tabs .tabbrowser-tab:hover .tab-background {
+    background: var(--uc-bg-hover) !important;
+}
+
+/* Tab favicon only (thin strip look) */
+#vertical-tabs .tabbrowser-tab .tab-icon-image {
+    margin-inline-end: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+/* Hide tab text ALWAYS in vertical tabs — let the tab box handle clipping */
+#vertical-tabs .tabbrowser-tab .tab-label-container {
+    display: none !important;
+}
+
+/* Tab close button — hidden until hover */
+#vertical-tabs .tabbrowser-tab .tab-close-button {
+    display: none !important;
+    background: transparent !important;
+    color: var(--uc-fg-muted) !important;
+    border-radius: 4px !important;
+    margin-inline-start: auto !important;
+}
+
+#vertical-tabs .tabbrowser-tab:hover .tab-close-button {
+    display: flex !important;
+}
+
+#vertical-tabs .tabbrowser-tab .tab-close-button:hover {
+    background: var(--uc-bg-hover) !important;
+    color: var(--uc-danger) !important;
+}
+
+/* --- New tab button — always visible --- */
+#tabs-newtab-button,
+#vertical-tabs #tabs-newtab-button {
+    background: transparent !important;
+    border-radius: var(--uc-border-radius-sm) !important;
+    margin: 2px 4px !important;
+    padding: 6px 8px !important;
+    min-height: 36px !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    transition: background 120ms ease;
+}
+
+#tabs-newtab-button:hover {
+    background: var(--uc-bg-hover) !important;
+}
+
+#tabs-newtab-button .toolbarbutton-icon {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+    fill: var(--uc-fg-dim) !important;
+}
+
+#tabs-newtab-button:hover .toolbarbutton-icon {
+    fill: var(--uc-accent) !important;
+}
+
+/* --- Sidebar splitter --- */
+.sidebar-splitter {
+    background: var(--uc-border) !important;
+    width: 1px !important;
+    border: none !important;
+}
+
+/* --- Toolbar (nav-bar) --- */
+#nav-bar {
+    background: var(--uc-bg) !important;
+    border-bottom: 1px solid var(--uc-border) !important;
+    padding: 4px 8px !important;
+    box-shadow: none !important;
+}
+
+#nav-bar toolbarbutton {
+    background: transparent !important;
+    border-radius: var(--uc-border-radius-sm) !important;
+    margin: 0 2px !important;
+    padding: 4px !important;
+    transition: background 120ms ease;
+}
+
+#nav-bar toolbarbutton:hover {
+    background: var(--uc-bg-hover) !important;
+}
+
+#nav-bar toolbarbutton:active {
+    background: var(--uc-bg-active) !important;
+}
+
+/* Toolbar icons */
+.toolbarbutton-icon {
+    fill: var(--uc-fg) !important;
+    fill-opacity: 1 !important;
+}
+
+/* --- URL bar --- */
+#urlbar {
+    --urlbar-height: 32px !important;
+}
+
+#urlbar-background {
+    background: var(--uc-bg-elevated) !important;
+    border: 1px solid var(--uc-border) !important;
+    border-radius: var(--uc-border-radius) !important;
+    box-shadow: none !important;
+}
+
+#urlbar[focused] #urlbar-background {
+    border-color: var(--uc-accent) !important;
+}
+
+#urlbar-input {
+    font-family: var(--uc-urlbar-font) !important;
+    font-size: var(--uc-urlbar-font-size) !important;
+    font-weight: var(--uc-urlbar-font-weight) !important;
+    color: var(--uc-fg) !important;
+    text-align: center !important;
+}
+
+#urlbar-input::placeholder {
+    color: var(--uc-fg-muted) !important;
+}
+
+/* URL bar results */
+.urlbarView {
+    background: var(--uc-bg) !important;
+    border: 1px solid var(--uc-border) !important;
+    border-radius: var(--uc-border-radius) !important;
+    margin-top: 2px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.urlbarView-row {
+    border-radius: var(--uc-border-radius-sm) !important;
+    margin: 1px 2px !important;
+    padding: 4px 8px !important;
+}
+
+.urlbarView-row:hover {
+    background: var(--uc-bg-hover) !important;
+}
+
+.urlbarView-row[selected] {
+    background: var(--uc-accent) !important;
+}
+
+.urlbarView-row[selected] .urlbarView-title,
+.urlbarView-row[selected] .urlbarView-url {
+    color: var(--uc-bg) !important;
+}
+
+.urlbarView-title {
+    font-family: var(--uc-urlbar-font) !important;
+    color: var(--uc-fg) !important;
+    font-weight: 700 !important;
+}
+
+.urlbarView-url {
+    color: var(--uc-accent) !important;
+    font-weight: 700 !important;
+}
+
+.urlbarView-row[selected] .urlbarView-url {
+    color: var(--uc-bg) !important;
+}
+
+/* --- Context menus --- */
+menupopup, panel {
+    --panel-background-color: var(--uc-bg) !important;
+    --panel-border-color: var(--uc-border) !important;
+    --panel-text-color: var(--uc-fg) !important;
+    border-radius: var(--uc-border-radius) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+menupopup > menuitem[_moz-menuactive="true"],
+menupopup > menu[_moz-menuactive="true"] {
+    background: var(--uc-bg-hover) !important;
+    color: var(--uc-fg) !important;
+    border-radius: var(--uc-border-radius-sm) !important;
+}
+
+/* --- Bookmarks bar — peek on hover, NO empty space --- */
+#PersonalToolbar {
+    /* Peek: hidden by default, NO empty space */
+    display: none !important;
+}
+
+/* Reveal bookmarks when hovering the navigator toolbox */
+#navigator-toolbox:hover #PersonalToolbar,
+#navigator-toolbox:focus-within #PersonalToolbar {
+    display: flex !important;
+}
+
+/* Bookmark items */
+toolbarbutton.bookmark-item {
+    background: transparent !important;
+    border-radius: var(--uc-border-radius-sm) !important;
+    padding: 4px 8px !important;
+    font-family: var(--uc-tab-font) !important;
+    font-size: var(--uc-tab-font-size) !important;
+    font-weight: var(--uc-tab-font-weight) !important;
+    color: var(--uc-fg-dim) !important;
+    transition: background 120ms ease, color 120ms ease;
+}
+
+toolbarbutton.bookmark-item:hover {
+    background: var(--uc-bg-hover) !important;
+    color: var(--uc-fg) !important;
+}
+
+toolbarbutton.bookmark-item:active {
+    background: var(--uc-bg-active) !important;
+}
+
+/* --- Hide unnecessary elements --- */
+#identity-box,
+#tracking-protection-icon-container,
+#star-button-box,
+#alltabs-button,
+.urlbarView-favicon,
+.urlbarView-type-icon {
+    display: none !important;
+}
+
+/* --- Navigation box --- */
+#navigator-toolbox {
+    border-bottom: none !important;
+}
+
+/* --- Selection --- */
+::selection {
+    background: var(--uc-accent) !important;
+    color: var(--uc-bg) !important;
+}
+
+/* --- Disabled buttons fade --- */
+#nav-bar:not([customizing="true"]) > #nav-bar-customization-target > toolbarbutton[disabled="true"] {
+    opacity: 0.4 !important;
+}
+
+/* --- Main content area --- */
+browser {
+    background: var(--uc-bg) !important;
+}
+
+/* --- Sidebar view button --- */
+#sidebar-button {
+    display: none !important;
+}
+
+/* --- Header bar overrides --- */
+:root {
+    --toolbar-bgcolor: var(--uc-bg) !important;
+    --toolbar-color: var(--uc-fg) !important;
+    --toolbar-field-background-color: var(--uc-bg-elevated) !important;
+    --toolbar-field-color: var(--uc-fg) !important;
+    --toolbar-field-focus-background-color: var(--uc-bg-elevated) !important;
+    --toolbar-field-focus-color: var(--uc-fg) !important;
+    --toolbar-field-border-color: var(--uc-border) !important;
+    --toolbar-field-focus-border-color: var(--uc-accent) !important;
+    --lwt-sidebar-background-color: var(--uc-bg) !important;
+    --lwt-sidebar-text-color: var(--uc-fg) !important;
+    --lwt-accent-color: var(--uc-bg) !important;
+    --lwt-text-color: var(--uc-fg) !important;
+    --tab-border-radius: 6px !important;
+    --tab-selected-bgcolor: var(--uc-bg-active) !important;
+    --tab-hover-background-color: var(--uc-bg-hover) !important;
+    --toolbarbutton-border-radius: 4px !important;
+    --toolbarbutton-inner-padding: 6px !important;
+    --toolbarbutton-icon-fill-attention: var(--uc-accent) !important;
+    --toolbarbutton-hover-background: var(--uc-bg-hover) !important;
+    --toolbarbutton-active-background: var(--uc-bg-active) !important;
+    --panel-background-color: var(--uc-bg) !important;
+    --panel-text-color: var(--uc-fg) !important;
+    --panel-border-color: var(--uc-border) !important;
+}
