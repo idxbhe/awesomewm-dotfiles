@@ -688,7 +688,6 @@ local set_popup = awful.popup {
     },
     minimum_width = 280,
     maximum_width = 280,
-    minimum_height = 320,
     bg = "#1e1e2eee",
     border_width = 1,
     border_color = "#313244",
