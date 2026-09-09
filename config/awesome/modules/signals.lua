@@ -403,13 +403,14 @@ client.connect_signal("request::titlebars", function(c)
 end)
 
 -- Ensure titlebars are always shown for normal and dialog windows
+-- Respects global _titlebar_hidden flag from settings toggle
 local function ensure_titlebars(c)
     if c.type ~= "normal" and c.type ~= "dialog" then return end
 
     local tb = awful.titlebar(c, { size = 22 })
     if tb then
         tb.size = 22  -- Force resize if titlebar already exists
-        tb.visible = true
+        tb.visible = not _G._titlebar_hidden
     end
 end
 
@@ -429,24 +430,43 @@ end)
 client.connect_signal("property::fullscreen", function(c)
     local tb = awful.titlebar(c, { size = 22 })
     if tb then
-        tb.visible = not c.fullscreen
+        if c.fullscreen then
+            tb.visible = false
+        else
+            tb.visible = not _G._titlebar_hidden
+        end
     end
 end)
 
 -- Restore titlebar visibility when layout changes or window state changes
 tag.connect_signal("property::layout", function()
     for _, c in ipairs(client.get()) do
-        ensure_titlebars(c)
+        if _G._titlebar_hidden then
+            local tb = awful.titlebar(c, { size = 22 })
+            if tb then tb.visible = false end
+        else
+            ensure_titlebars(c)
+        end
     end
 end)
 
 client.connect_signal("property::floating", function(c)
-    ensure_titlebars(c)
+    if _G._titlebar_hidden then
+        local tb = awful.titlebar(c, { size = 22 })
+        if tb then tb.visible = false end
+    else
+        ensure_titlebars(c)
+    end
 end)
 
 client.connect_signal("property::maximized", function(c)
     if not c.fullscreen then
-        ensure_titlebars(c)
+        if _G._titlebar_hidden then
+            local tb = awful.titlebar(c, { size = 22 })
+            if tb then tb.visible = false end
+        else
+            ensure_titlebars(c)
+        end
     end
 end)
 
@@ -454,7 +474,12 @@ end)
 client.connect_signal("manage", function(c)
     gears.timer.start_new(0.1, function()
         if c.valid then
-            ensure_titlebars(c)
+            if _G._titlebar_hidden then
+                local tb = awful.titlebar(c, { size = 22 })
+                if tb then tb.visible = false end
+            else
+                ensure_titlebars(c)
+            end
         end
         return false
     end)

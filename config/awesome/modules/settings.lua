@@ -627,29 +627,26 @@ picom_blur_btn:buttons(gears.table.join(
     end)
 ))
 
--- Initialize picom toggles on load
-init_picom_toggles()
-
--- Titlebar toggle
-local function get_titlebar_visible()
-    for s in screen do
-        for _, t in ipairs(s.tags) do
-            for _, c in ipairs(t:clients()) do
-                return c.titlebar ~= nil and c.titlebar.visible ~= false
-            end
-        end
-    end
-    return true
+-- Initialize titlebar toggle state
+if _G._titlebar_hidden == nil then
+    _G._titlebar_hidden = false
+end
+titlebar_btn._enabled = not _G._titlebar_hidden
+if _G._titlebar_hidden then
+    titlebar_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
 end
 
+-- Titlebar toggle
 local function toggle_titlebar(on)
+    _G._titlebar_hidden = not on
     for s in screen do
         for _, t in ipairs(s.tags) do
             for _, c in ipairs(t:clients()) do
-                if on then
-                    awful.titlebar.show(c)
-                else
-                    awful.titlebar.hide(c)
+                if c.type == "normal" or c.type == "dialog" then
+                    local tb = awful.titlebar(c, { size = 22 })
+                    if tb then
+                        tb.visible = on
+                    end
                 end
             end
         end
