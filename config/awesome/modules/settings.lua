@@ -984,13 +984,19 @@ local set_popup = awful.popup {
     },
     minimum_width = 280,
     maximum_width = 280,
-    bg = "#1e1e2eee",
+    bg = m.bg_alt or "#1e1e2eee",
     border_width = 1,
-    border_color = "#313244",
+    border_color = m.border or "#313244",
     shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 6) end,
     ontop = true,
     visible = false,
 }
+
+-- Update popup bg on theme change
+awesome.connect_signal("theme::changed", function()
+    set_popup.bg = m.bg_alt or "#1e1e2eee"
+    set_popup.border_color = m.border or "#313244"
+end)
 
 -- Init states
 awful.spawn.easy_async_with_shell(
