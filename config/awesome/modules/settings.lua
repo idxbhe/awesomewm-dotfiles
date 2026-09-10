@@ -619,6 +619,7 @@ end
 
 -- Transparency input state
 local transparency_editing = false
+local transparency_keygrabber = nil
 
 transparency_container:connect_signal("button::press", function(self, _, _, button)
     if button == 1 and not transparency_editing then
@@ -630,30 +631,39 @@ transparency_container:connect_signal("button::press", function(self, _, _, butt
         -- Show prompt in the textbox
         transparency_input.text = ""
         transparency_input.markup = '<span font="' .. m.font .. '" color="' .. m.surface0 .. '">1-100</span>'
+        transparency_container.bg = m.surface1
 
-        -- Use awful.prompt.run for proper input handling with auto-cleanup
-        awful.prompt.run {
-            prompt = "",
-            textbox = transparency_input,
-            exe_callback = function(input)
-                local val = tonumber(input)
-                if val then
-                    apply_transparency(val)
-                else
-                    transparency_input.text = current_val
+        -- Simple keygrabber for number input
+        local input_str = ""
+        transparency_keygrabber = awful.keygrabber.run(function(_, key, event)
+            if event ~= "press" then return end
+
+            if key:match("^%d$") then
+                -- Number key
+                if #input_str < 3 then
+                    input_str = input_str .. key
+                    transparency_input.text = input_str
                 end
+            elseif key == "BackSpace" then
+                input_str = input_str:sub(1, -2)
+                transparency_input.text = input_str
+            elseif key == "Return" or key == "KP_Enter" then
+                -- Confirm
+                local val = tonumber(input_str)
+                if val then apply_transparency(val) else transparency_input.text = current_val end
+                awful.keygrabber.stop(transparency_keygrabber)
+                transparency_keygrabber = nil
                 transparency_editing = false
                 transparency_container.bg = m.surface0
-            end,
-            done_callback = function()
-                -- Called when prompt finishes (Enter, Escape, or focus loss)
-                if transparency_editing then
-                    transparency_editing = false
-                    transparency_container.bg = m.surface0
-                end
-            end,
-            history_path = gears.filesystem.get_cache_dir() .. "/transparency_history",
-        }
+            elseif key == "Escape" then
+                -- Cancel
+                transparency_input.text = current_val
+                awful.keygrabber.stop(transparency_keygrabber)
+                transparency_keygrabber = nil
+                transparency_editing = false
+                transparency_container.bg = m.surface0
+            end
+        end)
     end
 end)
 
@@ -1057,6 +1067,25 @@ local set_popup = awful.popup {
     ontop = true,
     visible = false,
 }
+
+-- Auto-apply transparency when clicking outside transparency container
+set_popup:connect_signal("button::press", function(_, _, _, _, _, find_result)
+    if transparency_editing then
+        -- Check if click was on transparency_container
+        if find_result then
+            for _, w in ipairs(find_result) do
+                if w == transparency_container or w == transparency_input then
+                    return -- Click was on transparency input, let it handle
+                end
+            end
+        end
+        -- Click was outside transparency input - auto-apply
+        local val = tonumber(transparency_input.text)
+        if val then apply_transparency(val) else transparency_input.text = "100" end
+        transparency_editing = false
+        transparency_container.bg = m.surface0
+    end
+end)
 
 -- Update popup bg on theme change
 awesome.connect_signal("theme::changed", function()
