@@ -619,19 +619,37 @@ end
 
 transparency_container:connect_signal("button::press", function(self, _, _, button)
     if button == 1 then
-        awful.prompt.run {
-            prompt = "Transparency (1-100): ",
-            textbox = transparency_input,
-            exe_callback = function(input)
-                local val = tonumber(input)
-                if val then apply_transparency(val) end
-            end,
-            history_path = gears.filesystem.get_cache_dir() .. "/transparency_history",
-            done_callback = function()
-                -- Keep the current value displayed
-                transparency_input.text = tostring(transparency_input.text)
-            end,
-        }
+        -- Store current value
+        local current_val = transparency_input.text
+        -- Show prompt in the textbox
+        transparency_input.text = ""
+        transparency_input.markup = '<span font="' .. m.font .. '" color="' .. m.overlay1 .. '">1-100</span>'
+        
+        -- Use keygrabber for input
+        local input_str = ""
+        awful.keygrabber.run(function(_, key, event)
+            if event ~= "press" then return end
+            
+            if key:match("^%d$") then
+                -- Number key
+                if #input_str < 3 then
+                    input_str = input_str .. key
+                    transparency_input.text = input_str
+                end
+            elseif key == "BackSpace" then
+                input_str = input_str:sub(1, -2)
+                transparency_input.text = input_str
+            elseif key == "Return" or key == "KP_Enter" then
+                -- Confirm
+                local val = tonumber(input_str)
+                if val then apply_transparency(val) else transparency_input.text = current_val end
+                awful.keygrabber.stop()
+            elseif key == "Escape" then
+                -- Cancel
+                transparency_input.text = current_val
+                awful.keygrabber.stop()
+            end
+        end)
     end
 end)
 
