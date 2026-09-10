@@ -619,45 +619,6 @@ end
 
 -- Transparency input state
 local transparency_editing = false
-local transparency_keygrabber = nil
-local transparency_global_btn = nil
-
--- Stop editing (save or cancel)
-local function stop_transparency_editing(save)
-    if not transparency_keygrabber then return end
-
-    awful.keygrabber.stop(transparency_keygrabber)
-    transparency_keygrabber = nil
-
-    -- Remove global click handler
-    if transparency_global_btn then
-        local buttons = root.buttons()
-        local new_buttons = {}
-        for _, b in ipairs(buttons) do
-            if b._transparency_global then
-                -- skip
-            else
-                table.insert(new_buttons, b)
-            end
-        end
-        root.buttons(new_buttons)
-        transparency_global_btn = nil
-    end
-
-    if save then
-        local val = tonumber(transparency_input.text)
-        if val then
-            apply_transparency(val)
-        else
-            transparency_input.text = "100"
-        end
-    else
-        transparency_input.text = "100"
-    end
-
-    transparency_editing = false
-    transparency_container.bg = m.surface0
-end
 
 transparency_container:connect_signal("button::press", function(self, _, _, button)
     if button == 1 and not transparency_editing then
@@ -670,47 +631,29 @@ transparency_container:connect_signal("button::press", function(self, _, _, butt
         transparency_input.text = ""
         transparency_input.markup = '<span font="' .. m.font .. '" color="' .. m.surface0 .. '">1-100</span>'
 
-        -- Use keygrabber for input
-        local input_str = ""
-        transparency_keygrabber = awful.keygrabber.run(function(_, key, event)
-            if event ~= "press" then return end
-
-            if key:match("^%d$") then
-                -- Number key
-                if #input_str < 3 then
-                    input_str = input_str .. key
-                    transparency_input.text = input_str
+        -- Use awful.prompt.run for proper input handling with auto-cleanup
+        awful.prompt.run {
+            prompt = "",
+            textbox = transparency_input,
+            exe_callback = function(input)
+                local val = tonumber(input)
+                if val then
+                    apply_transparency(val)
+                else
+                    transparency_input.text = current_val
                 end
-            elseif key == "BackSpace" then
-                input_str = input_str:sub(1, -2)
-                transparency_input.text = input_str
-            elseif key == "Return" or key == "KP_Enter" then
-                -- Confirm
-                stop_transparency_editing(true)
-            elseif key == "Escape" then
-                -- Cancel
-                transparency_input.text = "100"
-                stop_transparency_editing(false)
-            end
-        end)
-
-        -- Install global mouse handler for clicks outside container
-        local existing_buttons = root.buttons()
-        local new_buttons = {}
-        for _, b in ipairs(existing_buttons) do
-            if not b._transparency_global then
-                table.insert(new_buttons, b)
-            end
-        end
-        local global_btn = awful.button({}, 1, function()
-            if transparency_editing then
-                stop_transparency_editing(true)
-            end
-        end)
-        global_btn._transparency_global = true
-        table.insert(new_buttons, global_btn)
-        root.buttons(new_buttons)
-        transparency_global_btn = global_btn
+                transparency_editing = false
+                transparency_container.bg = m.surface0
+            end,
+            done_callback = function()
+                -- Called when prompt finishes (Enter, Escape, or focus loss)
+                if transparency_editing then
+                    transparency_editing = false
+                    transparency_container.bg = m.surface0
+                end
+            end,
+            history_path = gears.filesystem.get_cache_dir() .. "/transparency_history",
+        }
     end
 end)
 
