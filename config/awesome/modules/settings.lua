@@ -498,10 +498,26 @@ ap_btn:buttons(gears.table.join(
 ))
 
 -- Picom settings toggle buttons
-local picom_animation_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, true, nil)
-local picom_transparent_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, false, nil)
-local picom_shadow_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, true, nil)
-local picom_blur_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, true, nil)
+local picom_animation_btn, picom_animation_get, picom_animation_set = make_toggle_button(
+    m.glyph.toggle_on, m.glyph.toggle_off, true, function(new_state)
+        write_picom_value("fading", new_state and "true" or "false")
+    end
+)
+local picom_transparent_btn, picom_transparent_get, picom_transparent_set = make_toggle_button(
+    m.glyph.toggle_on, m.glyph.toggle_off, false, function(new_state)
+        write_picom_value("inactive-opacity", new_state and "0.9" or "1.0")
+    end
+)
+local picom_shadow_btn, picom_shadow_get, picom_shadow_set = make_toggle_button(
+    m.glyph.toggle_on, m.glyph.toggle_off, true, function(new_state)
+        write_picom_value("shadow", new_state and "true" or "false")
+    end
+)
+local picom_blur_btn, picom_blur_get, picom_blur_set = make_toggle_button(
+    m.glyph.toggle_on, m.glyph.toggle_off, true, function(new_state)
+        write_picom_value("blur-method", new_state and "gaussian" or "none")
+    end
+)
 
 -- Titlebar toggle
 local function toggle_titlebar(on)
@@ -585,67 +601,6 @@ local function init_picom_toggles()
     end
 end
 
--- Set up picom toggle callbacks
-picom_animation_btn:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
-picom_animation_btn:connect_signal("mouse::leave", function(self) self.bg = nil end)
-picom_animation_btn:buttons(gears.table.join(
-    awful.button({}, 1, function()
-        local new_state = not picom_animation_btn._enabled
-        picom_animation_btn._enabled = new_state
-        write_picom_value("fading", new_state and "true" or "false")
-        if new_state then
-            picom_animation_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
-        else
-            picom_animation_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
-        end
-    end)
-))
-
-picom_transparent_btn:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
-picom_transparent_btn:connect_signal("mouse::leave", function(self) self.bg = nil end)
-picom_transparent_btn:buttons(gears.table.join(
-    awful.button({}, 1, function()
-        local new_state = not picom_transparent_btn._enabled
-        picom_transparent_btn._enabled = new_state
-        write_picom_value("inactive-opacity", new_state and "0.9" or "1.0")
-        if new_state then
-            picom_transparent_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
-        else
-            picom_transparent_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
-        end
-    end)
-))
-
-picom_shadow_btn:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
-picom_shadow_btn:connect_signal("mouse::leave", function(self) self.bg = nil end)
-picom_shadow_btn:buttons(gears.table.join(
-    awful.button({}, 1, function()
-        local new_state = not picom_shadow_btn._enabled
-        picom_shadow_btn._enabled = new_state
-        write_picom_value("shadow", new_state and "true" or "false")
-        if new_state then
-            picom_shadow_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
-        else
-            picom_shadow_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
-        end
-    end)
-))
-
-picom_blur_btn:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
-picom_blur_btn:connect_signal("mouse::leave", function(self) self.bg = nil end)
-picom_blur_btn:buttons(gears.table.join(
-    awful.button({}, 1, function()
-        local new_state = not picom_blur_btn._enabled
-        picom_blur_btn._enabled = new_state
-        write_picom_value("blur-method", new_state and "gaussian" or "none")
-        if new_state then
-            picom_blur_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
-        else
-            picom_blur_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
-        end
-    end)
-))
-
 -- Initialize titlebar toggle state
 if _G._titlebar_hidden == nil then
     _G._titlebar_hidden = false
@@ -654,6 +609,9 @@ titlebar_btn._enabled = not _G._titlebar_hidden
 if _G._titlebar_hidden then
     titlebar_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
 end
+
+-- Initialize picom toggle states from config
+init_picom_toggles()
 
 local function make_tab_content()
     return wibox.widget {
