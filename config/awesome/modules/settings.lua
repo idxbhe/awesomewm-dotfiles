@@ -650,11 +650,13 @@ transparency_container:connect_signal("button::press", function(self, _, _, butt
                 if val then apply_transparency(val) else transparency_input.text = current_val end
                 awful.keygrabber.stop(grabber)
                 transparency_editing = false
+                transparency_container.bg = m.surface0
             elseif key == "Escape" then
                 -- Cancel
                 transparency_input.text = current_val
                 awful.keygrabber.stop(grabber)
                 transparency_editing = false
+                transparency_container.bg = m.surface0
             end
         end)
     end
