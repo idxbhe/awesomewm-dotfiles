@@ -596,30 +596,22 @@ local function init_picom_toggles()
     local fading = read_picom_value("fading")
     if fading then
         local state = fading:match("true")
-        picom_animation_btn._enabled = state
-        picom_animation_btn.icon.markup = state and string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
-                              or string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+        picom_animation_set(state)
     end
     local shadow = read_picom_value("shadow")
     if shadow then
         local state = shadow:match("true")
-        picom_shadow_btn._enabled = state
-        picom_shadow_btn.icon.markup = state and string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
-                              or string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+        picom_shadow_set(state)
     end
     local blur_method = read_picom_value("blur-method")
     if blur_method then
         local state = blur_method ~= "none"
-        picom_blur_btn._enabled = state
-        picom_blur_btn.icon.markup = state and string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
-                              or string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+        picom_blur_set(state)
     end
     local inactive_opacity = read_picom_value("inactive-opacity")
     if inactive_opacity then
         local state = tonumber(inactive_opacity) ~= 1.0
-        picom_transparent_btn._enabled = state
-        picom_transparent_btn.icon.markup = state and string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
-                              or string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
+        picom_transparent_set(state)
     end
 end
 
