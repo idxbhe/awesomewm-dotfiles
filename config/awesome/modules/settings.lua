@@ -521,14 +521,17 @@ local function write_picom_value(key, value)
     if not f then return end
     local content = f:read("*a")
     f:close()
-    -- Escape magic chars for pattern matching
     local key_pat = key:gsub("([%-%.%+%[%]%(%)%$%^%%%?%*])", "%%%1")
     if key == "blur-method" then
         if value == "none" then
-            content = content:gsub("(blur:%s*{%s*method%s*=%s*\")([^\"]+)(\")", "%1none%3")
+            content = content:gsub('(blur:%s*{%s*method%s*=%s*")([^"]+)(")', '%1none%3')
         else
-            content = content:gsub("(blur:%s*{%s*method%s*=%s*\")([^\"]+)(\")", "%1" .. value .. "%3")
+            content = content:gsub('(blur:%s*{%s*method%s*=%s*")([^"]+)(")', '%1' .. value .. '%3')
         end
+    elseif key == "opacity-rule" then
+        -- value is "95" or "100" - replace both Alacritty and Thunar entries
+        content = content:gsub('(")%d+:class_g = \'Alacritty\'(")', '%1' .. value .. ':class_g = \'Alacritty\'%2')
+        content = content:gsub('(")%d+:class_g = \'Thunar\'(")', '%1' .. value .. ':class_g = \'Thunar\'%2')
     else
         local new_line = key .. " = " .. value .. ";"
         if content:match(key_pat .. "%s*=") then
@@ -552,6 +555,8 @@ local picom_transparent_btn, picom_transparent_get, picom_transparent_set = make
     m.glyph.toggle_on, m.glyph.toggle_off, false, function(new_state)
         write_picom_value("inactive-opacity", new_state and "0.9" or "1.0")
         write_picom_value("inactive-opacity-override", new_state and "true" or "false")
+        -- Also toggle opacity-rules: 95% -> 100% (opaque) for Alacritty/Thunar
+        write_picom_value("opacity-rule", new_state and "95" or "100")
     end
 )
 local picom_shadow_btn, picom_shadow_get, picom_shadow_set = make_toggle_button(
