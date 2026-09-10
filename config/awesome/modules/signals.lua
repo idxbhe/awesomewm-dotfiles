@@ -436,7 +436,7 @@ end)
 
 -- Hide titlebar when fullscreen, show when not
 client.connect_signal("property::fullscreen", function(c)
-    local tb = awful.titlebar(c, { size = 22 })
+    local tb = c.titlebar
     if tb then
         if c.fullscreen then
             tb.visible = false
@@ -449,32 +449,24 @@ end)
 -- Restore titlebar visibility when layout changes or window state changes
 tag.connect_signal("property::layout", function()
     for _, c in ipairs(client.get()) do
-        if _G._titlebar_hidden then
-            local tb = awful.titlebar(c, { size = 22 })
-            if tb then tb.visible = false end
-        else
-            ensure_titlebars(c)
+        local tb = c.titlebar
+        if tb then
+            tb.visible = not _G._titlebar_hidden
         end
     end
 end)
 
 client.connect_signal("property::floating", function(c)
-    if _G._titlebar_hidden then
-        local tb = awful.titlebar(c, { size = 22 })
-        if tb then tb.visible = false end
-    else
-        ensure_titlebars(c)
+    local tb = c.titlebar
+    if tb then
+        tb.visible = not _G._titlebar_hidden
     end
 end)
 
 client.connect_signal("property::maximized", function(c)
-    if not c.fullscreen then
-        if _G._titlebar_hidden then
-            local tb = awful.titlebar(c, { size = 22 })
-            if tb then tb.visible = false end
-        else
-            ensure_titlebars(c)
-        end
+    local tb = c.titlebar
+    if tb then
+        tb.visible = not _G._titlebar_hidden
     end
 end)
 
@@ -486,7 +478,8 @@ client.connect_signal("manage", function(c)
                 local tb = awful.titlebar(c, { size = 22 })
                 if tb then tb.visible = false end
             else
-                ensure_titlebars(c)
+                local tb = awful.titlebar(c, { size = 22 })
+                if tb then tb.visible = true end
             end
         end
         return false

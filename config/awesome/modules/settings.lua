@@ -502,7 +502,26 @@ local picom_animation_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle
 local picom_transparent_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, false, nil)
 local picom_shadow_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, true, nil)
 local picom_blur_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, true, nil)
-local titlebar_btn = make_toggle_button(m.glyph.toggle_on, m.glyph.toggle_off, true, nil)
+
+-- Titlebar toggle
+local function toggle_titlebar(on)
+    _G._titlebar_hidden = not on
+    for _, c in ipairs(client.get()) do
+        if c.type == "normal" or c.type == "dialog" then
+            if on then
+                awful.titlebar.show(c)
+            else
+                awful.titlebar.hide(c)
+            end
+        end
+    end
+end
+
+local titlebar_btn, titlebar_get_state, titlebar_set_state = make_toggle_button(
+    m.glyph.toggle_on, m.glyph.toggle_off, true, function(new_state)
+        toggle_titlebar(new_state)
+    end
+)
 
 -- Picom config path
 local picom_conf_path = os.getenv("HOME") .. "/.config/picom/picom.conf"
@@ -636,35 +655,6 @@ if _G._titlebar_hidden then
     titlebar_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
 end
 
--- Titlebar toggle
-local function toggle_titlebar(on)
-    _G._titlebar_hidden = not on
-    for s in screen do
-        for _, c in ipairs(s:clients()) do
-            if c.type == "normal" or c.type == "dialog" then
-                local tb = awful.titlebar(c)
-                if tb then
-                    tb.visible = on
-                end
-            end
-        end
-    end
-end
-
-titlebar_btn:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
-titlebar_btn:connect_signal("mouse::leave", function(self) self.bg = nil end)
-titlebar_btn:buttons(gears.table.join(
-    awful.button({}, 1, function()
-        local new_state = not titlebar_btn._enabled
-        titlebar_btn._enabled = new_state
-        toggle_titlebar(new_state)
-        if new_state then
-            titlebar_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
-        else
-            titlebar_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
-        end
-    end)
-))
 local function make_tab_content()
     return wibox.widget {
         layout = wibox.layout.fixed.vertical,
