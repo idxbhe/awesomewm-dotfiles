@@ -564,17 +564,6 @@ local picom_animation_btn, picom_animation_get, picom_animation_set = make_toggl
         write_picom_value("fading", new_state and "true" or "false")
     end
 )
-local picom_transparent_btn, picom_transparent_get, picom_transparent_set = make_toggle_button(
-    m.glyph.toggle_on, m.glyph.toggle_off, false, function(new_state)
-        write_picom_value("inactive-opacity", new_state and "0.9" or "1.0")
-        write_picom_value("active-opacity", new_state and "0.9" or "1.0")
-        write_picom_value("inactive-opacity-override", new_state and "true" or "false")
-        -- Also toggle opacity-rules: 95% -> 100% (opaque) for Alacritty/Thunar
-        write_picom_value("opacity-rule", new_state and "95" or "100")
-        -- Also toggle alacritty opacity
-        write_alacritty_opacity(new_state and "0.9" or "1.0")
-    end
-)
 local picom_shadow_btn, picom_shadow_get, picom_shadow_set = make_toggle_button(
     m.glyph.toggle_on, m.glyph.toggle_off, true, function(new_state)
         write_picom_value("shadow", new_state and "true" or "false")
@@ -585,6 +574,58 @@ local picom_blur_btn, picom_blur_get, picom_blur_set = make_toggle_button(
         write_picom_value("blur-method", new_state and "gaussian" or "none")
     end
 )
+
+-- Transparency input (1-100%, where 100 = opaque, 1 = nearly transparent)
+local transparency_input = wibox.widget {
+    widget = wibox.widget.textbox,
+    text = "100",
+    forced_width = 50,
+    align = "center",
+    font = m.font,
+}
+local transparency_text = wibox.widget {
+    markup = string.format('<span font="%s">%%</span>', m.font),
+    forced_width = 20,
+    align = "center",
+    widget = wibox.widget.textbox,
+}
+
+-- Helper: apply transparency value (1-100)
+local function apply_transparency(val)
+    val = math.max(1, math.min(100, math.floor(val)))
+    local opacity = val / 100  -- 0.01 to 1.0
+    local opacity_str = string.format("%.2f", opacity)
+    local rule_val = val
+    write_picom_value("inactive-opacity", opacity_str)
+    write_picom_value("active-opacity", opacity_str)
+    write_picom_value("inactive-opacity-override", val < 100 and "true" or "false")
+    write_picom_value("opacity-rule", tostring(rule_val))
+    write_alacritty_opacity(opacity_str)
+    transparency_input.text = tostring(val)
+end
+
+transparency_input:connect_signal("button::press", function(self, _, _, button)
+    if button == 1 then
+        awful.prompt.run {
+            prompt = "Transparency (1-100): ",
+            textbox = self,
+            exe_callback = function(input)
+                local val = tonumber(input)
+                if val then apply_transparency(val) end
+            end,
+            history_path = gears.filesystem.get_cache_dir() .. "/transparency_history",
+        }
+    end
+end)
+
+-- Initialize transparency from config
+local function init_transparency()
+    local inactive_opacity = read_picom_value("inactive-opacity")
+    if inactive_opacity then
+        local val = math.floor(tonumber(inactive_opacity) * 100 + 0.5)
+        apply_transparency(math.max(1, val))
+    end
+end
 
 -- Titlebar toggle
 local function toggle_titlebar(on)
@@ -623,11 +664,6 @@ local function init_picom_toggles()
         local state = blur_method ~= "none"
         picom_blur_set(state)
     end
-    local inactive_opacity = read_picom_value("inactive-opacity")
-    if inactive_opacity then
-        local state = tonumber(inactive_opacity) ~= 1.0
-        picom_transparent_set(state)
-    end
 end
 
 -- Initialize titlebar toggle state
@@ -641,6 +677,7 @@ end
 
 -- Initialize picom toggle states from config
 init_picom_toggles()
+init_transparency()
 
 local function make_tab_content()
     return wibox.widget {
@@ -778,7 +815,8 @@ add_to_tab(content_display, {
     end)(),
     (function()
         local row = make_row(m.glyph.settings_display_transparency or m.glyph.transparent or "", "Transparent", m.font_popup)
-        row.right_slot:add(picom_transparent_btn)
+        row.right_slot:add(transparency_input)
+        row.right_slot:add(transparency_text)
         return row
     end)(),
     (function()
