@@ -545,6 +545,19 @@ local function write_picom_value(key, value)
     awful.spawn("killall picom 2>/dev/null; sleep 0.2; picom --config " .. picom_conf_path .. " --daemon 2>/dev/null")
 end
 
+-- Helper: write alacritty opacity
+local function write_alacritty_opacity(value)
+    local alacritty_conf = os.getenv("HOME") .. "/.config/alacritty/alacritty.toml"
+    local f = io.open(alacritty_conf, "r")
+    if not f then return end
+    local content = f:read("*a")
+    f:close()
+    content = content:gsub("opacity%s*=%s*[%d%.]+", "opacity = " .. value)
+    f = io.open(alacritty_conf, "w")
+    if f then f:write(content); f:close() end
+    -- Alacritty live reloads config automatically
+end
+
 -- Picom settings toggle buttons
 local picom_animation_btn, picom_animation_get, picom_animation_set = make_toggle_button(
     m.glyph.toggle_on, m.glyph.toggle_off, true, function(new_state)
@@ -558,6 +571,8 @@ local picom_transparent_btn, picom_transparent_get, picom_transparent_set = make
         write_picom_value("inactive-opacity-override", new_state and "true" or "false")
         -- Also toggle opacity-rules: 95% -> 100% (opaque) for Alacritty/Thunar
         write_picom_value("opacity-rule", new_state and "95" or "100")
+        -- Also toggle alacritty opacity
+        write_alacritty_opacity(new_state and "0.9" or "1.0")
     end
 )
 local picom_shadow_btn, picom_shadow_get, picom_shadow_set = make_toggle_button(
