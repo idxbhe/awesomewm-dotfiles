@@ -1091,6 +1091,17 @@ set_popup:connect_signal("button::press", function(_, _, _, _, _, find_result)
     end
 end)
 
+-- Stop keygrabber when popup is hidden (clicked outside popup entirely)
+set_popup:connect_signal("property::visible", function()
+    if not set_popup.visible and transparency_keygrabber then
+        awful.keygrabber.stop(transparency_keygrabber)
+        transparency_keygrabber = nil
+        transparency_editing = false
+        transparency_container.bg = m.surface0
+        transparency_input.text = "100"
+    end
+end)
+
 -- Update popup bg on theme change
 awesome.connect_signal("theme::changed", function()
     set_popup.bg = m.bg_alt or "#1e1e2eee"
