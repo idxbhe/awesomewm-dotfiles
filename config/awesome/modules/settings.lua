@@ -554,6 +554,7 @@ local picom_animation_btn, picom_animation_get, picom_animation_set = make_toggl
 local picom_transparent_btn, picom_transparent_get, picom_transparent_set = make_toggle_button(
     m.glyph.toggle_on, m.glyph.toggle_off, false, function(new_state)
         write_picom_value("inactive-opacity", new_state and "0.9" or "1.0")
+        write_picom_value("active-opacity", new_state and "0.9" or "1.0")
         write_picom_value("inactive-opacity-override", new_state and "true" or "false")
         -- Also toggle opacity-rules: 95% -> 100% (opaque) for Alacritty/Thunar
         write_picom_value("opacity-rule", new_state and "95" or "100")
