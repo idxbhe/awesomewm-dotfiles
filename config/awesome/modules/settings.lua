@@ -497,6 +497,51 @@ ap_btn:buttons(gears.table.join(
     end)
 ))
 
+-- Picom config path
+local picom_conf_path = os.getenv("HOME") .. "/.config/picom/picom.conf"
+
+-- Helper: read picom config value
+local function read_picom_value(key)
+    local f = io.open(picom_conf_path, "r")
+    if not f then return nil end
+    local content = f:read("*a")
+    f:close()
+    local key_pat = key:gsub("([%-%.%+%[%]%(%)%$%^%%%?%*])", "%%%1")
+    if key == "blur-method" then
+        local method = content:match("blur:%s*{%s*method%s*=%s*\"([^\"]+)\"")
+        return method
+    end
+    local val = content:match(key_pat .. "%s*=%s*(.-)%s*;")
+    return val
+end
+
+-- Helper: write picom config value
+local function write_picom_value(key, value)
+    local f = io.open(picom_conf_path, "r")
+    if not f then return end
+    local content = f:read("*a")
+    f:close()
+    -- Escape magic chars for pattern matching
+    local key_pat = key:gsub("([%-%.%+%[%]%(%)%$%^%%%?%*])", "%%%1")
+    if key == "blur-method" then
+        if value == "none" then
+            content = content:gsub("(blur:%s*{%s*method%s*=%s*\")([^\"]+)(\")", "%1none%3")
+        else
+            content = content:gsub("(blur:%s*{%s*method%s*=%s*\")([^\"]+)(\")", "%1" .. value .. "%3")
+        end
+    else
+        local new_line = key .. " = " .. value .. ";"
+        if content:match(key_pat .. "%s*=") then
+            content = content:gsub(key_pat .. "%s*=.-;", new_line)
+        else
+            content = content .. "\n" .. new_line
+        end
+    end
+    f = io.open(picom_conf_path, "w")
+    if f then f:write(content); f:close() end
+    awful.spawn("killall picom 2>/dev/null; sleep 0.2; picom --config " .. picom_conf_path .. " --daemon 2>/dev/null")
+end
+
 -- Picom settings toggle buttons
 local picom_animation_btn, picom_animation_get, picom_animation_set = make_toggle_button(
     m.glyph.toggle_on, m.glyph.toggle_off, true, function(new_state)
@@ -538,36 +583,6 @@ local titlebar_btn, titlebar_get_state, titlebar_set_state = make_toggle_button(
         toggle_titlebar(new_state)
     end
 )
-
--- Picom config path
-local picom_conf_path = os.getenv("HOME") .. "/.config/picom/picom.conf"
-
--- Helper: read picom config value
-local function read_picom_value(key)
-    local f = io.open(picom_conf_path, "r")
-    if not f then return nil end
-    local content = f:read("*a")
-    f:close()
-    local val = content:match(key .. "%s*=%s*(.-)%s*;")
-    return val
-end
-
--- Helper: write picom config value
-local function write_picom_value(key, value)
-    local f = io.open(picom_conf_path, "r")
-    if not f then return end
-    local content = f:read("*a")
-    f:close()
-    local new_line = key .. " = " .. value .. ";"
-    if content:match(key .. "%s*=") then
-        content = content:gsub(key .. "%s*=.-;", new_line)
-    else
-        content = content .. "\n" .. new_line
-    end
-    f = io.open(picom_conf_path, "w")
-    if f then f:write(content); f:close() end
-    awful.spawn("killall picom 2>/dev/null; sleep 0.2; picom --config " .. picom_conf_path .. " --daemon 2>/dev/null")
-end
 
 -- Initialize picom toggle states from config
 local function init_picom_toggles()
