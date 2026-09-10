@@ -590,6 +590,19 @@ local transparency_text = wibox.widget {
     widget = wibox.widget.textbox,
 }
 
+-- Make input container clickable
+local transparency_container = wibox.widget {
+    {
+        transparency_input,
+        transparency_text,
+        spacing = 2,
+        layout = wibox.layout.fixed.horizontal,
+    },
+    bg = m.surface0,
+    shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+    widget = wibox.container.background,
+}
+
 -- Helper: apply transparency value (1-100)
 local function apply_transparency(val)
     val = math.max(1, math.min(100, math.floor(val)))
@@ -604,19 +617,26 @@ local function apply_transparency(val)
     transparency_input.text = tostring(val)
 end
 
-transparency_input:connect_signal("button::press", function(self, _, _, button)
+transparency_container:connect_signal("button::press", function(self, _, _, button)
     if button == 1 then
         awful.prompt.run {
             prompt = "Transparency (1-100): ",
-            textbox = self,
+            textbox = transparency_input,
             exe_callback = function(input)
                 local val = tonumber(input)
                 if val then apply_transparency(val) end
             end,
             history_path = gears.filesystem.get_cache_dir() .. "/transparency_history",
+            done_callback = function()
+                -- Keep the current value displayed
+                transparency_input.text = tostring(transparency_input.text)
+            end,
         }
     end
 end)
+
+transparency_container:connect_signal("mouse::enter", function(self) self.bg = m.surface1 end)
+transparency_container:connect_signal("mouse::leave", function(self) self.bg = m.surface0 end)
 
 -- Initialize transparency from config
 local function init_transparency()
@@ -815,8 +835,7 @@ add_to_tab(content_display, {
     end)(),
     (function()
         local row = make_row(m.glyph.settings_display_transparency or m.glyph.transparent or "", "Transparent", m.font_popup)
-        row.right_slot:add(transparency_input)
-        row.right_slot:add(transparency_text)
+        row.right_slot:add(transparency_container)
         return row
     end)(),
     (function()
