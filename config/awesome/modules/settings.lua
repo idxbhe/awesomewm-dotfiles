@@ -1080,6 +1080,10 @@ set_popup:connect_signal("button::press", function(_, _, _, _, _, find_result)
             end
         end
         -- Click was outside transparency input - auto-apply
+        if transparency_keygrabber then
+            awful.keygrabber.stop(transparency_keygrabber)
+            transparency_keygrabber = nil
+        end
         local val = tonumber(transparency_input.text)
         if val then apply_transparency(val) else transparency_input.text = "100" end
         transparency_editing = false
