@@ -617,17 +617,22 @@ local function apply_transparency(val)
     transparency_input.text = tostring(val)
 end
 
+-- Transparency input state
+local transparency_editing = false
+
 transparency_container:connect_signal("button::press", function(self, _, _, button)
-    if button == 1 then
+    if button == 1 and not transparency_editing then
+        transparency_editing = true
         -- Store current value
         local current_val = transparency_input.text
         -- Show prompt in the textbox
         transparency_input.text = ""
-        transparency_input.markup = '<span font="' .. m.font .. '" color="' .. m.overlay1 .. '">1-100</span>'
+        transparency_input.markup = '<span font="' .. m.font .. '" color="' .. m.surface0 .. '">1-100</span>'
         
         -- Use keygrabber for input
         local input_str = ""
-        awful.keygrabber.run(function(_, key, event)
+        local grabber
+        grabber = awful.keygrabber.run(function(_, key, event)
             if event ~= "press" then return end
             
             if key:match("^%d$") then
@@ -643,11 +648,13 @@ transparency_container:connect_signal("button::press", function(self, _, _, butt
                 -- Confirm
                 local val = tonumber(input_str)
                 if val then apply_transparency(val) else transparency_input.text = current_val end
-                awful.keygrabber.stop()
+                awful.keygrabber.stop(grabber)
+                transparency_editing = false
             elseif key == "Escape" then
                 -- Cancel
                 transparency_input.text = current_val
-                awful.keygrabber.stop()
+                awful.keygrabber.stop(grabber)
+                transparency_editing = false
             end
         end)
     end
