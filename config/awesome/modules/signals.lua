@@ -373,7 +373,7 @@ client.connect_signal("manage", function(c)
 end)
 
 -- {{{ Persist active tag per screen
-local tag_state_file = gears.filesystem.get_cache_dir() .. "/tag_state"
+local tag_state_file = require("modules.state").path("tag_state")
 
 -- Load saved tag states
 local saved_tags = {}

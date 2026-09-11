@@ -57,7 +57,7 @@ globalkeys = gears.table.join(
     awful.key({ modkey }, "o", function() awful.spawn("obsidian") end, {description = "open notes", group = "launcher"}),
     awful.key({ modkey, "Control" }, "r", function()
         -- Save current tag states before restart
-        local state_file = gears.filesystem.get_cache_dir() .. "/tag_state"
+        local state_file = require("modules.state").path("tag_state")
         local f = io.open(state_file, "w")
         if f then
             for _, s in ipairs(screen) do

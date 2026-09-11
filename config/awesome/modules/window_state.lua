@@ -13,7 +13,8 @@ local awful = m.awful
 
 local M = {}
 
-local state_file = gears.filesystem.get_cache_dir() .. "/window_state"
+local state = require("modules.state")
+local state_file = state.path("window_state")
 
 -- Format: class|xid|fx|fy|fw|fh|tx|ty|tw|th|last_mode   (xid 0 = class fallback)
 -- Legacy: class|fx|fy|fw|fh|tx|ty|tw|th|last_mode        (no xid column)

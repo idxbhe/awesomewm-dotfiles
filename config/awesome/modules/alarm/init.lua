@@ -10,7 +10,7 @@ local popup_registry = require("modules.popup_registry")
 local M = {}
 
 -- Alarm storage
-local alarms_file = gears.filesystem.get_cache_dir() .. "/alarms.json"
+local alarms_file = require("modules.state").path("alarms.json")
 local alarms = {}
 local alarm_timers = {}
 local active_ring_alarm = nil -- Track currently ringing alarm
@@ -146,7 +146,6 @@ end
 local function trigger_alarm(alarm)
     -- Prevent multiple triggers of the same alarm while it's still ringing
     if active_ring_alarm == alarm then
-        print("ALARM DEBUG: Skipping - alarm already ringing")
         return
     end
 
@@ -238,12 +237,9 @@ local function clear_timers()
 end
 
 local function schedule_alarms()
-    print("ALARM DEBUG: schedule_alarms() called, loading " .. #alarms .. " alarms")
     clear_timers()
 
     for _, alarm in ipairs(alarms) do
-        print(string.format("ALARM DEBUG: Processing alarm id=%d, type=%s, enabled=%s",
-            alarm.id, alarm.type, tostring(alarm.enabled)))
         if not alarm.enabled then goto continue end
 
         if alarm.type == "time" then
@@ -258,9 +254,6 @@ local function schedule_alarms()
                     local now = os.date("*t")
                     local secs_until = 60 - now.sec
 
-                    print(string.format("ALARM DEBUG: Creating timer for %02d:%02d, waiting %d seconds (now: %02d:%02d:%02d)",
-                        hour, min, secs_until, now.hour, now.min, now.sec))
-
                     local t = gears.timer({
                         timeout = secs_until,
                         single_shot = true,
@@ -272,12 +265,8 @@ local function schedule_alarms()
                             local now_wday = now.wday - 1 -- 0-6 (Sunday=0)
                             local now_time = string.format("%02d:%02d", now_hour, now_min)
 
-                            print(string.format("ALARM DEBUG: Timer fired at %02d:%02d:%02d, target: %02d:%02d, last_trigger: %s",
-                                now_hour, now_min, now.sec, hour, min, alarm.last_trigger_time or "none"))
-
                             -- Check if already triggered this minute
                             if alarm.last_trigger_time == now_time then
-                                print("ALARM DEBUG: Already triggered this minute, skipping")
                                 create_check_timer()
                                 return
                             end
@@ -297,7 +286,6 @@ local function schedule_alarms()
                                 end
 
                                 if should_trigger then
-                                    print("ALARM DEBUG: Triggering alarm")
                                     alarm.last_trigger_time = now_time
                                     trigger_alarm(alarm)
                                 end

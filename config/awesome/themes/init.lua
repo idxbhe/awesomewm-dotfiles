@@ -791,7 +791,7 @@ end
 -- Initialize on startup
 function M.init()
   -- Load saved preference
-  local state_file = gears.filesystem.get_cache_dir() .. "/theme_state"
+  local state_file = require("modules.state").path("theme_state")
   local f = io.open(state_file, "r")
   if f then
     local content = f:read("*a")
@@ -809,7 +809,7 @@ end
 
 -- Save theme state
 function M.save_state()
-  local state_file = gears.filesystem.get_cache_dir() .. "/theme_state"
+  local state_file = require("modules.state").path("theme_state")
   local f = io.open(state_file, "w")
   if f then
     f:write(M.current_theme .. " " .. M.current_accent)

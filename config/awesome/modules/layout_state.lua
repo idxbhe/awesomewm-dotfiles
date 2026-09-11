@@ -11,7 +11,8 @@ local awful = m.awful
 
 local M = {}
 
-local state_file = gears.filesystem.get_cache_dir() .. "/layout_state"
+local state = require("modules.state")
+local state_file = state.path("layout_state")
 local saved = {}
 local startup = true
 

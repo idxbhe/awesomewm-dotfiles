@@ -11,7 +11,8 @@ local awful = m.awful
 
 local M = {}
 
-local state_file = gears.filesystem.get_cache_dir() .. "/session_state"
+local state = require("modules.state")
+local state_file = state.path("session_state")
 local volume    -- 0..100
 local muted     -- boolean
 local brightness -- 0..100
@@ -24,7 +25,7 @@ local function load()
     local f = io.open(state_file, "r")
     if not f then return end
     for line in f:lines() do
-        local k, v = line:match("^(%w+)=(-?%d+)$")
+        local k, v = line:match("^([%w_]+)=(-?%d+)$")
         if v then
             v = tonumber(v)
             if k == "volume" and v >= 0 then

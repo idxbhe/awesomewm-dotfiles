@@ -13,7 +13,7 @@ local M = {}
 local MAX_ITEMS = 50
 local MAX_ITEM_SIZE = 10000  -- Limit individual item size to 10KB
 local POLL_INTERVAL = 2
-local clipboard_file = gears.filesystem.get_cache_dir() .. "/clipboard.json"
+local clipboard_file = require("modules.state").path("clipboard.json")
 
 -- State
 local clipboard_history = {}

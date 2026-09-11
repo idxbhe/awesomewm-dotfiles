@@ -690,7 +690,7 @@ end
 local BORDER_RADIUS_MIN, BORDER_RADIUS_MAX = 0, 30
 local BORDER_WIDTH_MIN, BORDER_WIDTH_MAX = 0, 8
 
-local display_state_file = m.gears.filesystem.get_cache_dir() .. "/display_state"
+local display_state_file = require("modules.state").path("display_state")
 
 -- Current resolved values (defaults match the theme tokens).
 local border_radius_value = m.border_radius or 6
@@ -700,7 +700,7 @@ local function load_display_state()
     local f = io.open(display_state_file, "r")
     if not f then return end
     for line in f:lines() do
-        local k, v = line:match("^(%w+)%s*=%s*(%d+)$")
+        local k, v = line:match("^([%w_]+)%s*=%s*(%d+)$")
         if v then
             v = tonumber(v)
             if k == "border_radius" then
