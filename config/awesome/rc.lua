@@ -159,6 +159,21 @@ end)
 -- Autostart picom compositor
 awful.spawn.with_shell("picom -b --config ~/.config/picom/picom.conf")
 
+-- System tray (single instance; shown on the primary screen's bar).
+-- The tray widget collapses to zero width when empty; hide the wrapping pill
+-- too so no empty box lingers on the bar.
+local systray = wibox.widget.systray()
+systray:set_horizontal(true)
+systray:set_base_size(16)
+systray:set_screen("primary")
+
+local systray_pill = widgets.pill_widget(systray)
+local function refresh_systray()
+    systray_pill.visible = (awesome.systray() or 0) > 0
+end
+awesome.connect_signal("systray::update", refresh_systray)
+refresh_systray()
+
 -- Tags
 awful.screen.connect_for_each_screen(function(s)
     awful.tag({ "1", "2", "3", "4", "5", "6", "7" }, s, awful.layout.layouts[1])
@@ -187,6 +202,26 @@ awful.screen.connect_for_each_screen(function(s)
         bg = m.wibar_bg,
         stretch = true,
     })
+
+    -- Right cluster. The systray is appended last: a hidden first/last child
+    -- still leaves one spacing gap in a fixed layout, but a trailing one is at
+    -- the screen edge and therefore invisible.
+    local right_items = {
+        layout = wibox.layout.fixed.horizontal,
+        spacing = m.pill_spacing,
+    }
+    right_items[#right_items + 1] = widgets.pill_widget(widgets.cpu_widget)
+    right_items[#right_items + 1] = widgets.pill_widget(widgets.ram_widget)
+    right_items[#right_items + 1] = widgets.pill_widget(widgets.net_widget)
+    right_items[#right_items + 1] = widgets.pill_widget(volume.vol_widget)
+    right_items[#right_items + 1] = widgets.pill_widget(tools.tools_widget)
+    right_items[#right_items + 1] = widgets.pill_widget(settings.set_widget)
+    right_items[#right_items + 1] = widgets.pill_widget(widgets.clock_widget)
+    right_items[#right_items + 1] = widgets.pill_widget(widgets.layout_widget)
+    right_items[#right_items + 1] = widgets.pill_widget(power.power_widget)
+    if s == screen.primary then
+        right_items[#right_items + 1] = systray_pill
+    end
 
     s.mywibox:setup {
         layout = wibox.layout.align.horizontal,
@@ -218,19 +253,7 @@ awful.screen.connect_for_each_screen(function(s)
             valign = "center",
         },
         { -- Right
-            {
-                layout = wibox.layout.fixed.horizontal,
-                spacing = m.pill_spacing,
-                widgets.pill_widget(widgets.cpu_widget),
-                widgets.pill_widget(widgets.ram_widget),
-                widgets.pill_widget(widgets.net_widget),
-                widgets.pill_widget(volume.vol_widget),
-                widgets.pill_widget(tools.tools_widget),
-                widgets.pill_widget(settings.set_widget),
-                widgets.pill_widget(widgets.clock_widget),
-                widgets.pill_widget(widgets.layout_widget),
-                widgets.pill_widget(power.power_widget),
-            },
+            right_items,
             widget = wibox.container.place,
             valign = "center",
         },

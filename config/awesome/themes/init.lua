@@ -79,7 +79,10 @@ function M.apply_to_beautiful()
   theme.bg_focus      = t.bg_subtle
   theme.bg_urgent     = t.error
   theme.bg_minimize   = t.bg_subtle
-  theme.bg_systray    = t.bg
+  -- Systray is a non-ARGB X window, so its background must be an opaque color
+  -- that matches the surrounding pill (transparent would render black).
+  theme.bg_systray    = t.pill_bg
+  theme.systray_icon_spacing = 4
 
   theme.fg_normal     = t.fg
   theme.fg_focus      = t.fg
