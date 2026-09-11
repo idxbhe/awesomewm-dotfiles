@@ -395,7 +395,10 @@ client.connect_signal("request::titlebars", function(c)
         { awful.titlebar.widget.iconwidget(c), buttons = buttons, layout = wibox.layout.fixed.horizontal },
         { { { align = "center", widget = awful.titlebar.widget.titlewidget(c), font = "Maple Mono NF Bold 9" }, buttons = buttons, layout = wibox.layout.flex.horizontal }, align = "center", valign = "center", widget = wibox.container.place },
         { tbbtn_icon(ic .. "minimize-normal.svg", ic .. "minimize-hover.svg", ic .. "nofocus.svg",
-            function(c) c.minimized = true end, 16),
+            function(c)
+                print("MINIMIZE BUTTON CLICKED")
+                c.minimized = true
+            end, 16),
           tbbtn_icon(ic .. "maximize-normal.svg", ic .. "maximize-hover.svg", ic .. "nofocus.svg",
             function(c) c.maximized = not c.maximized; c:raise() end, 16),
           tbbtn_icon(ic .. "close-normal.svg", ic .. "close-hover.svg", ic .. "nofocus.svg",
