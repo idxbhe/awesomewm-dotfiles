@@ -231,14 +231,14 @@ wifi_btn:buttons(gears.table.join(
         local new_state = not wifi_btn._enabled
         wifi_btn._enabled = new_state
         if new_state then
-            awful.spawn("nmcli radio wifi on")
+            awful.spawn("nmcli radio wifi on", false)
             wifi_row.label_widget.markup = "<b>Wi-Fi</b>"
             wifi_row.icon_widget:set_text(m.glyph.wifi_on)
             set_wifi_visible(true)
             awful.spawn.easy_async("nmcli device wifi rescan", function() refresh_wifi() end)
             wifi_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
         else
-            awful.spawn("nmcli radio wifi off")
+            awful.spawn("nmcli radio wifi off", false)
             wifi_row.label_widget.markup = "<span foreground='#a6adc8'>Wi-Fi</span>"
             wifi_row.icon_widget:set_text(m.glyph.wifi_off)
             set_wifi_visible(false)
@@ -443,12 +443,12 @@ bt_btn:buttons(gears.table.join(
         local new_state = not bt_btn._enabled
         bt_btn._enabled = new_state
         if new_state then
-            awful.spawn("rfkill unblock bluetooth")
+            awful.spawn("rfkill unblock bluetooth", false)
             bt_row.label_widget.markup = "<b>Bluetooth</b>"
             bt_row.icon_widget:set_text(m.glyph.bt_on)
             bt_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
         else
-            awful.spawn("rfkill block bluetooth")
+            awful.spawn("rfkill block bluetooth", false)
             bt_row.label_widget.markup = "<span foreground='#a6adc8'>Bluetooth</span>"
             bt_row.icon_widget:set_text(m.glyph.bt_off)
             bt_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
@@ -477,7 +477,7 @@ ap_btn:buttons(gears.table.join(
         local new_state = not ap_btn._enabled
         ap_btn._enabled = new_state
         if new_state then
-            awful.spawn("rfkill block all")
+            awful.spawn("rfkill block all", false)
             ap_btn.icon.markup = string.format('<span font="icons 17" color="%s">%s</span>', m.blue, m.glyph.toggle_on)
             ap_row.label_widget.markup = "<span foreground='#a6adc8'>Airplane Mode</span>"
             ap_row.icon_widget:set_text(m.glyph.airplane_on)
@@ -485,7 +485,7 @@ ap_btn:buttons(gears.table.join(
             bt_btn._enabled = false
             bt_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
         else
-            awful.spawn("rfkill unblock all")
+            awful.spawn("rfkill unblock all", false)
             ap_btn.icon.markup = string.format('<span font="icons 17">%s</span>', m.glyph.toggle_off)
             ap_row.label_widget.markup = "<b>Airplane Mode</b>"
             ap_row.icon_widget:set_text(m.glyph.airplane_off)
@@ -542,7 +542,7 @@ local function write_picom_value(key, value)
     end
     f = io.open(picom_conf_path, "w")
     if f then f:write(content); f:close() end
-    awful.spawn("killall picom 2>/dev/null; sleep 0.2; picom --config " .. picom_conf_path .. " --daemon 2>/dev/null")
+    awful.spawn("killall picom 2>/dev/null; sleep 0.2; picom --config " .. picom_conf_path .. " --daemon 2>/dev/null", false)
 end
 
 -- Helper: write alacritty opacity

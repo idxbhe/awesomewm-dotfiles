@@ -131,6 +131,12 @@ function M.apply_to_beautiful()
   theme.wibar_border_width  = 0
   theme.wibar_border_color  = t.border
   theme.wibar_shape         = gears.shape.rectangle
+  theme.wibar_cursor        = "left_ptr"
+
+  -- Never show the busy "watch" cursor for spawns (it lingers for the full
+  -- 20s startup-notification timeout on shell utilities and is inherited by
+  -- wiboxes such as the titlebar)
+  theme.enable_spawn_cursor = false
 
   -- Tooltip
   theme.tooltip_bg          = t.tooltip_bg
