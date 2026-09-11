@@ -395,6 +395,7 @@ client.connect_signal("request::titlebars", function(c)
         { { { align = "center", widget = awful.titlebar.widget.titlewidget(c), font = "Maple Mono NF Bold 9" }, buttons = buttons, layout = wibox.layout.flex.horizontal }, align = "center", valign = "center", widget = wibox.container.place },
         { tbbtn_icon(ic .. "minimize-normal.svg", ic .. "minimize-hover.svg", ic .. "nofocus.svg",
             function(c)
+                print("MINIMIZE BUTTON CLICKED")
                 c.minimized = true
             end, 16),
           tbbtn_icon(ic .. "maximize-normal.svg", ic .. "maximize-hover.svg", ic .. "nofocus.svg",
