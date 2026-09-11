@@ -119,6 +119,5 @@ end)
 
 M.find_layout = find_layout
 M.restore = restore
-M.flush = save_timer
 
 return M
