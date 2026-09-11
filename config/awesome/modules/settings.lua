@@ -1091,14 +1091,16 @@ set_popup:connect_signal("button::press", function(_, _, _, _, _, find_result)
     end
 end)
 
--- Stop keygrabber when popup is hidden (clicked outside popup entirely)
+-- Stop keygrabber when popup is hidden (clicked outside popup entirely) - apply current value
 set_popup:connect_signal("property::visible", function()
     if not set_popup.visible and transparency_keygrabber then
         awful.keygrabber.stop(transparency_keygrabber)
         transparency_keygrabber = nil
+        -- Apply current value before closing
+        local val = tonumber(transparency_input.text)
+        if val then apply_transparency(val) else transparency_input.text = "100" end
         transparency_editing = false
         transparency_container.bg = m.surface0
-        transparency_input.text = "100"
     end
 end)
 
