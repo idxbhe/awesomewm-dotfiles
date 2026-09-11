@@ -19,6 +19,7 @@ local calendar = require("modules.calendar")
 local tools = require("modules.tools")
 local power = require("modules.power")
 local signals = require("modules.signals")
+require("modules.layout_manager")
 local theme_switcher = require("modules.theme_switcher")
 theme_switcher.init()
 

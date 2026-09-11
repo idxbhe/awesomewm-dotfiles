@@ -8,6 +8,7 @@ local gears = m.gears
 local awful = m.awful
 local wibox = m.wibox
 local beautiful = m.beautiful
+local window_state = require("modules.window_state")
 
 -- {{{ Papirus icon lookup and application
 -- Build a WM_CLASS -> Icon mapping from .desktop files
@@ -174,155 +175,9 @@ client.connect_signal("property::icon", function(c)
     end)
 end)
 
--- {{{ Remember window state (position, size) per app class, separately for floating and tiled
-local state_file = gears.filesystem.get_cache_dir() .. "/window_state"
-
--- Load saved states (format: class|fx|fy|fw|fh|tx|ty|tw|th|last_mode)
-local window_states = {}
-do
-    local f = io.open(state_file, "r")
-    if f then
-        for line in f:lines() do
-            local class, fx, fy, fw, fh, tx, ty, tw, th, last_mode =
-                line:match("^(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.-)|(.+)$")
-            if class and fx then
-                window_states[class] = {
-                    floating = {
-                        x = tonumber(fx) ~= -999 and tonumber(fx) or nil,
-                        y = tonumber(fy) ~= -999 and tonumber(fy) or nil,
-                        width = tonumber(fw) ~= -999 and tonumber(fw) or nil,
-                        height = tonumber(fh) ~= -999 and tonumber(fh) or nil,
-                    },
-                    tiled = {
-                        x = tonumber(tx) ~= -999 and tonumber(tx) or nil,
-                        y = tonumber(ty) ~= -999 and tonumber(ty) or nil,
-                        width = tonumber(tw) ~= -999 and tonumber(tw) or nil,
-                        height = tonumber(th) ~= -999 and tonumber(th) or nil,
-                    },
-                    last_mode = last_mode or "tiled",
-                }
-            end
-        end
-        f:close()
-    end
-end
-
-local function save_window_states()
-    local f = io.open(state_file, "w")
-    if not f then return end
-    for class, s in pairs(window_states) do
-        local fl = s.floating or {}
-        local ti = s.tiled or {}
-        f:write(string.format("%s|%d|%d|%d|%d|%d|%d|%d|%d|%s\n",
-            class,
-            fl.x and math.floor(fl.x) or -999,
-            fl.y and math.floor(fl.y) or -999,
-            fl.width and math.floor(fl.width) or -999,
-            fl.height and math.floor(fl.height) or -999,
-            ti.x and math.floor(ti.x) or -999,
-            ti.y and math.floor(ti.y) or -999,
-            ti.width and math.floor(ti.width) or -999,
-            ti.height and math.floor(ti.height) or -999,
-            s.last_mode or "tiled"))
-    end
-    f:close()
-end
-
--- Debounced save (avoid writing on every pixel of resize)
-local save_timer = gears.timer {
-    timeout = 2,
-    single_shot = true,
-    callback = save_window_states,
-}
-
--- Flag to prevent recording during startup
-local startup_phase = true
-
-local function record_window_state(c)
-    if not (c.class and c.valid) then return end
-
-    -- Skip recording fullscreen windows
-    if c.fullscreen then return end
-
-    local class = c.class
-    if not window_states[class] then
-        window_states[class] = { floating = {}, tiled = {}, last_mode = "tiled" }
-    end
-
-    local geo = c:geometry()
-    if c.floating then
-        window_states[class].floating = {
-            x = geo.x, y = geo.y,
-            width = geo.width, height = geo.height,
-        }
-        window_states[class].last_mode = "floating"
-    elseif not c.maximized then
-        window_states[class].tiled = {
-            x = geo.x, y = geo.y,
-            width = geo.width, height = geo.height,
-        }
-        window_states[class].last_mode = "tiled"
-    end
-    save_timer:again()
-end
-
--- Restore window state with proper handling
-client.connect_signal("manage", function(c)
-    -- Skip restoration during startup to let windows position themselves
-    if awesome.startup then return end
-
-    local state = c.class and window_states[c.class]
-    if not state then return end
-
-    -- Delay restoration slightly to ensure window is ready
-    gears.timer.start_new(0.1, function()
-        if not c.valid then return false end
-
-        -- Restore based on last saved state
-        if state.floating and state.floating.width and state.floating.width > 0 then
-            -- Restore floating state
-            c.floating = true
-            pcall(function()
-                c.x = state.floating.x
-                c.y = state.floating.y
-                c.width = state.floating.width
-                c.height = state.floating.height
-            end)
-        else
-            -- Restore tiled state
-            c.floating = false
-            pcall(function()
-                c.x = state.tiled.x
-                c.y = state.tiled.y
-                c.width = state.tiled.width
-                c.height = state.tiled.height
-            end)
-        end
-
-        return false
-    end)
-end)
-
--- Start recording after startup is complete
-client.connect_signal("property::geometry", function(c)
-    if not startup_phase then record_window_state(c) end
-end)
-client.connect_signal("property::floating", function(c)
-    if not startup_phase then record_window_state(c) end
-end)
-client.connect_signal("property::maximized", function(c)
-    if not startup_phase then record_window_state(c) end
-end)
-client.connect_signal("property::fullscreen", function(c)
-    if not startup_phase then record_window_state(c) end
-end)
-client.connect_signal("unmanage", function(c) record_window_state(c) end)
-
--- Mark startup as complete after a short delay
-gears.timer.start_new(3, function()
-    startup_phase = false
-    return false
-end)
+-- {{{ Window state (per-window floating/tiled geometry) now lives in
+-- modules/window_state.lua, required at the top of this file. It handles
+-- restore, recording and persistence, including across awesome restart.
 -- }}}
 
 client.connect_signal("request::titlebars", function(c)
@@ -408,8 +263,8 @@ client.connect_signal("request::titlebars", function(c)
     }
     
     -- Hide titlebar if globally disabled
-    if hide_tb and c.titlebar then
-        c.titlebar.visible = false
+    if hide_tb then
+        awful.titlebar.hide(c)
     end
 end)
 
@@ -473,17 +328,11 @@ client.connect_signal("property::maximized", function(c)
     end
 end)
 
--- Also ensure titlebars on manage
+-- Ensure new clients respect the global titlebar visibility flag
 client.connect_signal("manage", function(c)
     gears.timer.start_new(0.1, function()
-        if c.valid then
-            if _G._titlebar_hidden then
-                local tb = awful.titlebar(c, { size = 22 })
-                if tb then tb.visible = false end
-            else
-                local tb = awful.titlebar(c, { size = 22 })
-                if tb then tb.visible = true end
-            end
+        if c.valid and _G._titlebar_hidden then
+            awful.titlebar.hide(c)
         end
         return false
     end)
@@ -565,8 +414,11 @@ end
 
 -- Save before restart/quit
 awesome.connect_signal("exit", function()
-    print("[awesome] Saving tag states on exit")
+    print("[awesome] Saving state on exit")
     record_current_tags()
+    -- Flush any debounced window-state write before the process dies, then
+    -- stop recording so teardown geometry does not overwrite it
+    window_state.flush()
 end)
 
 -- Also save when switching between screens (in case tag changed)
