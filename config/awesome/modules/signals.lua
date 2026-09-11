@@ -400,7 +400,10 @@ client.connect_signal("request::titlebars", function(c)
                 c.minimized = true
             end, 16),
           tbbtn_icon(ic .. "maximize-normal.svg", ic .. "maximize-hover.svg", ic .. "nofocus.svg",
-            function(c) c.maximized = not c.maximized; c:raise() end, 16),
+                      function(c)
+                          print("MAXIMIZE BUTTON CLICKED")
+                          c.maximized = not c.maximized; c:raise()
+                      end, 16),
           tbbtn_icon(ic .. "close-normal.svg", ic .. "close-hover.svg", ic .. "nofocus.svg",
             function(c) c:kill() end, 16),
           layout = wibox.layout.fixed.horizontal() },
