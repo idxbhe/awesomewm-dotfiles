@@ -22,6 +22,7 @@ local tooltips = require("modules.tooltips")
 local signals = require("modules.signals")
 require("modules.layout_manager")
 require("modules.layout_menu")
+require("modules.layout_state")
 local theme_switcher = require("modules.theme_switcher")
 theme_switcher.init()
 

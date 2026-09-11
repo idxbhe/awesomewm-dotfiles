@@ -7,6 +7,7 @@ local awful = m.awful
 local wibox = m.wibox
 local beautiful = m.beautiful
 local popup_registry = require("modules.popup_registry")
+local session_state = require("modules.session_state")
 
 local M = {}
 
@@ -197,6 +198,7 @@ bri_slider:connect_signal("property::value", function(self)
     if val then
         bri_text.markup = string.format('<span font="%s">%d%%</span>', m.font, math.floor(val))
         awful.spawn("brightnessctl set " .. math.floor(val) .. "%", false)
+        session_state.save_brightness(val)
     end
 end)
 
@@ -699,11 +701,17 @@ local function load_display_state()
     if not f then return end
     for line in f:lines() do
         local k, v = line:match("^(%w+)%s*=%s*(%d+)$")
-        v = tonumber(v)
-        if k == "border_radius" and v then
-            border_radius_value = math.max(BORDER_RADIUS_MIN, math.min(BORDER_RADIUS_MAX, v))
-        elseif k == "border_width" and v then
-            border_width_value = math.max(BORDER_WIDTH_MIN, math.min(BORDER_WIDTH_MAX, v))
+        if v then
+            v = tonumber(v)
+            if k == "border_radius" then
+                border_radius_value = math.max(BORDER_RADIUS_MIN, math.min(BORDER_RADIUS_MAX, v))
+            elseif k == "border_width" then
+                border_width_value = math.max(BORDER_WIDTH_MIN, math.min(BORDER_WIDTH_MAX, v))
+            elseif k == "titlebar_hidden" then
+                -- Restored before client signals are wired, so new/restored
+                -- windows honor it from the first titlebar creation.
+                _G._titlebar_hidden = (v == 1)
+            end
         end
     end
     f:close()
@@ -714,6 +722,7 @@ local function save_display_state()
     if not f then return end
     f:write("border_radius=" .. border_radius_value .. "\n")
     f:write("border_width=" .. border_width_value .. "\n")
+    f:write("titlebar_hidden=" .. (_G._titlebar_hidden and 1 or 0) .. "\n")
     f:close()
 end
 
@@ -922,6 +931,7 @@ local function toggle_titlebar(on)
             end
         end
     end
+    save_display_state()
 end
 
 local titlebar_btn, titlebar_get_state, titlebar_set_state = make_toggle_button(

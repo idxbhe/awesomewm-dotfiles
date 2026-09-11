@@ -6,6 +6,7 @@ local gears = m.gears
 local awful = m.awful
 local wibox = m.wibox
 local popup_registry = require("modules.popup_registry")
+local session_state = require("modules.session_state")
 
 local M = {}
 
@@ -89,6 +90,7 @@ vol_slider:connect_signal("property::value", function(self)
     if val then
         vol_text.markup = math.floor(val) .. "%"
         awful.spawn({"pamixer", "--set-volume", math.floor(val)})
+        session_state.save_volume(val)
     end
 end)
 
@@ -142,11 +144,13 @@ vol_widget:buttons(gears.table.join(
         local new_vol = get_current_vol() + 5
         awful.spawn({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "+5%"})
         update_bar_vol(new_vol)
+        session_state.save_volume(new_vol)
     end),
     awful.button({}, 5, function()
         local new_vol = get_current_vol() - 5
         awful.spawn({"pactl", "set-sink-volume", "@DEFAULT_SINK@", "-5%"})
         update_bar_vol(new_vol)
+        session_state.save_volume(new_vol)
     end),
     awful.button({}, 3, function() awful.spawn({"pactl", "set-sink-mute", "@DEFAULT_SINK@", "toggle"}) end)
 ))
@@ -160,17 +164,26 @@ awful.spawn.easy_async_with_shell("pamixer --get-volume", function(stdout)
     update_vol_icon(vol)
 end)
 
--- Use timer with pamixer --get-volume (still spawns but less overhead than watch)
+-- Use timer with pamixer (still spawns but less overhead than watch).
+-- Also snapshots volume/mute so they survive a restart/reboot (save_* only
+-- writes when the value actually changed).
 gears.timer {
     timeout = 1,
     call_now = false,
     autostart = true,
     callback = function()
-        awful.spawn.easy_async("pamixer --get-volume", function(stdout)
-            local vol = math.floor(tonumber(stdout) or 0)
-            vol_slider.value = vol
-            vol_text_tb.markup = string.format("%d%%", vol)
-            update_vol_icon(vol)
+        awful.spawn.easy_async_with_shell("pamixer --get-volume; pamixer --get-mute", function(stdout)
+            local vol, mute = stdout:match("(%d+)%s*\n(%a+)")
+            if vol then
+                vol = math.floor(tonumber(vol) or 0)
+                vol_slider.value = vol
+                vol_text_tb.markup = string.format("%d%%", vol)
+                update_vol_icon(vol)
+                session_state.save_volume(vol)
+            end
+            if mute then
+                session_state.save_mute(mute == "true")
+            end
         end)
     end,
 }

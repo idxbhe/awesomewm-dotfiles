@@ -57,6 +57,9 @@ function M.load_theme(name, accent_name)
   -- Emit signal for widgets to refresh
   awesome.emit_signal("theme::changed")
 
+  -- Persist immediately (not only on exit) so a crash/restart keeps the choice.
+  if M.save_state then M.save_state() end
+
   print("[theme] Loaded: " .. name .. " with accent " .. M.current_accent)
   return true
 end
