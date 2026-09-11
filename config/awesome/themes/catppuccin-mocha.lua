@@ -216,6 +216,8 @@ local theme = {
     settings_themes_theme = "\u{f5fe}",
     settings_themes_accent = "\u{fab3}",
     settings_display_titlebar = "\u{fc87}",
+    settings_display_border = "\u{fb99}",
+    settings_display_corner = "\u{f4a1}",
   },
 
   -- Titlebar button icons (custom SVGs)

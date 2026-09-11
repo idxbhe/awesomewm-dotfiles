@@ -130,12 +130,9 @@ end
 
 -- Signal function to execute when a new client appears.
 client.connect_signal("manage", function(c)
-    -- Apply rounded corners using theme border_radius
-    if beautiful.border_radius then
-        c.shape = function(cr, w, h)
-            gears.shape.rounded_rect(cr, w, h, beautiful.border_radius)
-        end
-    end
+    -- NOTE: corner rounding is owned by the compositor (picom corner-radius),
+    -- not by an Awesome c.shape clip. Doing both double-rounds and fights with
+    -- the shadow. Border width stays a WM concern (client.border_width).
 
     -- Apply Papirus icon immediately (retry logic handles apps that overwrite it)
     if c.valid then

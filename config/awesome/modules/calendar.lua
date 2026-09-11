@@ -257,54 +257,11 @@ function M.setup_clock_click(clock_widget)
 end
 
 function M.setup_clock_tooltip(clock_widget)
-    local tooltip_text_widget = wibox.widget.textbox()
-    tooltip_text_widget.font = m.font_popup
-    tooltip_text_widget.align = "center"
-    tooltip_text_widget.valign = "center"
-    tooltip_text_widget.markup = '<span foreground="#cdd6f4">Sunday, 31 August 2025</span>'
-
-    local clock_tooltip_popup = awful.popup {
-        widget = {
-            tooltip_text_widget,
-            margins = 8,
-            widget = wibox.container.margin,
-        },
-        bg = "#1e1e2eee",
-        fg = "#cdd6f4",
-        border_width = 1,
-        border_color = "#313244",
-        shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
-        ontop = true,
-        visible = false,
-        type = "tooltip",
-    }
-
-    clock_widget:connect_signal("mouse::enter", function()
-        tooltip_text_widget.markup = '<span foreground="#cdd6f4">' .. os.date("%A, %d %B %Y") .. '</span>'
-        popup_registry.show_tooltip(clock_tooltip_popup)
-
-        -- Position tooltip same as calendar popup (right side, below wibar)
-        local s = awful.screen.focused().geometry
-        clock_tooltip_popup.x = s.x + s.width - 275
-        clock_tooltip_popup.y = s.y + 30
-    end)
-
-    -- Reuse a single timer for hide check instead of creating new ones
-    local tooltip_hide_timer = gears.timer {
-        timeout = 0.1,
-        single_shot = true,
-        callback = function()
-            local mouse_x, mouse_y = mouse.coords().x, mouse.coords().y
-            local popup_geo = clock_tooltip_popup:geometry()
-            if mouse_x < popup_geo.x or mouse_x > popup_geo.x + popup_geo.width or
-               mouse_y < popup_geo.y or mouse_y > popup_geo.y + popup_geo.height then
-                popup_registry.hide_tooltip(clock_tooltip_popup)
-            end
-        end,
-    }
-
-    clock_widget:connect_signal("mouse::leave", function()
-        tooltip_hide_timer:again()
+    -- Reuse the shared wibar tooltip style/positioning (near cursor, bottom
+    -- placement, theme colors) so the clock tooltip matches the other pills.
+    local tooltips = require("modules.tooltips")
+    tooltips.attach_dynamic(clock_widget, function()
+        return os.date("%A, %d %B %Y")
     end)
 end
 

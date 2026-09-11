@@ -5,6 +5,7 @@ local m = require("modules")
 local gears = m.gears
 local awful = m.awful
 local wibox = m.wibox
+local beautiful = m.beautiful
 local popup_registry = require("modules.popup_registry")
 
 local M = {}
@@ -679,6 +680,236 @@ local function init_transparency()
     end
 end
 
+-- ============================================================================
+-- Window border settings (radius + size)
+-- ============================================================================
+
+-- Hard limits so users can't pick absurd values.
+local BORDER_RADIUS_MIN, BORDER_RADIUS_MAX = 0, 30
+local BORDER_WIDTH_MIN, BORDER_WIDTH_MAX = 0, 8
+
+local display_state_file = m.gears.filesystem.get_cache_dir() .. "/display_state"
+
+-- Current resolved values (defaults match the theme tokens).
+local border_radius_value = m.border_radius or 6
+local border_width_value = m.border_width or 1
+
+local function load_display_state()
+    local f = io.open(display_state_file, "r")
+    if not f then return end
+    for line in f:lines() do
+        local k, v = line:match("^(%w+)%s*=%s*(%d+)$")
+        v = tonumber(v)
+        if k == "border_radius" and v then
+            border_radius_value = math.max(BORDER_RADIUS_MIN, math.min(BORDER_RADIUS_MAX, v))
+        elseif k == "border_width" and v then
+            border_width_value = math.max(BORDER_WIDTH_MIN, math.min(BORDER_WIDTH_MAX, v))
+        end
+    end
+    f:close()
+end
+
+local function save_display_state()
+    local f = io.open(display_state_file, "w")
+    if not f then return end
+    f:write("border_radius=" .. border_radius_value .. "\n")
+    f:write("border_width=" .. border_width_value .. "\n")
+    f:close()
+end
+
+-- Corner radius is owned by the compositor (picom). We only record the value
+-- and push it into picom.conf, then let picom redraw with smooth (anti-aliased)
+-- corners whose shadows follow the shape. Awesome does NOT set c.shape, so the
+-- two never fight.
+local function apply_border_radius(v, persist)
+    v = math.max(BORDER_RADIUS_MIN, math.min(BORDER_RADIUS_MAX, math.floor(v)))
+    border_radius_value = v
+    m.border_radius = v
+    write_picom_value("corner-radius", tostring(v))
+    if persist then save_display_state() end
+end
+
+local function apply_border_width(v, persist)
+    v = math.max(BORDER_WIDTH_MIN, math.min(BORDER_WIDTH_MAX, math.floor(v)))
+    border_width_value = v
+    m.border_width = v
+    beautiful.border_width = v
+    for _, c in ipairs(client.get()) do
+        if c.valid and c.type ~= "desktop" then
+            c.border_width = v
+        end
+    end
+    if persist then save_display_state() end
+end
+
+-- Reusable numeric input: click to edit, digits + BackSpace, Enter applies,
+-- Escape cancels. Values are clamped to [min, max] on apply.
+local number_editors = {}
+
+local function make_number_input(opts)
+    local min_v = opts.min or 0
+    local max_v = opts.max or 100
+    local suffix = opts.suffix or ""
+    local input_width = opts.width or 42
+    local value = math.max(min_v, math.min(max_v, opts.value or min_v))
+
+    local input = wibox.widget {
+        widget = wibox.widget.textbox,
+        text = tostring(value),
+        forced_width = input_width,
+        align = "center",
+        font = m.font,
+    }
+    local suffix_w = wibox.widget {
+        markup = string.format('<span font="%s">%s</span>', m.font, suffix),
+        forced_width = 20,
+        align = "center",
+        widget = wibox.widget.textbox,
+    }
+    local container = wibox.widget {
+        {
+            {
+                input,
+                suffix_w,
+                spacing = 2,
+                layout = wibox.layout.fixed.horizontal,
+            },
+            left = 4,
+            right = 4,
+            widget = wibox.container.margin,
+        },
+        bg = m.surface0,
+        shape = function(cr, w, h) gears.shape.rounded_rect(cr, w, h, 4) end,
+        widget = wibox.container.background,
+    }
+
+    local editor = { container = container, editing = false }
+
+    local function stop()
+        if editor.keygrabber then
+            awful.keygrabber.stop(editor.keygrabber)
+            editor.keygrabber = nil
+        end
+        editor.editing = false
+        container.bg = m.surface0
+    end
+
+    function editor.cancel()
+        input.text = tostring(value)
+        stop()
+    end
+
+    function editor.commit()
+        local v = tonumber(input.text)
+        if v then
+            v = math.max(min_v, math.min(max_v, math.floor(v)))
+            value = v
+            input.text = tostring(v)
+            if opts.on_apply then opts.on_apply(v) end
+        else
+            input.text = tostring(value)
+        end
+        stop()
+    end
+
+    container:connect_signal("button::press", function(_, _, _, button)
+        if button == 1 and not editor.editing then
+            editor.editing = true
+            input.text = ""
+            input.markup = string.format('<span font="%s" color="%s">%d-%d</span>',
+                m.font, m.surface0, min_v, max_v)
+            container.bg = m.surface1
+
+            local input_str = ""
+            editor.keygrabber = awful.keygrabber.run(function(_, key, event)
+                if event ~= "press" then return end
+                if key:match("^%d$") then
+                    if #input_str < #tostring(max_v) then
+                        input_str = input_str .. key
+                        input.text = input_str
+                    end
+                elseif key == "BackSpace" then
+                    input_str = input_str:sub(1, -2)
+                    input.text = input_str
+                elseif key == "Return" or key == "KP_Enter" then
+                    editor.commit()
+                elseif key == "Escape" then
+                    editor.cancel()
+                end
+            end)
+        end
+    end)
+
+    container:connect_signal("mouse::enter", function(self)
+        if not editor.editing then self.bg = m.surface1 end
+    end)
+    container:connect_signal("mouse::leave", function(self)
+        if not editor.editing then self.bg = m.surface0 end
+    end)
+
+    number_editors[#number_editors + 1] = editor
+    return editor
+end
+
+-- Commit any in-progress numeric edit except ones under the clicked widget.
+local function commit_number_editors(find_result)
+    for _, ed in ipairs(number_editors) do
+        if ed.editing then
+            local clicked = false
+            if find_result then
+                for _, w in ipairs(find_result) do
+                    if w == ed.container then clicked = true; break end
+                end
+            end
+            if not clicked then ed.commit() end
+        end
+    end
+end
+
+-- Border Radius input
+local border_radius_editor = make_number_input {
+    min = BORDER_RADIUS_MIN,
+    max = BORDER_RADIUS_MAX,
+    value = border_radius_value,
+    suffix = "px",
+    width = 42,
+    on_apply = function(v) apply_border_radius(v, true) end,
+}
+
+-- Border Size input
+local border_width_editor = make_number_input {
+    min = BORDER_WIDTH_MIN,
+    max = BORDER_WIDTH_MAX,
+    value = border_width_value,
+    suffix = "px",
+    width = 42,
+    on_apply = function(v) apply_border_width(v, true) end,
+}
+
+-- Load persisted values. Corner radius is authoritative in picom.conf; border
+-- size is a WM value kept in our own state.
+load_display_state()
+do
+    local pr = read_picom_value("corner-radius")
+    local n = pr and tonumber(pr)
+    if n then
+        border_radius_value = math.max(BORDER_RADIUS_MIN, math.min(BORDER_RADIUS_MAX, math.floor(n + 0.5)))
+    end
+end
+
+-- Apply the remembered border size on startup (Awesome-side only; no picom
+-- restart here -- picom already has the right corner-radius from its own conf).
+apply_border_width(border_width_value, false)
+
+-- After a theme switch only the WM border width needs re-applying. The corner
+-- radius stays whatever picom.conf says, independent of the theme.
+awesome.connect_signal("theme::changed", function()
+    apply_border_width(border_width_value, false)
+    for _, ed in ipairs(number_editors) do
+        if not ed.editing then ed.container.bg = m.surface0 end
+    end
+end)
+
 -- Titlebar toggle
 local function toggle_titlebar(on)
     _G._titlebar_hidden = not on
@@ -789,6 +1020,8 @@ local arrow_right = wibox.widget {
 }
 
 -- Page title (boxed like alarm tone selector)
+-- Width = popup inner width (280 - 2*12 margins) minus the two 28px arrows and
+-- the 2*8px spacing, so the nav row fits exactly and the title stays centered.
 local page_title = wibox.widget {
     {
         markup = "<b>" .. page_names[1] .. "</b>",
@@ -797,7 +1030,7 @@ local page_title = wibox.widget {
         valign = "center",
         widget = wibox.widget.textbox,
     },
-    forced_width = 200,
+    forced_width = 184,
     forced_height = 28,
     widget = wibox.container.background,
 }
@@ -881,8 +1114,18 @@ add_to_tab(content_display, {
         return row
     end)(),
     (function()
-        local row = make_row(m.glyph.settings_display_titlebar or "", "Titlebar", m.font_popup)
+        local row = make_row(m.glyph.settings_display_titlebar or "", "Titlebar", m.font_popup)
         row.right_slot:add(titlebar_btn)
+        return row
+    end)(),
+    (function()
+        local row = make_row(m.glyph.settings_display_corner or m.glyph.settings or "", "Border Radius", m.font_popup)
+        row.right_slot:add(border_radius_editor.container)
+        return row
+    end)(),
+    (function()
+        local row = make_row(m.glyph.settings_display_border or m.glyph.settings or "", "Border Size", m.font_popup)
+        row.right_slot:add(border_width_editor.container)
         return row
     end)(),
     layout = wibox.layout.fixed.vertical,
@@ -1070,15 +1313,17 @@ local set_popup = awful.popup {
 
 -- Auto-apply transparency when clicking outside transparency container
 set_popup:connect_signal("button::press", function(_, _, _, _, _, find_result)
-    if transparency_editing then
-        -- Check if click was on transparency_container
-        if find_result then
-            for _, w in ipairs(find_result) do
-                if w == transparency_container or w == transparency_input then
-                    return -- Click was on transparency input, let it handle
-                end
+    local on_transparency = false
+    if find_result then
+        for _, w in ipairs(find_result) do
+            if w == transparency_container or w == transparency_input then
+                on_transparency = true
+                break
             end
         end
+    end
+
+    if transparency_editing and not on_transparency then
         -- Click was outside transparency input - auto-apply
         if transparency_keygrabber then
             awful.keygrabber.stop(transparency_keygrabber)
@@ -1089,18 +1334,24 @@ set_popup:connect_signal("button::press", function(_, _, _, _, _, find_result)
         transparency_editing = false
         transparency_container.bg = m.surface0
     end
+
+    -- Auto-apply any in-progress border radius/size edit when clicking elsewhere
+    commit_number_editors(find_result)
 end)
 
 -- Stop keygrabber when popup is hidden (clicked outside popup entirely) - apply current value
 set_popup:connect_signal("property::visible", function()
-    if not set_popup.visible and transparency_keygrabber then
-        awful.keygrabber.stop(transparency_keygrabber)
-        transparency_keygrabber = nil
-        -- Apply current value before closing
-        local val = tonumber(transparency_input.text)
-        if val then apply_transparency(val) else transparency_input.text = "100" end
-        transparency_editing = false
-        transparency_container.bg = m.surface0
+    if not set_popup.visible then
+        if transparency_keygrabber then
+            awful.keygrabber.stop(transparency_keygrabber)
+            transparency_keygrabber = nil
+            -- Apply current value before closing
+            local val = tonumber(transparency_input.text)
+            if val then apply_transparency(val) else transparency_input.text = "100" end
+            transparency_editing = false
+            transparency_container.bg = m.surface0
+        end
+        commit_number_editors(nil)
     end
 end)
 
