@@ -467,10 +467,9 @@ show_alarm_ring_popup = function(alarm)
     active_ring_alarm = alarm
     local popup = create_alarm_ring_popup()
 
-    -- Position same as tools popup (top-right)
-    local s = awful.screen.focused()
-    popup.x = s.geometry.x + s.geometry.width - 380
-    popup.y = s.geometry.y + 30
+    -- Position anchored to tools widget
+    local tools = require("modules.tools")
+    popup_registry.anchor_to_widget(popup, tools.tools_widget)
 
     popup_registry.show_priority_popup(popup)
 end
@@ -1355,9 +1354,8 @@ function M.show_add_alarm()
         form_widgets.set_silent_after(silent_after_options[1].value)
     end
 
-    local s = awful.screen.focused().geometry
-    popup.x = s.x + s.width - 380
-    popup.y = s.y + 30
+    local tools = require("modules.tools")
+    popup_registry.anchor_to_widget(popup, tools.tools_widget)
     popup_registry.show_child_popup(popup)
 end
 
@@ -1408,9 +1406,8 @@ function M.edit_alarm(id)
         end
     end
 
-    local s = awful.screen.focused().geometry
-    popup.x = s.x + s.width - 380
-    popup.y = s.y + 30
+    local tools = require("modules.tools")
+    popup_registry.anchor_to_widget(popup, tools.tools_widget)
     popup_registry.show_child_popup(popup)
 end
 
@@ -1640,9 +1637,7 @@ local function create_list_popup()
             popup_registry.hide_popup(list_popup)
             local tools = require("modules.tools")
             popup_registry.show_popup(tools.tools_popup)
-            local s = awful.screen.focused().geometry
-            tools.tools_popup.x = s.x + s.width - 380
-            tools.tools_popup.y = s.y + 30
+            popup_registry.anchor_to_widget(tools.tools_popup, tools.tools_widget)
         end)
     ))
 
@@ -1700,9 +1695,8 @@ end
 
 function M.show_alarm_list()
     local popup = create_list_popup()
-    local s = awful.screen.focused().geometry
-    popup.x = s.x + s.width - 380
-    popup.y = s.y + 30
+    local tools = require("modules.tools")
+    popup_registry.anchor_to_widget(popup, tools.tools_widget)
     popup_registry.show_child_popup(popup)
 
     -- Auto-hide on mouse leave

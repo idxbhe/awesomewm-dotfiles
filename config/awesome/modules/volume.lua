@@ -135,9 +135,7 @@ vol_widget:buttons(gears.table.join(
             popup_registry.hide_popup(vol_popup)
         else
             popup_registry.show_popup(vol_popup)
-            local s = awful.screen.focused().geometry
-            vol_popup.x = s.x + s.width - 440
-            vol_popup.y = s.y + 30
+            popup_registry.anchor_to_widget(vol_popup, vol_widget)
         end
     end),
     awful.button({}, 4, function()

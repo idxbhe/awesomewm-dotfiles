@@ -298,9 +298,7 @@ local function create_clipboard_header()
             popup_registry.hide_popup(clipboard_popup)
             local tools = require("modules.tools")
             popup_registry.show_popup(tools.tools_popup)
-            local s = awful.screen.focused().geometry
-            tools.tools_popup.x = s.x + s.width - 380
-            tools.tools_popup.y = s.y + 30
+            popup_registry.anchor_to_widget(tools.tools_popup, tools.tools_widget)
         end)
     ))
 
@@ -462,11 +460,9 @@ function M.show_clipboard_popup(refresh_only)
     }
     clipboard_popup.ontop = true
 
+    local tools = require("modules.tools")
+    popup_registry.anchor_to_widget(clipboard_popup, tools.tools_widget)
     popup_registry.show_child_popup(clipboard_popup)
-
-    local s = awful.screen.focused().geometry
-    clipboard_popup.x = s.x + s.width - 380
-    clipboard_popup.y = s.y + 30
 end
 
 -- =============================================================================

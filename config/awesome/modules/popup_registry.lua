@@ -3,6 +3,8 @@
 -- Ensures only one popup/tooltip is visible at a time (password popup is exception)
 
 local gears = require("gears")
+local matrix = require("gears.matrix")
+local awful = require("awful")
 
 local M = {
     active_popup = nil,
@@ -224,6 +226,83 @@ end
 -- Disabled: popups now only close on click outside, not on mouse leave
 function M.should_auto_hide()
     return false
+end
+
+-- Get geometry of a widget inside a screen's wibox
+function M.get_widget_geometry(target_widget, target_screen)
+    if not target_widget then return nil end
+    target_screen = target_screen or awful.screen.focused()
+    local wb = target_screen and target_screen.mywibox
+    if not wb or not wb._drawable or not wb._drawable._widget_hierarchy then
+        return nil
+    end
+
+    local function search_hierarchy(h)
+        if not h then return nil end
+        if h:get_widget() == target_widget then
+            local width, height = h:get_size()
+            local m = h:get_matrix_to_device()
+            local x, y, w, h_dim = matrix.transform_rectangle(m, 0, 0, width, height)
+            return { x = x, y = y, width = w, height = h_dim }
+        end
+        for _, child in ipairs(h:get_children()) do
+            local found = search_hierarchy(child)
+            if found then return found end
+        end
+        return nil
+    end
+
+    local local_geo = search_hierarchy(wb._drawable._widget_hierarchy)
+    if not local_geo then return nil end
+
+    local wb_geo = wb:geometry()
+    return {
+        x = wb_geo.x + local_geo.x,
+        y = wb_geo.y + local_geo.y,
+        width = local_geo.width,
+        height = local_geo.height,
+        wibox_x = wb_geo.x,
+        wibox_y = wb_geo.y,
+        wibox_width = wb_geo.width,
+        wibox_height = wb_geo.height,
+        screen = target_screen,
+    }
+end
+
+-- Anchor a popup relative to a widget on the wibar
+function M.anchor_to_widget(popup, target_widget, options)
+    if not popup then return end
+    options = options or {}
+    local gap = options.gap or 4
+    local screen_margin = options.screen_margin or 8
+    local align = options.align or "center"
+    local s = awful.screen.focused()
+    local s_geo = s.geometry
+
+    if popup._apply_size_now then
+        popup:_apply_size_now(false)
+    end
+    local popup_w = popup.width or popup.minimum_width or 280
+
+    local geo = target_widget and M.get_widget_geometry(target_widget, s)
+    local wibar_h = (s.mywibox and s.mywibox.height) or 26
+    local wibar_y = (s.mywibox and s.mywibox.y) or s_geo.y
+
+    if geo then
+        popup.y = geo.wibox_y + geo.wibox_height + gap
+        local target_x
+        if align == "right" then
+            target_x = geo.x + geo.width - popup_w
+        elseif align == "left" then
+            target_x = geo.x
+        else
+            target_x = math.floor(geo.x + (geo.width / 2) - (popup_w / 2))
+        end
+        popup.x = math.max(s_geo.x + screen_margin, math.min(target_x, s_geo.x + s_geo.width - popup_w - screen_margin))
+    else
+        popup.y = wibar_y + wibar_h + gap
+        popup.x = math.max(s_geo.x + screen_margin, s_geo.x + s_geo.width - popup_w - screen_margin)
+    end
 end
 
 return M

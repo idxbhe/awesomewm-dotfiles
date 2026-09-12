@@ -54,9 +54,7 @@ local function make_power_option(icon, label, callback)
 end
 
 local function position_on_screen(popup)
-    local s = awful.screen.focused().geometry
-    popup.x = s.x + s.width - 285
-    popup.y = s.y + 30
+    popup_registry.anchor_to_widget(popup, M.power_widget)
 end
 
 -- Power popup

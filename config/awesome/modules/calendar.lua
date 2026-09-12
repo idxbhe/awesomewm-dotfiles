@@ -248,9 +248,7 @@ function M.setup_clock_click(clock_widget)
                 popup_registry.show_popup(calendar_popup)
                 cal_year, cal_month = tonumber(os.date("%Y")), tonumber(os.date("%m"))
                 render_calendar()
-                local s = awful.screen.focused().geometry
-                calendar_popup.x = s.x + s.width - 275
-                calendar_popup.y = s.y + 30
+                popup_registry.anchor_to_widget(calendar_popup, clock_widget)
             end
         end)
     ))

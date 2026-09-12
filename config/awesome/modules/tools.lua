@@ -151,9 +151,7 @@ function M.show_screenshot_menu()
             popup_registry.hide_popup(screenshot_popup)
             local tools = require("modules.tools")
             popup_registry.show_popup(tools.tools_popup)
-            local s = awful.screen.focused().geometry
-            tools.tools_popup.x = s.x + s.width - 380
-            tools.tools_popup.y = s.y + 30
+            popup_registry.anchor_to_widget(tools.tools_popup, tools.tools_widget)
         end)
     ))
 
@@ -223,9 +221,7 @@ function M.show_screenshot_menu()
     popup_registry.show_child_popup(screenshot_popup)
 
     -- Position same as tools popup
-    local s = awful.screen.focused().geometry
-    screenshot_popup.x = s.x + s.width - 380
-    screenshot_popup.y = s.y + 30
+    popup_registry.anchor_to_widget(screenshot_popup, M.tools_widget)
 end
 
 -- =============================================================================
@@ -441,9 +437,7 @@ M.tools_widget:buttons(gears.table.join(
 
         -- Jika tidak ada yang terbuka, buka tools popup
         popup_registry.show_popup(M.tools_popup)
-        local s = awful.screen.focused().geometry
-        M.tools_popup.x = s.x + s.width - 380
-        M.tools_popup.y = s.y + 30
+        popup_registry.anchor_to_widget(M.tools_popup, M.tools_widget)
     end)
 ))
 

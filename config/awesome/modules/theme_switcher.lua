@@ -129,9 +129,7 @@ function M.show_switcher(refresh_only)
 
   M.rebuild_switcher()
 
-  local s = awful.screen.focused().geometry
-  switcher_popup.x = s.x + s.width - 400
-  switcher_popup.y = s.y + 30
+  popup_registry.anchor_to_widget(switcher_popup)
 
   popup_registry.show_popup(switcher_popup)
 end

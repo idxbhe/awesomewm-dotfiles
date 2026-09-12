@@ -188,12 +188,7 @@ local function show_menu()
     build_rows()
     update_highlight()
 
-    local s = awful.screen.focused().geometry
-    local mx = mouse.coords().x
-    local half = math.floor(POPUP_WIDTH / 2)
-    M.popup.x = math.max(s.x + 8, math.min(mx - half, s.x + s.width - POPUP_WIDTH - 8))
-    M.popup.y = s.y + (m.wibar_height or 26) + 4
-
+    popup_registry.anchor_to_widget(M.popup, widgets.layout_widget)
     popup_registry.show_popup(M.popup)
 end
 

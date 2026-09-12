@@ -1414,9 +1414,7 @@ set_widget:buttons(gears.table.join(
         else
             popup_registry.show_popup(set_popup)
             go_to_page(1) -- ensure only first page visible on open
-            local s = awful.screen.focused().geometry
-            set_popup.x = s.x + s.width - 340
-            set_popup.y = s.y + 30
+            popup_registry.anchor_to_widget(set_popup, set_widget)
             awful.spawn.easy_async_with_shell("nmcli radio wifi", function(stdout)
                 if stdout:match("enabled") then
                     wifi_set_state(true)
