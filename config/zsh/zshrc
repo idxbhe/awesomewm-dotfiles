@@ -180,3 +180,7 @@ alias ll='eza --icons=always --color=always -la'
 
 # opencode
 export PATH=/home/bhe/.opencode/bin:$PATH
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/bhe/.local/bin:$PATH"
