@@ -16,6 +16,10 @@ local M = {
     _child_popup_just_closed = false,
 }
 
+local function notify_popup_changed()
+    awesome.emit_signal("popup::changed")
+end
+
 local function hide_active_tooltip()
     if M.active_tooltip and M.active_tooltip.visible then
         M.active_tooltip.visible = false
@@ -48,6 +52,7 @@ function M.show_popup(popup, is_password)
         -- Password popup is special, doesn't interfere with others
         M.password_popup = popup
         popup.visible = true
+        notify_popup_changed()
         return true
     end
 
@@ -60,6 +65,7 @@ function M.show_popup(popup, is_password)
     end
 
     popup.visible = true
+    notify_popup_changed()
     return true
 end
 
@@ -79,6 +85,7 @@ function M.show_child_popup(popup)
 
     M.active_popup = popup
     popup.visible = true
+    notify_popup_changed()
     return true
 end
 
@@ -86,6 +93,17 @@ function M.has_child_popup()
     -- Check if any child popup is visible
     if M.active_popup and M.active_popup.visible then
         return true
+    end
+    return false
+end
+
+-- Check if any popup (regular, priority, password or child) is visible
+function M.is_any_popup_open()
+    if M.active_popup and M.active_popup.visible then return true end
+    if M.is_priority_popup_active() then return true end
+    if M.password_popup and M.password_popup.visible then return true end
+    for _, popup in ipairs(M.child_popups) do
+        if popup.visible then return true end
     end
     return false
 end
@@ -101,11 +119,13 @@ function M.hide_popup(popup, is_password)
         end
     end
     popup.visible = false
+    notify_popup_changed()
 end
 
 function M.hide_active(mark_as_just_closed)
     local had_active = M.active_popup ~= nil
     hide_active_popup()
+    notify_popup_changed()
 
     -- Mark that child popup was just closed (used to prevent parent from opening)
     if mark_as_just_closed and had_active then
@@ -158,6 +178,7 @@ function M.setup_global_click_handler()
         if not is_inside then
             M.active_popup.visible = false
             M.active_popup = nil
+            notify_popup_changed()
         end
     end)
 end
@@ -181,6 +202,7 @@ function M.show_priority_popup(popup)
     -- Set as priority popup
     M.active_priority_popup = popup
     popup.visible = true
+    notify_popup_changed()
 
     return true
 end
@@ -189,6 +211,7 @@ function M.hide_priority_popup(popup)
     if M.active_priority_popup == popup then
         M.active_priority_popup = nil
         popup.visible = false
+        notify_popup_changed()
     end
 end
 

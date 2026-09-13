@@ -4,15 +4,24 @@
 -- Uses the built-in awful.tooltip (positioned near the cursor and styled from
 -- the theme's beautiful.tooltip_* tokens). Attached to the widgets themselves
 -- so they work regardless of the surrounding pill container.
+--
+-- Tooltips are suppressed while a popup is open: awful.tooltip wires
+-- mouse::enter straight to tt.show, so the show handler is re-wired with a
+-- popup-state gate, and any visible tooltip is force-hidden when a popup opens.
 
 local m = require("modules")
 local gears = m.gears
 local awful = m.awful
 local beautiful = m.beautiful
+local popup_registry = require("modules.popup_registry")
 
 local M = {}
 
 local attached = {}
+
+local function popup_open()
+    return popup_registry.is_any_popup_open()
+end
 
 local function tooltip_common(widget)
     return {
@@ -29,6 +38,22 @@ local function tooltip_common(widget)
     }
 end
 
+-- Swap the auto-connected hover handler for a gated one: refuse to show
+-- while a popup is open.
+local function gate_tooltip(tt, widget)
+    if not widget then return tt end
+
+    tt:remove_from_object(widget)
+    local orig_show = tt.show
+    tt.show = function(other, geo)
+        if popup_open() then return end
+        orig_show(other, geo)
+    end
+    tt:add_to_object(widget)
+
+    return tt
+end
+
 local function attach(widget, text)
     if not widget then return nil end
 
@@ -36,6 +61,7 @@ local function attach(widget, text)
     args.text = text
 
     local tt = awful.tooltip(args)
+    gate_tooltip(tt, widget)
     attached[#attached + 1] = tt
     return tt
 end
@@ -50,6 +76,7 @@ local function attach_dynamic(widget, fn)
     args.timeout = 30
 
     local tt = awful.tooltip(args)
+    gate_tooltip(tt, widget)
     attached[#attached + 1] = tt
     return tt
 end
@@ -72,6 +99,16 @@ awesome.connect_signal("theme::changed", function()
         tt.backgroundbox.shape_border_color = beautiful.tooltip_border_color
         local wb = tt:get_wibox()
         if wb then wb.fg = m.tooltip_fg end
+    end
+end)
+
+-- When a popup opens, hide any tooltip that is already visible (e.g. the
+-- tooltip of the widget that was just clicked).
+awesome.connect_signal("popup::changed", function()
+    if popup_open() then
+        for _, tt in ipairs(attached) do
+            tt.visible = false
+        end
     end
 end)
 

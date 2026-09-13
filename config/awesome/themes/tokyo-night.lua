@@ -221,6 +221,8 @@ local theme = {
     settings_display_titlebar = "\u{fc87}",
     settings_display_border = "\u{fb99}",
     settings_display_corner = "\u{f4a1}",
+    settings_display_backend = "\u{f035b}",
+    settings_display_vsync = "\u{f695}",
   },
 
   -- Titlebar button icons (custom SVGs)

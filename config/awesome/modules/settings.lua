@@ -972,6 +972,91 @@ end
 init_picom_toggles()
 init_transparency()
 
+-- ============================================================================
+-- Picom backend selector (xrender / glx / egl) + VSync toggle
+-- picom cannot switch backend/vsync at runtime, so each change rewrites
+-- picom.conf and restarts picom (same path as the other picom settings).
+-- ============================================================================
+
+local backend_order = { "xrender", "glx", "egl" }
+local backend_labels = { xrender = "XRender", glx = "GLX", egl = "EGL" }
+
+local function read_backend_idx()
+    local v = read_picom_value("backend")
+    v = v and v:gsub('"', "") or "glx"
+    for i, name in ipairs(backend_order) do
+        if name == v then return i end
+    end
+    return 2 -- glx
+end
+
+local current_backend_idx = read_backend_idx()
+
+local backend_name_display = wibox.widget {
+    {
+        markup = "<b>" .. backend_labels[backend_order[current_backend_idx]] .. "</b>",
+        font = m.font_popup,
+        align = "center",
+        valign = "center",
+        widget = wibox.widget.textbox,
+    },
+    forced_width = 70,
+    forced_height = 22,
+    widget = wibox.container.background,
+}
+
+local backend_left_arrow = wibox.widget {
+    markup = m.glyph.chevron_left or "‹",
+    font = m.font_icon,
+    align = "center",
+    valign = "center",
+    forced_width = 28,
+    forced_height = 28,
+    widget = wibox.widget.textbox,
+}
+
+local backend_right_arrow = wibox.widget {
+    markup = m.glyph.chevron_right or "›",
+    font = m.font_icon,
+    align = "center",
+    valign = "center",
+    forced_width = 28,
+    forced_height = 28,
+    widget = wibox.widget.textbox,
+}
+
+local function set_backend(idx)
+    current_backend_idx = ((idx - 1) % #backend_order) + 1
+    local name = backend_order[current_backend_idx]
+    write_picom_value("backend", '"' .. name .. '"')
+    backend_name_display.widget.markup = "<b>" .. backend_labels[name] .. "</b>"
+end
+
+local function cycle_backend_left()
+    set_backend(current_backend_idx - 1)
+end
+
+local function cycle_backend_right()
+    set_backend(current_backend_idx + 1)
+end
+
+backend_left_arrow:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+backend_left_arrow:connect_signal("mouse::leave", function(self) self.bg = nil end)
+backend_left_arrow:buttons(gears.table.join(awful.button({}, 1, cycle_backend_left)))
+
+backend_right_arrow:connect_signal("mouse::enter", function(self) self.bg = m.surface0 end)
+backend_right_arrow:connect_signal("mouse::leave", function(self) self.bg = nil end)
+backend_right_arrow:buttons(gears.table.join(awful.button({}, 1, cycle_backend_right)))
+
+-- VSync toggle
+local vsync_btn, vsync_get_state, vsync_set_state = make_toggle_button(
+    m.glyph.toggle_on, m.glyph.toggle_off,
+    read_picom_value("vsync") ~= "false", -- default on
+    function(new_state)
+        write_picom_value("vsync", new_state and "true" or "false")
+    end
+)
+
 local function make_tab_content()
     return wibox.widget {
         layout = wibox.layout.fixed.vertical,
@@ -1119,8 +1204,21 @@ add_to_tab(content_display, {
         return row
     end)(),
     (function()
-        local row = make_row(m.glyph.settings_display_blur or m.glyph.blur or "", "Blur", m.font_popup)
+        local row = make_row(m.glyph.settings_display_blur or m.glyph.blur or "", "Blur", m.font_popup)
         row.right_slot:add(picom_blur_btn)
+        return row
+    end)(),
+    (function()
+        local row = make_row(m.glyph.settings_display_backend or m.glyph.gpu or "", "Backend", m.font_popup)
+        row.right_slot.spacing = 2
+        row.right_slot:add(backend_left_arrow)
+        row.right_slot:add(backend_name_display)
+        row.right_slot:add(backend_right_arrow)
+        return row
+    end)(),
+    (function()
+        local row = make_row(m.glyph.settings_display_vsync or m.glyph.refresh or "", "VSync", m.font_popup)
+        row.right_slot:add(vsync_btn)
         return row
     end)(),
     (function()

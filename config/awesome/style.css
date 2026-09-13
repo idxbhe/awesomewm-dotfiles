@@ -1,15 +1,15 @@
 @font-face {
-    font-family: "icons";
-    src: url("fonts/icons.woff2") format("woff2"),
-        url("fonts/icons.ttf") format("truetype"),
-        url("fonts/icons.woff") format("woff");
+    font-family: "Untitled";
+    src: url("fonts/Untitled.woff2") format("woff2"),
+        url("fonts/Untitled.ttf") format("truetype"),
+        url("fonts/Untitled.woff") format("woff");
     font-weight: normal;
     font-style: normal;
     font-display: block;
 }
 .icon {
     /* Use !important to prevent extensions from overriding this font. */
-    font-family: "icons" !important;
+    font-family: "Untitled" !important;
     font-style: normal;
     font-weight: normal;
     font-variant: normal;
@@ -19,4 +19,75 @@
     /* Better Font Rendering =========== */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+:root {
+    --icon-bar_clock: "\f02b";
+    --icon-notes: "\f053";
+    --icon-button_copy: "\f0ad";
+    --icon-button_save: "\f0ce";
+    --icon-bar_tools: "\f174";
+    --icon-todo: "\f1bb";
+    --icon-ss_selection: "\f1c2";
+    --icon-wm_floating: "\f260";
+    --icon-settings_display_shadow: "\f28e";
+    --icon-ss_full: "\f2b1";
+    --icon-volume_high: "\f2d5";
+    --icon-ss_window: "\f2f8";
+    --icon-eye__fill: "\f31d";
+    --icon-button_delete: "\f32f";
+    --icon-tools_color_pick: "\f3c6";
+    --icon-power_restart_wm: "\f421";
+    --icon-settings_display_animation: "\f422";
+    --icon-button_cancel: "\f488";
+    --icon-settings_display_corner: "\f4a1";
+    --icon-button_edit: "\f565";
+    --icon-pin: "\f5f4";
+    --icon-settings_themes_theme: "\f5fe";
+    --icon-volume_mute: "\f635";
+    --icon-toggle_off: "\f6e3";
+    --icon-arrow_right_alt: "\f789";
+    --icon-bar_cpu: "\f810";
+    --icon-button_delete_alt: "\f890";
+    --icon-power_shutdown: "\f8cf";
+    --icon-settings_bluetooth: "\f90e";
+    --icon-tools_ss: "\f98b";
+    --icon-notif_with_ring: "\f995";
+    --icon-button_add: "\f99c";
+    --icon-settings_display_blur: "\f9a9";
+    --icon-wm_tile_bottom: "\fa2e";
+    --icon-toggle_on: "\fa3f";
+    --icon-tools_downloader: "\fa75";
+    --icon-arrow_left: "\fa86";
+    --icon-settings_themes_accent: "\fab3";
+    --icon-settings_brightness: "\fae1";
+    --icon-bar_brightness: "\fae2";
+    --icon-pin_alt: "\fafd";
+    --icon-bar_main_menu: "\fb8c";
+    --icon-wm_tile: "\fb96";
+    --icon-settings_display_border: "\fb99";
+    --icon-settings_airplane: "\fbba";
+    --icon-calendar: "\fbf7";
+    --icon-volume_none: "\fc41";
+    --icon-todo_alt: "\fc76";
+    --icon-settins_display_titlebar: "\fc87";
+    --icon-bar_settings: "\fcd8";
+    --icon-settings_wifi: "\fcfe";
+    --icon-button_edit_alt: "\fd33";
+    --icon-volume_low: "\fd71";
+    --icon-bar_no_inet: "\fd9e";
+    --icon-arrow_right: "\fe11";
+    --icon-power_logout: "\fe35";
+    --icon-no_notif: "\fe45";
+    --icon-settings_display_tranparency: "\fe61";
+    --icon-tools_clipboard: "\fec5";
+    --icon-tools_alarm: "\fecd";
+    --icon-power_restart: "\ff0c";
+    --icon-bar_memory: "\ffdc";
+    --icon-wm_full: "\1002d";
+    --icon-tools_music: "\10117";
+    --icon-arrow_left_alt: "\10172";
+    --icon-notif_no_ring: "\101a7";
+    --icon-bar_netspeed: "\101b2";
+    --icon-settings-display-vsync: "\f1bc";
+    --icon-settings-display-backend: "\f9c1";
 }
